@@ -1,11 +1,66 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Acceso - Gestor de Horas y Calendario</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    
+<body class="bg-slate-100 flex items-center justify-center min-h-screen">
+    <div class="bg-white p-8 rounded-xl shadow-lg max-w-md w-full">
+        <h1 class="text-2xl font-bold text-slate-800 text-center mb-2">Gestión de Calendario</h1>
+        <p class="text-sm text-slate-500 text-center mb-6">Introduce tus credenciales para acceder</p>
+
+        <form id="login-form" onsubmit="realizarLogin(event)" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-slate-600 mb-1">Correo Electrónico</label>
+                <input type="email" id="email" required class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-slate-600 mb-1">Contraseña</label>
+                <input type="password" id="password" required class="w-full border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-blue-500 outline-none">
+            </div>
+            <button type="submit" class="w-full bg-blue-600 text-white font-semibold py-2.5 rounded-lg hover:bg-blue-700 transition">
+                Entrar al Sistema
+            </button>
+        </form>
+
+        <div id="error-msg" class="mt-4 text-red-500 text-sm text-center hidden"></div>
+    </div>
+
+    <script>
+        async function realizarLogin(event) {
+            event.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('error-msg');
+
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Error al iniciar sesión');
+                }
+
+                // Guardar el token de acceso en el navegador
+                localStorage.setItem('token', data.token);
+                localStorage.setItem('usuario', JSON.stringify(data.usuario));
+
+                // Redirigir al panel principal (lo crearemos en el siguiente paso)
+                alert(`¡Bienvenido/a, ${data.usuario.nombre}! Rol: ${data.usuario.rol}`);
+                // window.location.href = '/dashboard.html';
+
+            } catch (error) {
+                errorDiv.textContent = error.message;
+                errorDiv.classList.remove('hidden');
+            }
+        }
+    </script>
 </body>
 </html>
