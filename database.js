@@ -9,6 +9,7 @@ const db = new sqlite3.Database('./database.sqlite', (err) => {
 
 // Inicialización de tablas y relaciones
 db.serialize(() => {
+    
     // 1. Tabla de Usuarios (Profesionales / Admins)
     db.run(`CREATE TABLE IF NOT EXISTS usuarios (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -37,6 +38,15 @@ db.serialize(() => {
     UNIQUE(nombre, apellidos)
 )`);
    
+});
+
+// 2. Intentar añadir la columna 'activo' mediante ALTER TABLE (por si la tabla ya existía)
+db.run(`ALTER TABLE alumnos ADD COLUMN activo INTEGER DEFAULT 1`, (err) => {
+    // Si da error, normalmente es porque la columna ya existe, lo cual es normal y se puede ignorar
+});
+
+db.run(`ALTER TABLE usuarios ADD COLUMN activo INTEGER DEFAULT 1`, (err) => {
+    // Idem para usuarios
 });
 
 module.exports = db;

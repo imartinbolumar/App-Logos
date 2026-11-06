@@ -3,12 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Acceso - Gestor de Horas y Calendario</title>
+    <title>Gestión Logos</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-100 flex items-center justify-center min-h-screen">
     <div class="bg-white p-8 rounded-xl shadow-lg max-w-md w-full">
-        <h1 class="text-2xl font-bold text-slate-800 text-center mb-2">Gestión de Calendario</h1>
+        <div class="flex items-center gap-3">
+          <img src="/Logo_Logos.png" alt="Logotipo" class="w-10 h-10 object-contain">
+          <h1 class="text-2xl font-bold text-slate-800 text-center mb-2">Logos - Centro de psicología y educación integral</h1>
+        </div>
         <p class="text-sm text-slate-500 text-center mb-6">Introduce tus credenciales para acceder</p>
 
         <form id="login-form" onsubmit="realizarLogin(event)" class="space-y-4">
@@ -53,7 +56,7 @@
                 localStorage.setItem('usuario', JSON.stringify(data.usuario));
 
                 // Redirigir al panel principal (lo crearemos en el siguiente paso)
-                alert(`¡Bienvenido/a, ${data.usuario.nombre}! Rol: ${data.usuario.rol}`);
+                //alert(`¡Bienvenido/a, ${data.usuario.nombre}! Rol: ${data.usuario.rol}`);
                 window.location.href = '/dashboard.html';
 
             } catch (error) {
