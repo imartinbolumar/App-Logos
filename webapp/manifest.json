@@ -1,0 +1,12 @@
+{
+    "_version":"1.60.0",
+    "sap.app": {
+        "id":"App_logos",
+        "type":"application",
+        "title":"Gestión Logos",
+        "description":"App para la gestión de Logos",
+        "applicationVersion": {
+            "version":"1.0.0"
+        }
+    }
+}
