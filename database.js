@@ -16,41 +16,27 @@ db.serialize(() => {
         email TEXT UNIQUE NOT NULL,
         password TEXT NOT NULL,
         rol TEXT CHECK(rol IN ('admin', 'pedagogo', 'profesor')) NOT NULL,
-        tarifa_base REAL DEFAULT 0
+        UNIQUE(email)
     )`);
 
-    // 2. Tabla de Clientes (Familias / Centros)
-    db.run(`CREATE TABLE IF NOT EXISTS clientes (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        nombre TEXT NOT NULL,
-        contacto TEXT,
-        email TEXT,
-        telefono TEXT
-    )`);
-
-    // 3. Tabla de Servicios / Tarifas especiales
-    db.run(`CREATE TABLE IF NOT EXISTS tarifas_servicio (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        tipo_servicio TEXT NOT NULL,
-        precio_hora REAL NOT NULL
-    )`);
-
-    // 4. Tabla de Sesiones del Calendario e Imputación de Horas
-    db.run(`CREATE TABLE IF NOT EXISTS sesiones (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        usuario_id INTEGER,
-        cliente_id INTEGER,
-        servicio_id INTEGER,
-        fecha TEXT NOT NULL,
-        horas REAL NOT NULL,
-        tarifa_aplicada REAL NOT NULL,
-        importe_total REAL NOT NULL,
-        estado TEXT CHECK(estado IN ('Programada', 'Completada', 'Cancelada')) DEFAULT 'Programada',
-        observaciones TEXT,
-        FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
-        FOREIGN KEY (cliente_id) REFERENCES clientes(id),
-        FOREIGN KEY (servicio_id) REFERENCES tarifas_servicio(id)
-    )`);
+   db.run(`CREATE TABLE IF NOT EXISTS alumnos (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    nombre TEXT NOT NULL,
+    apellidos TEXT NOT NULL,
+    contacto_padre TEXT,
+    telefono_padre TEXT,
+    email_padre TEXT,
+    contacto_madre TEXT,
+    telefono_madre TEXT,
+    email_madre TEXT,
+    observaciones TEXT,
+    creado_por TEXT,
+    creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+    modificado_por TEXT,
+    modificado_en DATETIME,
+    UNIQUE(nombre, apellidos)
+)`);
+   
 });
 
 module.exports = db;

@@ -18,17 +18,18 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 // Registrar un nuevo usuario (útil para administradores)
 app.post('/api/auth/registro', async (req, res) => {
-    const { nombre, email, password, rol, tarifa_base } = req.body;
+
+    const { nombre, email, password, rol } = req.body;
 
     if (!nombre || !email || !password || !rol) {
         return res.status(400).json({ error: 'Faltan campos obligatorios' });
     }
 
-    try {
-        const hashedPassword = await bcrypt.hash(password, 10);
-        const query = `INSERT INTO usuarios (nombre, email, password, rol, tarifa_base) VALUES (?, ?, ?, ?, ?)`;
+    try {        
+        const hashedPassword = await bcrypt.hash(password, 10);        
+        const query = `INSERT INTO usuarios (nombre, email, password, rol) VALUES (?, ?, ?, ?)`;
         
-        db.run(query, [nombre, email, hashedPassword, rol, tarifa_base || 0], function(err) {
+        db.run(query, [nombre, email, hashedPassword, rol], function(err) {
             if (err) {
                 return res.status(400).json({ error: 'El email ya está registrado o hay un error.' });
             }
@@ -61,6 +62,91 @@ app.post('/api/auth/login', (req, res) => {
             token, 
             usuario: { nombre: user.nombre, rol: user.rol, email: user.email } 
         });
+    });
+});
+
+// ----------------------------------------------------
+// RUTAS GESTIÓN DE ALUMNOS
+// ----------------------------------------------------
+
+// Ruta para registrar un nuevo alumno
+app.post('/api/alumnos', (req, res) => {
+    const { 
+        nombre, apellidos, 
+        contacto_padre, telefono_padre, email_padre, 
+        contacto_madre, telefono_madre, email_madre, 
+        observaciones, creado_por 
+    } = req.body;
+
+    if (!nombre || !apellidos) {
+        return res.status(400).json({ error: 'El nombre y los apellidos son obligatorios' });
+    }
+
+    const query = `INSERT INTO alumnos (
+        nombre, apellidos, 
+        contacto_padre, telefono_padre, email_padre, 
+        contacto_madre, telefono_madre, email_madre, 
+        observaciones, creado_por, modificado_por, modificado_en
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    
+    db.run(query, [
+        nombre, apellidos, 
+        contacto_padre || '', telefono_padre || '', email_padre || '', 
+        contacto_madre || '', telefono_madre || '', email_madre || '', 
+        observaciones || '', creado_por || 'Sistema', creado_por || 'Sistema', new Date().toISOString()
+    ], function(err) {
+        if (err) {
+            // Si el error es por duplicidad de nombre y apellidos
+            if (err.message.includes('UNIQUE constraint failed')) {
+                return res.status(400).json({ error: 'Ya existe un alumno registrado con ese mismo nombre y apellidos.' });
+            }
+            return res.status(400).json({ error: 'Error al registrar el alumno en la base de datos.' });
+        }
+        res.json({ 
+            mensaje: 'Alumno registrado con éxito', 
+            id: this.lastID 
+        });
+    });
+});
+
+// Ruta para actualizar un alumno existente
+app.put('/api/alumnos/:id', (req, res) => {
+    const { id } = req.params;
+    const { 
+        nombre, apellidos, 
+        contacto_padre, telefono_padre, email_padre, 
+        contacto_madre, telefono_madre, email_madre, 
+        observaciones, modificado_por 
+    } = req.body;
+
+    const query = `UPDATE alumnos SET 
+        nombre = ?, apellidos = ?, 
+        contacto_padre = ?, telefono_padre = ?, email_padre = ?, 
+        contacto_madre = ?, telefono_madre = ?, email_madre = ?, 
+        observaciones = ?, modificado_por = ?, modificado_en = CURRENT_TIMESTAMP 
+        WHERE id = ?`;
+
+    db.run(query, [
+        nombre, apellidos, 
+        contacto_padre || '', telefono_padre || '', email_padre || '', 
+        contacto_madre || '', telefono_madre || '', email_madre || '', 
+        observaciones || '', modificado_por || 'Sistema', id
+    ], function(err) {
+        if (err) {
+            return res.status(400).json({ error: 'Error al actualizar el alumno' });
+        }
+        res.json({ mensaje: 'Alumno actualizado con éxito' });
+    });
+});
+
+
+// Ruta para cargar alumnos
+app.get('/api/alumnos', (req, res) => {
+    db.all(`SELECT * FROM alumnos ORDER BY creado_en DESC`, [], (err, rows) => {
+        if (err) {
+            return res.status(500).json({ error: 'Error al obtener los alumnos' });
+        }
+        res.json(rows);
     });
 });
 

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menú Principal - Gestor de Horas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 min-h-screen flex flex-col">
+    <!-- Barra de navegación superior -->
+    <header class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 class="text-xl font-bold text-slate-800">📅 Gestor de Calendarios y Tarifas</h1>
+            <div class="flex items-center gap-4">
+                <span id="info-usuario" class="text-sm font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg">Cargando...</span>
+                <button onclick="cerrarSesion()" class="bg-red-50 text-red-600 text-sm font-semibold px-4 py-2 rounded-lg hover:bg-red-100 transition">
+                    Cerrar Sesión
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenido Principal / Menú de Opciones -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-6">
+        <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+            <h2 class="text-2xl font-bold text-slate-800 mb-2">Panel de Control Principal</h2>
+            <p class="text-slate-600 text-sm">Selecciona una de las opciones disponibles en el sistema para comenzar a gestionar tu actividad diaria.</p>
+        </div>
+
+        <!-- Cuadrícula de Módulos -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            <!-- Opción 1: Gestión de Alumnos (Activa) -->
+            <a href="/alumnos.html" class="bg-white p-6 rounded-xl shadow-md border-l-4 border-blue-600 hover:shadow-lg transition group">
+                <div class="flex justify-between items-start mb-4">
+                    <span class="text-3xl">🎓</span>
+                    <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full group-hover:bg-blue-600 group-hover:text-white transition">Acceder →</span>
+                </div>
+                <h3 class="font-bold text-lg text-slate-800 mb-1">Alumnos</h3>
+                <p class="text-sm text-slate-500">Crear, modificar y consultar las fichas de los alumnos y datos de contacto de los padres.</p>
+            </a>
+
+            <!-- Opción 2: Calendario / Sesiones (Próximamente) -->
+            <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-emerald-600 opacity-80">
+                <div class="flex justify-between items-start mb-4">
+                    <span class="text-3xl">📅</span>
+                    <span class="text-xs font-semibold text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full">Próximamente</span>
+                </div>
+                <h3 class="font-bold text-lg text-slate-800 mb-1">Calendario / Sesiones</h3>
+                <p class="text-sm text-slate-500">Registra las horas lectivas de pedagogos y profesores y consulta las citas programadas.</p>
+            </div>
+
+            <!-- Opción 3: Cálculo de Importes / Tarifas (Próximamente) -->
+            <div class="bg-white p-6 rounded-xl shadow-md border-l-4 border-purple-600 opacity-80">
+                <div class="flex justify-between items-start mb-4">
+                    <span class="text-3xl">💶</span>
+                    <span class="text-xs font-semibold text-purple-600 bg-purple-50 px-2.5 py-1 rounded-full">Próximamente</span>
+                </div>
+                <h3 class="font-bold text-lg text-slate-800 mb-1">Cálculo de Importes</h3>
+                <p class="text-sm text-slate-500">Revisa los totales a facturar según las horas acumuladas y las tarifas de los servicios.</p>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Pie de página -->
+    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-400">
+        Gestor Educativo & Pedagógico &copy; 2026
+    </footer>
+
+    <script>
+        // Comprobar autenticación al cargar el menú
+        const token = localStorage.getItem('token');
+        const usuarioGuardado = localStorage.getItem('usuario');
+
+        if (!token || !usuarioGuardado) {
+            // Si no hay sesión válida, redirigir al login
+            window.location.href = '/';
+        } else {
+            const usuario = JSON.parse(usuarioGuardado);
+            document.getElementById('info-usuario').textContent = `👤 ${usuario.nombre} (${usuario.rol.toUpperCase()})`;
+        }
+
+        function cerrarSesion() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('usuario');
+            window.location.href = '/';
+        }
+    </script>
+</body>
+</html>
