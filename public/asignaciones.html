@@ -10,7 +10,7 @@
     
     <!-- Navbar superior unificada -->
     <header class="bg-white shadow-sm">
-        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+        <div class="w-full px-4 sm:px-8 py-4 flex justify-between items-center">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-sm">
                     <img src="/Logo_Logos.png" alt="Logotipo" class="w-10 h-10 object-contain">
@@ -35,7 +35,18 @@
             <div class="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1">Semana (Lunes):</label>
-                    <input type="date" id="filtro-semana" onchange="validarYCambiarSemana(this)" onkeydown="return false;" class="px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200">
+                    <div class="flex items-center gap-1.5">
+                        <!-- Botón Semana Anterior -->
+                        <button onclick="cambiarSemana(-7)" title="Semana Anterior" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs px-2.5 py-2 rounded-lg transition shadow-sm">
+                            ◀
+                        </button>
+                        <!-- Input de fecha -->
+                        <input type="date" id="filtro-semana" onchange="validarYCambiarSemana(this)" onkeydown="return false;" class="px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200">
+                        <!-- Botón Semana Siguiente -->
+                        <button onclick="cambiarSemana(7)" title="Semana Siguiente" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs px-2.5 py-2 rounded-lg transition shadow-sm">
+                            ▶
+                        </button>
+                    </div>
                 </div>
                 <!-- Contenedor del filtro de profesor -->
                 <div id="contenedor-filtro-profesor">
@@ -96,8 +107,8 @@
     </div>
 
     <script>
-        const usuarioGuardado = JSON.parse(localStorage.getItem('usuario') || '{}');
-        document.getElementById('info-usuario').textContent = `👤 ${usuarioGuardado.nombre} (${usuarioGuardado.rol.toUpperCase()})`;
+        let usuarioGuardado = JSON.parse(localStorage.getItem('usuario') || '{}');
+        document.getElementById('info-usuario').textContent = `👤 ${usuarioGuardado.nombre || 'Usuario'} (${(usuarioGuardado.rol || 'PROFE').toUpperCase()})`;
 
         const esAdminOGestion = usuarioGuardado.rol === 'admin' || usuarioGuardado.rol === 'admin_profesor';
 
@@ -161,6 +172,20 @@
             const dia = d.getDay();
             const diff = d.getDate() - dia + (dia === 0 ? -6 : 1);
             return new Date(d.setDate(diff));
+        }
+
+        // Función para mover la semana 7 días hacia atrás (-7) o hacia adelante (+7)
+        function cambiarSemana(dias) {
+            const inputSemana = document.getElementById('filtro-semana');
+            const valorActual = inputSemana.value;
+            if (!valorActual) return;
+
+            const [year, month, day] = valorActual.split('-').map(Number);
+            const fecha = new Date(year, month - 1, day);
+            fecha.setDate(fecha.getDate() + dias);
+
+            inputSemana.value = formatearFechaIsoLocal(fecha);
+            validarYCambiarSemana(inputSemana);
         }
 
         function validarYCambiarSemana(input) {
@@ -231,6 +256,13 @@
                 usuariosActivos = usuarios.filter(u => u.activo === 1 && u.rol !== 'admin');
                 alumnosActivos = alumnos.filter(a => a.activo === 1);
 
+                const usuarioEncontrado = usuarios.find(u => u.email === usuarioGuardado.email || u.nombre === usuarioGuardado.nombre);
+                if (usuarioEncontrado) {
+                    usuarioGuardado.id = usuarioEncontrado.id;
+                } else if (usuariosActivos.length > 0 && !usuarioGuardado.id) {
+                    usuarioGuardado.id = usuarioGuardado.id || usuariosActivos[0].id;
+                }
+
                 const selectFiltro = document.getElementById('filtro-profesor');
                 selectFiltro.innerHTML = '';
 
@@ -240,7 +272,6 @@
                         selectFiltro.innerHTML += `<option value="${u.id}">${u.nombre} (${u.email})</option>`;
                     });
                 } else {
-                    // Cargar todos los usuarios activos pero asegurar que aparezca el propio profesor y bloquear el selector
                     usuariosActivos.forEach(u => {
                         selectFiltro.innerHTML += `<option value="${u.id}">${u.nombre} (${u.email})</option>`;
                     });
@@ -311,8 +342,8 @@
 
             const diasSemana = obtenerDiasDeLaSemana(semanaInput);
             const contenedor = document.getElementById('contenedor-tablas');
-            contenedor.innerHTML = '';
-
+            contenedor.innerHTML = '';            
+            
             let profesoresAMostrar = [];
             if (esAdminOGestion) {
                 const filtroProfesorId = document.getElementById('filtro-profesor').value;
@@ -320,13 +351,12 @@
                     ? usuariosActivos 
                     : usuariosActivos.filter(u => u.id == filtroProfesorId);
             } else {
-                // Forzar de forma segura que el profesor solo se muestre a sí mismo usando comparación flexible
-                profesoresAMostrar = usuariosActivos.filter(u => u.id == usuarioGuardado.id);
+                profesoresAMostrar = usuariosActivos.filter(u => String(u.id) === String(usuarioGuardado.id));
                 if (profesoresAMostrar.length === 0) {
-                    profesoresAMostrar = [usuarioGuardado];
+                    profesoresAMostrar = [usuarioGuardado];                    
                 }
-            }
-
+            }            
+            
             let optionsAlumnos = '<option value="">-- Alumno --</option>';
             alumnosActivos.forEach(alumno => {
                 optionsAlumnos += `<option value="${alumno.id}">👤 ${alumno.nombre} ${alumno.apellidos}</option>`;
@@ -411,7 +441,6 @@
                 `;
             });
 
-            // Rellenar selects con datos de la BD utilizando comparación flexible (==)
             setTimeout(() => {
                 const contadorSlots = {};
                 document.querySelectorAll('.select-alumno').forEach(sel => {

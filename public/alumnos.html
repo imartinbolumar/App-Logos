@@ -9,7 +9,7 @@
 <body class="bg-slate-100 min-h-screen">
     <!-- Navbar superior -->
     <header class="bg-white shadow-sm">
-        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+        <div class="w-full px-4 sm:px-8 py-4 flex justify-between items-center">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-sm">
                     <img src="/Logo_Logos.png" alt="Logotipo" class="w-10 h-10 object-contain">
@@ -207,7 +207,8 @@
 
         function normalizarTexto(texto) {
             if (!texto) return '';
-            return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+            // Pasa a minúsculas, elimina acentos y elimina también símbolos de puntuación o caracteres especiales
+            return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^\w\s]/gi, '').trim();
         }
 
         async function cargarCentrosSelect() {
@@ -284,7 +285,7 @@
                             <div><b>Inicio:</b> ${a.fecha_comienzo || '-'}</div>
                             <div class="text-emerald-600 font-semibold"><b>Precio:</b> ${a.precio_terapia ? a.precio_terapia + ' €' : 'Estándar'}</div>
                             <div class="text-slate-500 italic mt-1 max-w-xs truncate" title="${a.observaciones || ''}"><b>Obs:</b> ${a.observaciones || '-'}</div>
-                        </td>                     
+                        </td>                    
                         <td class="py-3 px-3 text-center align-middle">
                             <button onclick="cargarParaEditar(${a.id})" class="text-blue-600 hover:text-blue-800 text-xs font-semibold bg-blue-50 px-2.5 py-1 rounded transition">Editar</button>
                         </td>
@@ -294,20 +295,30 @@
         }
 
         function filtrarListaAlumnos(datos) {
-            const texto = document.getElementById('buscador').value.toLowerCase();
+            const textoBuscado = normalizarTexto(document.getElementById('buscador').value);
             const soloActivos = document.getElementById('filtro-activos').checked;
             const soloBecados = document.getElementById('filtro-beca').checked;
 
             return datos.filter(a => {
+                // Normalizamos cada campo del alumno para compararlo de forma limpia (sin tildes, sin símbolos, sin mayúsculas)
+                const nombreNorm = normalizarTexto(a.nombre);
+                const apellidosNorm = normalizarTexto(a.apellidos);
+                const cursoNorm = normalizarTexto(a.curso);
+                const centroNorm = normalizarTexto(a.centro);
+                const contactoPadreNorm = normalizarTexto(a.contacto_padre);
+                const contactoMadreNorm = normalizarTexto(a.contacto_madre);
+                const emailPadreNorm = normalizarTexto(a.email_padre);
+                const emailMadreNorm = normalizarTexto(a.email_madre);
+
                 const cumpleTexto = (
-                    a.nombre.toLowerCase().includes(texto) || 
-                    a.apellidos.toLowerCase().includes(texto) ||
-                    (a.curso && a.curso.toLowerCase().includes(texto)) ||
-                    (a.centro && a.centro.toLowerCase().includes(texto)) ||
-                    (a.contacto_padre && a.contacto_padre.toLowerCase().includes(texto)) ||
-                    (a.contacto_madre && a.contacto_madre.toLowerCase().includes(texto)) ||
-                    (a.email_padre && a.email_padre.toLowerCase().includes(texto)) ||
-                    (a.email_madre && a.email_madre.toLowerCase().includes(texto))
+                    nombreNorm.includes(textoBuscado) || 
+                    apellidosNorm.includes(textoBuscado) ||
+                    cursoNorm.includes(textoBuscado) ||
+                    centroNorm.includes(textoBuscado) ||
+                    contactoPadreNorm.includes(textoBuscado) ||
+                    contactoMadreNorm.includes(textoBuscado) ||
+                    emailPadreNorm.includes(textoBuscado) ||
+                    emailMadreNorm.includes(textoBuscado)
                 );
 
                 const cumpleActivo = !soloActivos || (a.activo === 1);
