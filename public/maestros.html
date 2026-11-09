@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestión de Datos Maestros (Admin)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 min-h-screen">
+
+    <!-- Navbar superior -->
+     <header class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-sm">
+                    <img src="/Logo_Logos.png" alt="Logotipo" class="w-10 h-10 object-contain">
+                </div>
+                <h1 class="text-xl font-bold text-slate-800">📋 Gestión de Datos Maestros (Modos de Pago y Centros)</h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="/dashboard.html" class="text-sm font-semibold text-blue-600 hover:underline">← Volver al Panel</a>
+                <span id="info-usuario" class="text-sm font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg">Cargando...</span>
+                <button onclick="cerrarSesion()" class="bg-red-50 text-red-600 text-sm font-semibold px-4 py-2 rounded-lg hover:bg-red-100 transition">
+                    Cerrar Sesión
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenido Principal a Dos Columnas -->
+    <main class="w-full px-4 sm:px-8 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- COLUMNA IZQUIERDA: Modos de Pago (Ocupa 5 columnas) -->
+        <div class="bg-white p-6 rounded-xl shadow-md lg:col-span-5">
+            <h2 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Modos de Pago</h2>
+            
+            <form onsubmit="guardarModoPago(event)" class="space-y-3 mb-6 bg-slate-50 p-4 rounded-lg border">
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block text-xs font-medium text-slate-700 mb-1">Código</label>
+                        <input type="text" id="mp-codigo" required placeholder="Ej. E/T" class="w-full px-3 py-1.5 text-sm border rounded uppercase">
+                    </div>
+                    <div class="col-span-2">
+                        <label class="block text-xs font-medium text-slate-700 mb-1">Descripción</label>
+                        <input type="text" id="mp-descripcion" required placeholder="Ej. Efectivo / Tarjeta" class="w-full px-3 py-1.5 text-sm border rounded">
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white text-xs font-semibold py-2 rounded-lg hover:bg-blue-700">Añadir Modo de Pago</button>
+            </form>
+
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b text-slate-500 text-xs uppercase">
+                            <th class="py-2 px-3">Código</th>
+                            <th class="py-2 px-3">Descripción</th>
+                            <th class="py-2 px-3 text-center">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-modos-pago" class="text-slate-700 text-sm">
+                        <!-- Dinámico -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- COLUMNA DERECHA: Centros (Ocupa 7 columnas) -->
+        <div class="bg-white p-6 rounded-xl shadow-md lg:col-span-7">
+            <h2 class="text-lg font-bold text-slate-800 mb-4 border-b pb-2">Centros Educativos</h2>
+            
+            <form onsubmit="guardarCentro(event)" class="space-y-3 mb-6 bg-slate-50 p-4 rounded-lg border flex gap-2">
+                <div class="flex-1">
+                    <input type="text" id="centro-nombre" required placeholder="Nombre del centro educativo..." class="w-full px-3 py-2 text-sm border rounded uppercase">
+                </div>
+                <button type="submit" class="bg-emerald-600 text-white text-xs font-semibold px-5 py-2 rounded-lg hover:bg-emerald-700">Añadir Centro</button>
+            </form>
+
+            <div class="overflow-x-auto max-h-[450px] overflow-y-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b text-slate-500 text-xs uppercase sticky top-0 bg-white">
+                            <th class="py-2 px-3">Nombre del Centro</th>
+                            <th class="py-2 px-3 text-center">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-centros" class="text-slate-700 text-sm">
+                        <!-- Dinámico -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </main>
+
+    <script>
+        // Verificación de seguridad Admin
+        const usuarioGuardado = JSON.parse(localStorage.getItem('usuario') || '{}');
+        if (usuarioGuardado.rol !== 'admin' && usuarioGuardado.rol !== 'admin_profesor') {
+            alert("⚠️ Acceso denegado.");
+            window.location.replace('/dashboard.html');
+        }
+        
+        document.getElementById('info-usuario').textContent = `👤 ${usuarioGuardado.nombre} (${usuarioGuardado.rol.toUpperCase()})`;
+        
+        function cerrarSesion() {
+            fetch('/api/logout', { method: 'POST' }).finally(() => {
+                localStorage.removeItem('usuario');
+                window.location.replace('/index.html');
+            });
+        }
+
+        async function cargarDatosMaestros() {
+            try {
+                // Cargar Modos de Pago
+                const resMP = await fetch('/api/modos-pago');
+                const modos = await resMP.json();
+                document.getElementById('tabla-modos-pago').innerHTML = modos.map(m => `
+                    <tr class="border-b hover:bg-slate-50">
+                        <td class="py-2 px-3 font-bold">${m.codigo}</td>
+                        <td class="py-2 px-3">${m.descripcion}</td>
+                        <td class="py-2 px-3 text-center">
+                            <button onclick="eliminarModoPago('${m.codigo}')" class="text-red-600 hover:text-red-800 text-xs font-semibold bg-red-50 px-2.5 py-1 rounded transition">Eliminar</button>
+                        </td>
+                    </tr>
+                `).join('') || `<tr><td colspan="3" class="text-center text-slate-400 py-4">Sin registros</td></tr>`;
+
+                // Cargar Centros
+                const resC = await fetch('/api/centros');
+                const centros = await resC.json();
+                document.getElementById('tabla-centros').innerHTML = centros.map(c => `
+                    <tr class="border-b hover:bg-slate-50">
+                        <td class="py-2 px-3">${c.nombre}</td>
+                        <td class="py-2 px-3 text-center">
+                            <button onclick="eliminarCentro(${c.id})" class="text-red-600 hover:text-red-800 text-xs font-semibold bg-red-50 px-2.5 py-1 rounded transition">Eliminar</button>
+                        </td>
+                    </tr>
+                `).join('') || `<tr><td colspan="2" class="text-center text-slate-400 py-4">Sin registros</td></tr>`;
+            } catch (e) {
+                console.error("Error al cargar maestros", e);
+            }
+        }
+
+        async function guardarModoPago(e) {
+            e.preventDefault();
+            const codigo = document.getElementById('mp-codigo').value;
+            const descripcion = document.getElementById('mp-descripcion').value;
+            
+            const res = await fetch('/api/modos-pago', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ codigo, descripcion })
+            });
+            if (res.ok) {
+                document.getElementById('mp-codigo').value = '';
+                document.getElementById('mp-descripcion').value = '';
+                cargarDatosMaestros();
+            }
+        }
+
+        async function eliminarModoPago(codigo) {
+            if (!confirm(`¿Estás seguro de eliminar el modo de pago [${codigo}]?`)) return;
+
+            const res = await fetch(`/api/modos-pago/${codigo}`, { method: 'DELETE' });
+            if (res.ok) {
+                cargarDatosMaestros();
+            } else {
+                alert("❌ No se pudo eliminar el modo de pago.");
+            }
+        }
+
+        async function guardarCentro(e) {
+            e.preventDefault();
+            const nombre = document.getElementById('centro-nombre').value;
+            
+            const res = await fetch('/api/centros', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ nombre })
+            });
+            if (res.ok) {
+                document.getElementById('centro-nombre').value = '';
+                cargarDatosMaestros();
+            } else {
+                alert("No se pudo guardar el centro (puede que ya exista).");
+            }
+        }
+
+        async function eliminarCentro(id) {
+            if (!confirm("¿Estás seguro de eliminar este centro educativo?")) return;
+
+            const res = await fetch(`/api/centros/${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                cargarDatosMaestros();
+            } else {
+                alert("❌ No se pudo eliminar el centro.");
+            }
+        }
+
+        cargarDatosMaestros();
+    </script>
+</body>
+</html>

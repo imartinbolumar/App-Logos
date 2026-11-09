@@ -7,11 +7,22 @@
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-100 min-h-screen">
-    <!-- Navbar superior -->
+    <!-- Navbar superior -->    
     <header class="bg-white shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-            <h1 class="text-xl font-bold text-slate-800">🛡️ Gestión de Usuarios (Admin)</h1>
-            <a href="/dashboard.html" class="text-sm font-semibold text-blue-600 hover:underline">← Volver al Panel</a>
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-sm">
+                    <img src="/Logo_Logos.png" alt="Logotipo" class="w-10 h-10 object-contain">
+                </div>
+                <h1 class="text-xl font-bold text-slate-800">🛡️ Gestión de Usuarios (Admin)</h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="/dashboard.html" class="text-sm font-semibold text-blue-600 hover:underline">← Volver al Panel</a>
+                <span id="info-usuario" class="text-sm font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg">Cargando...</span>
+                <button onclick="cerrarSesion()" class="bg-red-50 text-red-600 text-sm font-semibold px-4 py-2 rounded-lg hover:bg-red-100 transition">
+                    Cerrar Sesión
+                </button>
+            </div>
         </div>
     </header>
 
@@ -27,6 +38,10 @@
                 <div class="flex justify-between items-center pb-3 border-b sticky top-0 bg-white z-10">
                     <h2 id="form-titulo" class="text-lg font-bold text-slate-800">Nuevo Usuario</h2>
                     <div class="flex gap-2">
+                        <!-- Botón Borrar (Solo visible al editar) -->
+                        <button type="button" id="btn-borrar" onclick="borrarUsuarioActual()" class="hidden bg-red-50 text-red-600 text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-red-100 transition">
+                            Borrar
+                        </button>
                         <button type="button" id="btn-cancelar" onclick="limpiarFormulario()" class="hidden bg-slate-200 text-slate-700 text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-slate-300 transition">
                             Cancelar
                         </button>
@@ -51,9 +66,10 @@
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-slate-700 mb-1">Rol de Acceso</label>
-                        <select id="rol" required class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                        <select id="rol" required class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">                            
                             <option value="profesor">Profesor</option>
-                            <option value="admin">Administrador</option>
+                            <option value="admin_profesor">Administrador/Profesor</option>
+                            <option value="admin">Administrador</option>                                                         
                         </select>
                     </div>
                     <div class="flex items-center gap-2 pt-2">
@@ -66,7 +82,10 @@
 
         <!-- Listado de Usuarios Registrados -->
         <div class="bg-white p-6 rounded-xl shadow-md lg:col-span-2 overflow-hidden flex flex-col">
-            <h2 class="text-lg font-bold text-slate-800 mb-4">Usuarios del Sistema</h2>
+            <div class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
+                <h2 class="text-lg font-bold text-slate-800">Usuarios del Sistema</h2>
+                <input type="text" id="buscador" oninput="filtrarUsuarios()" placeholder="🔍 Buscar por nombre, email..." class="w-full sm:w-72 px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
 
             <div class="overflow-x-auto flex-1">
                 <table class="w-full text-left border-collapse min-w-[500px]">
@@ -91,32 +110,36 @@
     <script>
         // 🔒 1. CONTROL DE ACCESO: Verificar si el usuario conectado es Administrador
         const usuarioGuardado = JSON.parse(localStorage.getItem('usuario') || '{}');
-        if (usuarioGuardado.rol !== 'admin') {
+        if (usuarioGuardado.rol !== 'admin' && usuarioGuardado.rol !== 'admin_profesor') {
             alert('⛔ Acceso denegado. Esta sección es exclusiva para administradores.');
             window.location.href = '/dashboard.html';
         }
 
+        document.getElementById('info-usuario').textContent = `👤 ${usuarioGuardado.nombre} (${usuarioGuardado.rol.toUpperCase()})`;
+
         let usuariosGlobal = [];
+        
+        function cerrarSesion() {
+            fetch('/api/logout', { method: 'POST' }).finally(() => {
+                localStorage.removeItem('usuario');
+                window.location.replace('/index.html');
+            });
+        }
 
         async function cargarUsuarios() {
             try {
-                console.log("Pidiendo usuarios al servidor...");
                 const respuesta = await fetch('/api/usuarios');
                 const data = await respuesta.json();
                 
-                console.log("Respuesta recibida del servidor:", data);
-
-                // Comprobamos si el servidor devolvió un array o un error
                 if (Array.isArray(data)) {
                     usuariosGlobal = data;
                     renderizarTabla(usuariosGlobal);
                 } else {
-                    console.error("El servidor no devolvió una lista válida:", data);
-                    document.getElementById('tabla-usuarios').innerHTML = `<tr><td colspan="5" class="py-6 text-center text-red-500">Error: ${data.error || 'Respuesta inválida del servidor'}</td></tr>`;
+                    document.getElementById('tabla-usuarios').innerHTML = `<tr><td colspan="6" class="py-6 text-center text-red-500">Error: ${data.error || 'Respuesta inválida del servidor'}</td></tr>`;
                 }
             } catch (error) {
                 console.error("Error de red al cargar los usuarios:", error);
-                document.getElementById('tabla-usuarios').innerHTML = `<tr><td colspan="5" class="py-6 text-center text-red-500">Error de conexión con el servidor.</td></tr>`;
+                document.getElementById('tabla-usuarios').innerHTML = `<tr><td colspan="6" class="py-6 text-center text-red-500">Error de conexión con el servidor.</td></tr>`;
             }
         }
 
@@ -125,13 +148,15 @@
             tbody.innerHTML = '';
 
             if (!lista || lista.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-400">No hay usuarios registrados.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-400">No hay usuarios registrados.</td></tr>`;
                 return;
             }
 
             lista.forEach(u => {
-                const badgeRol = u.rol === 'admin' 
+               const badgeRol = u.rol === 'admin' 
                     ? '<span class="bg-purple-100 text-purple-700 text-xs font-semibold px-2 py-0.5 rounded">Admin</span>' 
+                    : u.rol === 'admin_profesor'
+                    ? '<span class="bg-emerald-100 text-emerald-700 text-xs font-semibold px-2 py-0.5 rounded">Admin/Profesor</span>'
                     : '<span class="bg-blue-100 text-blue-700 text-xs font-semibold px-2 py-0.5 rounded">Profesor</span>';
                 
                 const badgeEstado = u.activo === 0 
@@ -144,15 +169,24 @@
                         <td class="py-3 px-3 font-medium text-slate-900">${u.nombre}</td>
                         <td class="py-3 px-3 text-xs text-slate-600">${u.email}</td>
                         <td class="py-3 px-3 text-xs">${badgeRol}</td>          
-                        <td class="py-3 px-3 text-xs">${badgeEstado}</td>              
+                        <td class="py-3 px-3 text-xs">${badgeEstado}</td>             
                         <td class="py-3 px-3 text-center">
-                            <button onclick="cargarParaEditar(${u.id})" class="text-blue-600 hover:text-blue-800 text-xs font-semibold bg-blue-50 px-2 py-1 rounded transition">Editar</button>
+                            <button onclick="cargarParaEditar(${u.id})" class="text-blue-600 hover:text-blue-800 text-xs font-semibold bg-blue-50 px-2.5 py-1 rounded transition">Editar</button>
                         </td>
                     </tr>
                 `;
             });
         }
-
+        
+        function filtrarUsuarios() {
+            const texto = document.getElementById('buscador').value.toLowerCase();
+            const filtrados = usuariosGlobal.filter(u => 
+                u.nombre.toLowerCase().includes(texto) || 
+                u.email.toLowerCase().includes(texto)
+            );
+            renderizarTabla(filtrados);
+        }
+        
         async function guardarUsuario(e) {
             e.preventDefault();
             
@@ -161,10 +195,10 @@
                 nombre: document.getElementById('nombre').value.trim(),
                 email: document.getElementById('email').value.trim(),
                 password: document.getElementById('password').value,
-                rol: document.getElementById('rol').value
+                rol: document.getElementById('rol').value,
+                activo: document.getElementById('activo').checked ? 1 : 0
             };
 
-            // Si hay ID es una modificación (PUT), si no, es un registro nuevo (POST)
             const url = id ? `/api/usuarios/${id}` : '/api/usuarios';
             const metodo = id ? 'PUT' : 'POST';
             
@@ -180,7 +214,7 @@
                 if (respuesta.ok) {
                     alert(id ? '¡Usuario actualizado con éxito!' : '¡Usuario registrado con éxito!');
                     limpiarFormulario();
-                    cargarUsuarios(); // Recarga la tabla de inmediato
+                    cargarUsuarios();
                 } else {
                     alert('❌ Error: ' + (resultado.error || 'No se pudo completar la operación'));
                 }
@@ -190,44 +224,74 @@
             }
         }
 
-        function cargarParaEditar(id) {
-            console.log("Intentando editar el usuario ID:", id);
-            console.log("Lista actual de usuarios:", usuariosGlobal);
+        async function borrarUsuarioActual() {
+            const id = document.getElementById('usuario-id').value;
+            const nombre = document.getElementById('nombre').value;
 
-            const usuario = usuariosGlobal.find(u => u.id === id);
-            
-            if (!usuario) {
-                alert("⚠️ No se pudieron cargar los datos de este usuario porque la lista está vacía o no se encontró.");
+            if (!id) return;
+
+            if (!confirm(`⚠️ ¿Estás totalmente seguro de que deseas eliminar al usuario "${nombre}"?\n\nEsta acción no se puede deshacer.`)) {
                 return;
             }
+
+            try {
+                const respuesta = await fetch(`/api/usuarios/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (respuesta.ok) {
+                    alert('🗑️ Usuario eliminado correctamente.');
+                    limpiarFormulario();
+                    cargarUsuarios();
+                } else {
+                    const resultado = await respuesta.json();
+                    alert('❌ Error: ' + (resultado.error || 'No se pudo eliminar el usuario.'));
+                }
+            } catch (error) {
+                alert('❌ Error de conexión con el servidor.');
+            }
+        }
+
+        function cargarParaEditar(id) {
+            const usuario = usuariosGlobal.find(u => u.id === id);
+            if (!usuario) return;
 
             document.getElementById('usuario-id').value = usuario.id;
             document.getElementById('nombre').value = usuario.nombre;
             document.getElementById('email').value = usuario.email;
-            document.getElementById('password').value = ''; // Limpiamos la contraseña por seguridad
+            document.getElementById('password').value = ''; 
             document.getElementById('rol').value = usuario.rol;
+            
+            const checkActivo = document.getElementById('activo');
+            if (checkActivo) {
+                checkActivo.checked = (usuario.activo === 1 || usuario.activo === true);
+            }  
 
             document.getElementById('form-titulo').textContent = 'Editar Usuario';
             document.getElementById('btn-guardar').textContent = 'Actualizar';
             document.getElementById('btn-cancelar').classList.remove('hidden');
+            document.getElementById('btn-borrar').classList.remove('hidden'); // Muestra el botón de borrar
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function limpiarFormulario() {
             document.getElementById('form-usuario').reset();
             document.getElementById('usuario-id').value = '';
+            const checkActivo = document.getElementById('activo');
+            if (checkActivo) {
+                checkActivo.checked = true;
+            }
             document.getElementById('form-titulo').textContent = 'Nuevo Usuario';
             document.getElementById('btn-guardar').textContent = 'Guardar';
             document.getElementById('btn-cancelar').classList.add('hidden');
+            document.getElementById('btn-borrar').classList.add('hidden'); // Oculta el botón de borrar
         }
-
         
-        // 🕒 Forzar la limpieza un instante después de cargar para evitar el autocompletado agresivo del navegador
         setTimeout(() => {
             limpiarFormulario();
         }, 100);
 
-        // Cargar listado al abrir
         cargarUsuarios();
-
     </script>
+</body>
+</html>

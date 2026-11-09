@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuadrante Semanal de Asignaciones</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-100 min-h-screen">
+    
+    <!-- Navbar superior unificada -->
+    <header class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-sm">
+                    <img src="/Logo_Logos.png" alt="Logotipo" class="w-10 h-10 object-contain">
+                </div>
+                <h1 class="text-xl font-bold text-slate-800">📅 Cuadrante Semanal de Asignaciones</h1>
+            </div>
+            <div class="flex items-center gap-4">
+                <a href="/dashboard.html" class="text-sm font-semibold text-blue-600 hover:underline">← Volver al Panel</a>
+                <span id="info-usuario" class="text-sm font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg">Cargando...</span>
+                <button onclick="cerrarSesion()" class="bg-red-50 text-red-600 text-sm font-semibold px-4 py-2 rounded-lg hover:bg-red-100 transition">
+                    Cerrar Sesión
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenido principal -->
+    <main class="w-full mx-auto p-4 sm:p-6 space-y-6">
+        
+        <!-- Controles de semana, filtro de profesor y botones -->
+        <div class="bg-white p-4 rounded-xl shadow-md flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Semana (Lunes):</label>
+                    <input type="date" id="filtro-semana" onchange="validarYCambiarSemana(this)" onkeydown="return false;" class="px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200">
+                </div>
+                <!-- Contenedor del filtro de profesor -->
+                <div id="contenedor-filtro-profesor">
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Filtrar Profesor:</label>
+                    <select id="filtro-profesor" onchange="renderizarCuadrante()" class="px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <!-- Dinámico -->
+                    </select>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <!-- Botón Copiar Semana (Se oculta si no es admin / admin_profesor) -->
+                <button id="btn-copiar-semana" onclick="abrirModalCopiar()" class="bg-amber-600 text-white text-xs font-semibold px-4 py-2.5 rounded-lg hover:bg-amber-700 transition shadow-sm">
+                    📋 Copiar Semana
+                </button>
+                <button onclick="guardarAsignaciones()" class="bg-blue-600 text-white text-xs font-semibold px-5 py-2.5 rounded-lg hover:bg-blue-700 transition shadow-sm">
+                    💾 Guardar Cambios
+                </button>
+            </div>
+        </div>
+
+        <!-- Contenedor de Tablas por Profesor -->
+        <div id="contenedor-tablas" class="space-y-6">
+            <!-- Dinámico -->
+        </div>
+    </main>
+
+    <!-- Modal para Copiar Semana -->
+    <div id="modal-copiar" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4">
+            <div class="flex justify-between items-center pb-3 border-b">
+                <h3 class="text-lg font-bold text-slate-800">📋 Copiar Asignaciones entre Semanas</h3>
+                <button onclick="cerrarModalCopiar()" class="text-slate-400 hover:text-slate-600 font-bold text-xl">&times;</button>
+            </div>
+
+            <div class="space-y-3">
+                <p class="text-xs text-slate-500">Selecciona la fecha del Lunes de origen y la fecha del Lunes de destino. Se copiarán los alumnos y sus códigos de tarifa, pero no los estados de asistencia.</p>
+                
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Semana de Origen (Lunes):</label>
+                    <input type="date" id="modal-origen" onchange="validarInputLunes(this)" onkeydown="return false;" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Semana de Destino (Lunes):</label>
+                    <input type="date" id="modal-destino" onchange="validarInputLunes(this)" onkeydown="return false;" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-2 pt-3 border-t">
+                <button onclick="cerrarModalCopiar()" class="bg-slate-200 text-slate-700 text-xs font-semibold px-4 py-2 rounded-lg hover:bg-slate-300 transition">
+                    Cancelar
+                </button>
+                <button onclick="ejecutarCopiaSemanaModal()" class="bg-amber-600 text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-amber-700 transition shadow-sm">
+                    Confirmar Copia
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const usuarioGuardado = JSON.parse(localStorage.getItem('usuario') || '{}');
+        document.getElementById('info-usuario').textContent = `👤 ${usuarioGuardado.nombre} (${usuarioGuardado.rol.toUpperCase()})`;
+
+        const esAdminOGestion = usuarioGuardado.rol === 'admin' || usuarioGuardado.rol === 'admin_profesor';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!esAdminOGestion) {
+                const btnCopiar = document.getElementById('btn-copiar-semana');
+                if (btnCopiar) btnCopiar.style.display = 'none';
+            }
+
+            calcularSemanaInicial();
+            inicializar();
+        });
+
+        function cerrarSesion() {
+            fetch('/api/logout', { method: 'POST' }).finally(() => {
+                localStorage.removeItem('usuario');
+                window.location.replace('/index.html');
+            });
+        }
+
+        let usuariosActivos = [];
+        let alumnosActivos = [];
+        let tarifasGlobales = [];
+        let asignacionesActuales = [];
+
+        const franjasHorarias = [
+            "09:00 - 10:00", "10:00 - 11:00", "11:00 - 12:00", 
+            "12:00 - 13:00", "13:00 - 14:00", "14:00 - 15:00", 
+            "15:30 - 16:30", "16:30 - 17:30", "17:30 - 18:30", 
+            "18:30 - 19:30", "19:30 - 20:30"
+        ];
+
+        function calcularSemanaInicial() {
+            const hoy = new Date();
+            const diaSemana = hoy.getDay(); 
+
+            let lunes = new Date(hoy);
+            if (diaSemana === 0) { 
+                lunes.setDate(hoy.getDate() + 1);
+            } else if (diaSemana === 6) { 
+                lunes.setDate(hoy.getDate() + 2);
+            } else { 
+                const diff = hoy.getDate() - diaSemana + 1;
+                lunes.setDate(diff);
+            }
+
+            const inputSemana = document.getElementById('filtro-semana');
+            inputSemana.value = formatearFechaIsoLocal(lunes);
+            actualizarColorInputSemana(inputSemana);
+        }
+
+        function formatearFechaIsoLocal(fecha) {
+            const yyyy = fecha.getFullYear();
+            const mm = String(fecha.getMonth() + 1).padStart(2, '0');
+            const dd = String(fecha.getDate()).padStart(2, '0');
+            return `${yyyy}-${mm}-${dd}`;
+        }
+
+        function obtenerLunesDeFecha(fechaObj) {
+            const d = new Date(fechaObj);
+            const dia = d.getDay();
+            const diff = d.getDate() - dia + (dia === 0 ? -6 : 1);
+            return new Date(d.setDate(diff));
+        }
+
+        function validarYCambiarSemana(input) {
+            validarInputLunes(input);
+            actualizarColorInputSemana(input);
+            cargarDatosServidor();
+        }
+
+        function validarInputLunes(input) {
+            const val = input.value;
+            if (!val) return;
+
+            const [year, month, day] = val.split('-').map(Number);
+            const fechaSeleccionada = new Date(year, month - 1, day);
+            
+            const lunesCorrespondiente = obtenerLunesDeFecha(fechaSeleccionada);
+            input.value = formatearFechaIsoLocal(lunesCorrespondiente);
+        }
+
+        function obtenerClasesColorSemana(semanaLunesIso) {
+            if (!semanaLunesIso) return 'bg-white text-slate-700 border-slate-300';
+
+            const [y, m, d] = semanaLunesIso.split('-').map(Number);
+            const fechaLunesSeleccionado = new Date(y, m - 1, d).setHours(0,0,0,0);
+
+            const hoy = new Date();
+            const diaHoySemana = hoy.getDay(); 
+            const diffActual = hoy.getDate() - diaHoySemana + (diaHoySemana === 0 ? -6 : 1);
+            const lunesSemanaActual = new Date(hoy.getFullYear(), hoy.getMonth(), diffActual).setHours(0,0,0,0);
+
+            if (fechaLunesSeleccionado < lunesSemanaActual) {
+                return 'bg-red-50 text-red-700 border-red-300';
+            } else if (fechaLunesSeleccionado === lunesSemanaActual) {
+                if (diaHoySemana === 0 || diaHoySemana === 6) {
+                    return 'bg-red-50 text-red-700 border-red-300';
+                } else {
+                    return 'bg-emerald-50 text-emerald-700 border-emerald-300';
+                }
+            } else {
+                return 'bg-white text-slate-700 border-slate-300';
+            }
+        }
+
+        function actualizarColorInputSemana(input) {
+            const clasesColor = obtenerClasesColorSemana(input.value);
+            input.className = `px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200 ${clasesColor}`;
+        }
+
+        async function inicializar() {
+            try {
+                const [resUsers, resAlumnos, resTarifas] = await Promise.all([
+                    fetch('/api/usuarios'),
+                    fetch('/api/alumnos'),
+                    fetch('/api/tarifas')
+                ]);
+
+                const usuarios = await resUsers.json();
+                const alumnos = await resAlumnos.json();
+                
+                try {
+                    if (resTarifas.ok) {
+                        tarifasGlobales = await resTarifas.json();
+                    }
+                } catch(e) { 
+                    tarifasGlobales = []; 
+                }
+
+                usuariosActivos = usuarios.filter(u => u.activo === 1 && u.rol !== 'admin');
+                alumnosActivos = alumnos.filter(a => a.activo === 1);
+
+                const selectFiltro = document.getElementById('filtro-profesor');
+                selectFiltro.innerHTML = '';
+
+                if (esAdminOGestion) {
+                    selectFiltro.innerHTML += `<option value="todos">-- Todos los Profesores --</option>`;
+                    usuariosActivos.forEach(u => {
+                        selectFiltro.innerHTML += `<option value="${u.id}">${u.nombre} (${u.email})</option>`;
+                    });
+                } else {
+                    // Cargar todos los usuarios activos pero asegurar que aparezca el propio profesor y bloquear el selector
+                    usuariosActivos.forEach(u => {
+                        selectFiltro.innerHTML += `<option value="${u.id}">${u.nombre} (${u.email})</option>`;
+                    });
+                    selectFiltro.value = usuarioGuardado.id;
+                    selectFiltro.disabled = true;
+                    selectFiltro.classList.add('bg-slate-100', 'text-slate-600', 'cursor-not-allowed');
+                }
+
+                actualizarColorInputSemana(document.getElementById('filtro-semana'));
+
+                await cargarDatosServidor();
+            } catch (error) {
+                console.error("Error al inicializar:", error);
+            }
+        }
+
+        async function cargarDatosServidor() {
+            const semana = document.getElementById('filtro-semana').value;
+            if (!semana) return;
+
+            try {
+                const res = await fetch(`/api/asignaciones?semana=${semana}`);
+                if (res.ok) {
+                    asignacionesActuales = await res.json();
+                } else {
+                    asignacionesActuales = [];
+                }
+            } catch (e) {
+                console.error("Error al cargar asignaciones", e);
+                asignacionesActuales = [];
+            }
+            renderizarCuadrante();
+        }
+
+        function obtenerDiasDeLaSemana(fechaBaseStr) {
+            const [year, month, day] = fechaBaseStr.split('-').map(Number);
+            const base = new Date(year, month - 1, day);
+            const dias = [];
+            const nombresDias = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
+
+            for (let i = 0; i < 5; i++) {
+                const d = new Date(base);
+                d.setDate(base.getDate() + i);
+                const fechaIso = formatearFechaIsoLocal(d);
+                const fechaFormateada = d.toLocaleDateString('es-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                
+                dias.push({
+                    nombre: nombresDias[i],
+                    fechaIso: fechaIso,
+                    titulo: `${nombresDias[i]}<br><span class="text-[10px] font-normal text-slate-500">${fechaFormateada}</span>`
+                });
+            }
+            return dias;
+        }
+
+        function obtenerTarifasActivasEnFecha(fechaIso) {
+            return tarifasGlobales.filter(t => {
+                const inicioValido = !t.fecha_inicio || t.fecha_inicio <= fechaIso;
+                const finValido = !t.fecha_fin || t.fecha_fin >= fechaIso;
+                const activo = t.activa === 1 || t.activo === 1 || t.activa === true || t.activa === undefined;
+                return inicioValido && finValido && activo;
+            });
+        }
+
+        function renderizarCuadrante() {
+            const semanaInput = document.getElementById('filtro-semana').value;
+            if (!semanaInput) return;
+
+            const diasSemana = obtenerDiasDeLaSemana(semanaInput);
+            const contenedor = document.getElementById('contenedor-tablas');
+            contenedor.innerHTML = '';
+
+            let profesoresAMostrar = [];
+            if (esAdminOGestion) {
+                const filtroProfesorId = document.getElementById('filtro-profesor').value;
+                profesoresAMostrar = filtroProfesorId === 'todos' 
+                    ? usuariosActivos 
+                    : usuariosActivos.filter(u => u.id == filtroProfesorId);
+            } else {
+                // Forzar de forma segura que el profesor solo se muestre a sí mismo usando comparación flexible
+                profesoresAMostrar = usuariosActivos.filter(u => u.id == usuarioGuardado.id);
+                if (profesoresAMostrar.length === 0) {
+                    profesoresAMostrar = [usuarioGuardado];
+                }
+            }
+
+            let optionsAlumnos = '<option value="">-- Alumno --</option>';
+            alumnosActivos.forEach(alumno => {
+                optionsAlumnos += `<option value="${alumno.id}">👤 ${alumno.nombre} ${alumno.apellidos}</option>`;
+            });
+
+            const clasesColorSemana = obtenerClasesColorSemana(semanaInput);
+            const disabledAttr = esAdminOGestion ? '' : 'disabled';
+            const bgDisabledStyle = esAdminOGestion ? '' : 'bg-slate-100 text-slate-500 cursor-not-allowed';
+
+            profesoresAMostrar.forEach(profesor => {
+                let htmlCabeceraDias = '';
+                diasSemana.forEach(d => {
+                    htmlCabeceraDias += `<th class="py-2.5 px-3 text-center border-b border-slate-200">${d.titulo}</th>`;
+                });
+
+                let htmlFilasFranjas = '';
+                franjasHorarias.forEach(franja => {
+                    let htmlCeldasDias = '';
+                    diasSemana.forEach(diaObj => {
+                        let selectsSlot = '';
+                        const tarifasDelDia = obtenerTarifasActivasEnFecha(diaObj.fechaIso);
+                        
+                        let optionsTarifas = '<option value="">Tarifa</option>';
+                        tarifasDelDia.forEach(t => {
+                            optionsTarifas += `<option value="${t.id}">${t.codigo}</option>`;
+                        });
+
+                        for (let slot = 1; slot <= 3; slot++) {
+                            selectsSlot += `
+                                <div class="flex items-center gap-1 mb-1">
+                                    <select data-profesor="${profesor.id}" data-fecha="${diaObj.fechaIso}" data-franja="${franja}" data-slot="${slot}" data-tipo="alumno"
+                                            onchange="validarDuplicados(this)" ${disabledAttr}
+                                            class="select-alumno w-[62%] px-1 py-1 text-[11px] border rounded focus:ring-1 focus:ring-blue-500 font-medium ${clasesColorSemana} ${bgDisabledStyle}">
+                                        ${optionsAlumnos}
+                                    </select>
+                                    <select data-profesor="${profesor.id}" data-fecha="${diaObj.fechaIso}" data-franja="${franja}" data-slot="${slot}" data-tipo="tarifa" ${disabledAttr}
+                                            class="select-tarifa w-[22%] px-0.5 py-1 text-[9px] border rounded focus:ring-1 focus:ring-blue-500 ${clasesColorSemana} ${bgDisabledStyle}">
+                                        ${optionsTarifas}
+                                    </select>
+                                    <select data-profesor="${profesor.id}" data-fecha="${diaObj.fechaIso}" data-franja="${franja}" data-slot="${slot}" data-tipo="asistencia"
+                                            class="select-asistencia w-[16%] px-0.5 py-1 text-[9px] border rounded focus:ring-1 focus:ring-blue-500 font-semibold ${clasesColorSemana}">
+                                        <option value="">--</option>
+                                        <option value="na">NA</option>
+                                        <option value="nv">NV</option>
+                                        <option value="rec">REC</option>
+                                    </select>
+                                </div>
+                            `;
+                        }
+                        htmlCeldasDias += `<td class="py-2 px-1.5 border-t-2 border-b border-slate-200 bg-slate-50/70 align-top">${selectsSlot}</td>`;
+                    });
+
+                    htmlFilasFranjas += `
+                        <tr class="hover:bg-blue-50/40 border-t-2 border-slate-200 bg-slate-50/60">
+                            <td class="py-3 px-2 font-mono text-[11px] font-bold text-blue-700 bg-slate-100/90 border-t-2 border-b border-slate-200 whitespace-nowrap w-24 text-center">
+                                ${franja}
+                            </td>
+                            ${htmlCeldasDias}
+                        </tr>
+                    `;
+                });
+
+                contenedor.innerHTML += `
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden border border-slate-200 mb-6">
+                        <div class="bg-slate-100 px-4 py-3 border-b border-slate-200 flex justify-between items-center">
+                            <h3 class="font-bold text-slate-800 text-sm">👨‍🏫 Profesor: ${profesor.nombre} <span class="text-xs font-normal text-slate-500">(${profesor.email})</span></h3>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse min-w-[900px]">
+                                <thead>
+                                    <tr class="bg-slate-100 text-slate-700 text-xs uppercase font-semibold">
+                                        <th class="py-3 px-2 w-24 text-center border-b-2 border-slate-300">Franja Horaria</th>
+                                        ${htmlCabeceraDias}
+                                    </tr>
+                                </thead>
+                                <tbody class="text-slate-700 text-sm">
+                                    ${htmlFilasFranjas}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            });
+
+            // Rellenar selects con datos de la BD utilizando comparación flexible (==)
+            setTimeout(() => {
+                const contadorSlots = {};
+                document.querySelectorAll('.select-alumno').forEach(sel => {
+                    const profId = sel.getAttribute('data-profesor');
+                    const fecha = sel.getAttribute('data-fecha');
+                    const franja = sel.getAttribute('data-franja');
+                    const slot = sel.getAttribute('data-slot');
+                    const clave = `${profId}_${fecha}_${franja}`;
+
+                    contadorSlots[clave] = (contadorSlots[clave] || 0);
+                    const indexSlot = contadorSlots[clave];
+                    contadorSlots[clave]++;
+
+                    const encontrados = asignacionesActuales.filter(a => String(a.usuario_id) === String(profId) && a.fecha == fecha && a.franja == franja);
+                    if (encontrados[indexSlot]) {
+                        sel.value = encontrados[indexSlot].alumno_id;
+                        
+                        const selTarifa = document.querySelector(`.select-tarifa[data-profesor="${profId}"][data-fecha="${fecha}"][data-franja="${franja}"][data-slot="${slot}"]`);
+                        if (selTarifa && encontrados[indexSlot].tarifa_id) {
+                            selTarifa.value = encontrados[indexSlot].tarifa_id;
+                        }
+
+                        const selAsistencia = document.querySelector(`.select-asistencia[data-profesor="${profId}"][data-fecha="${fecha}"][data-franja="${franja}"][data-slot="${slot}"]`);
+                        if (selAsistencia && encontrados[indexSlot].asistencia) {
+                            selAsistencia.value = encontrados[indexSlot].asistencia;
+                        }
+                    }
+                });
+            }, 50);
+        }
+
+        function validarDuplicados(selectActual) {
+            const alumnoId = selectActual.value;
+            const fechaActual = selectActual.getAttribute('data-fecha');
+            const franjaActual = selectActual.getAttribute('data-franja');
+
+            if (!alumnoId) return;
+
+            let repetido = false;
+            document.querySelectorAll('.select-alumno').forEach(sel => {
+                if (sel !== selectActual && sel.value == alumnoId && 
+                    sel.getAttribute('data-fecha') === fechaActual && 
+                    sel.getAttribute('data-franja') === franjaActual) {
+                    repetido = true;
+                }
+            });
+
+            if (repetido) {
+                alert("⚠️ Este alumno ya está asignado a otro profesor en esta misma fecha y franja horaria.");
+                selectActual.value = "";
+            }
+        }
+
+        async function guardarAsignaciones() {
+            const semana = document.getElementById('filtro-semana').value;
+            if (!semana) {
+                alert("Por favor, selecciona una fecha de referencia.");
+                return;
+            }
+
+            const asignaciones = [];
+            const conteoProfesorFranjaFecha = {};
+            const slotsUnicos = {};
+
+            let faltaTarifa = false;
+            document.querySelectorAll('.select-alumno').forEach(sel => {
+                const profId = sel.getAttribute('data-profesor');
+                const fecha = sel.getAttribute('data-fecha');
+                const franja = sel.getAttribute('data-franja');
+                const slot = sel.getAttribute('data-slot');
+                const key = `${profId}_${fecha}_${franja}_${slot}`;
+
+                const selTarifa = document.querySelector(`.select-tarifa[data-profesor="${profId}"][data-fecha="${fecha}"][data-franja="${franja}"][data-slot="${slot}"]`);
+
+                if (sel.value && (!selTarifa || !selTarifa.value)) {
+                    faltaTarifa = true;
+                    selTarifa.classList.add('ring-2', 'ring-red-500');
+                } else if (selTarifa) {
+                    selTarifa.classList.remove('ring-2', 'ring-red-500');
+                }
+
+                if (!slotsUnicos[key]) {
+                    slotsUnicos[key] = {
+                        usuario_id: profId,
+                        fecha: fecha,
+                        franja: franja,
+                        alumno_id: sel.value,
+                        tarifa_id: selTarifa ? selTarifa.value || null : null,
+                        asistencia: ''
+                    };
+                } else {
+                    slotsUnicos[key].alumno_id = sel.value;
+                    slotsUnicos[key].tarifa_id = selTarifa ? selTarifa.value || null : null;
+                }
+            });
+
+            if (faltaTarifa) {
+                alert("❌ Hay uno o más alumnos seleccionados que no tienen una tarifa asignada. Por favor, selecciona una tarifa para cada alumno.");
+                return;
+            }
+
+            document.querySelectorAll('.select-tarifa').forEach(sel => {
+                const profId = sel.getAttribute('data-profesor');
+                const fecha = sel.getAttribute('data-fecha');
+                const franja = sel.getAttribute('data-franja');
+                const slot = sel.getAttribute('data-slot');
+                const key = `${profId}_${fecha}_${franja}_${slot}`;
+                if (slotsUnicos[key]) slotsUnicos[key].tarifa_id = sel.value || null;
+            });
+
+            document.querySelectorAll('.select-asistencia').forEach(sel => {
+                const profId = sel.getAttribute('data-profesor');
+                const fecha = sel.getAttribute('data-fecha');
+                const franja = sel.getAttribute('data-franja');
+                const slot = sel.getAttribute('data-slot');
+                const key = `${profId}_${fecha}_${franja}_${slot}`;
+                if (slotsUnicos[key]) slotsUnicos[key].asistencia = sel.value;
+            });
+
+            for (let key in slotsUnicos) {
+                const item = slotsUnicos[key];
+                if (item.alumno_id) {
+                    const claveProfFranja = `${item.usuario_id}_${item.fecha}_${item.franja}`;
+                    conteoProfesorFranjaFecha[claveProfFranja] = (conteoProfesorFranjaFecha[claveProfFranja] || 0) + 1;
+                    asignaciones.push(item);
+                }
+            }
+
+            for (let clave in conteoProfesorFranjaFecha) {
+                if (conteoProfesorFranjaFecha[clave] > 3) {
+                    alert("❌ Un profesor no puede tener más de 3 alumnos asignados en la misma fecha y franja horaria.");
+                    return;
+                }
+            }
+
+            try {
+                const respuesta = await fetch('/api/asignaciones/guardar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ semana, asignaciones })
+                });
+
+                const resultado = await respuesta.json();
+                if (respuesta.ok) {
+                    alert("✅ ¡Asignaciones guardadas correctamente en la base de datos!");
+                    cargarDatosServidor();
+                } else {
+                    alert("❌ Error: " + resultado.error);
+                }
+            } catch (error) {
+                alert("❌ Error de conexión al guardar.");
+            }
+        }
+
+        function abrirModalCopiar() {
+            if (!esAdminOGestion) return;
+
+            const semanaActualEnPantalla = document.getElementById('filtro-semana').value;
+            if (!semanaActualEnPantalla) {
+                alert("Por favor, selecciona primero una semana en pantalla.");
+                return;
+            }
+
+            const [year, month, day] = semanaActualEnPantalla.split('-').map(Number);
+            const fechaOrigen = new Date(year, month - 1, day);
+            
+            const fechaDestino = new Date(fechaOrigen);
+            fechaDestino.setDate(fechaOrigen.getDate() + 7); 
+            
+            const semanaSiguienteIso = formatearFechaIsoLocal(fechaDestino);
+
+            document.getElementById('modal-origen').value = semanaActualEnPantalla;
+            document.getElementById('modal-destino').value = semanaSiguienteIso;
+
+            document.getElementById('modal-copiar').classList.remove('hidden');
+        }
+
+        function cerrarModalCopiar() {
+            document.getElementById('modal-copiar').classList.add('hidden');
+        }
+
+        async function ejecutarCopiaSemanaModal() {
+            const semanaOrigen = document.getElementById('modal-origen').value;
+            const semanaDestino = document.getElementById('modal-destino').value;
+
+            if (!semanaOrigen || !semanaDestino) {
+                alert("❌ Por favor, selecciona ambas fechas.");
+                return;
+            }
+
+            const inputOrigen = document.getElementById('modal-origen');
+            const inputDestino = document.getElementById('modal-destino');
+            validarInputLunes(inputOrigen);
+            validarInputLunes(inputDestino);
+
+            const destIso = inputDestino.value;
+
+            const [yDest, mDest, dDest] = destIso.split('-').map(Number);
+            const timeDestino = new Date(yDest, mDest - 1, dDest).setHours(0,0,0,0);
+
+            const hoy = new Date();
+            const diaHoySemana = hoy.getDay(); 
+            const diffActual = hoy.getDate() - diaHoySemana + (diaHoySemana === 0 ? -6 : 1);
+            const timeLunesActual = new Date(hoy.getFullYear(), hoy.getMonth(), diffActual).setHours(0,0,0,0);
+
+            if (timeDestino < timeLunesActual) {
+                alert("❌ No se puede copiar asignaciones a una semana pasada.");
+                return;
+            }
+
+            if (timeDestino === timeLunesActual) {
+                try {
+                    const resCheck = await fetch(`/api/asignaciones?semana=${destIso}`);
+                    if (resCheck.ok) {
+                        const datosActuales = await resCheck.json();
+                        if (datosActuales.length > 0) {
+                            alert("❌ No se puede sobrescribir la semana actual ya que esta ya tiene asignaciones definidas.");
+                            return;
+                        }
+                    }
+                } catch (e) {
+                    console.error("Error al verificar la semana actual", e);
+                }
+            }
+
+            if (confirm(`⚠️ ¿Estás seguro de copiar las asignaciones y tarifas de la semana del ${inputOrigen.value} a la del ${destIso}?\n\nLos estados de asistencia no se copiarán.`)) {
+                try {
+                    const res = await fetch('/api/asignaciones/copiar', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ semanaOrigen: inputOrigen.value, semanaDestino: destIso })
+                    });
+                    const data = await res.json();
+                    
+                    if (res.ok) {
+                        alert("✅ ¡Semana copiada con éxito!");
+                        cerrarModalCopiar();
+                        document.getElementById('filtro-semana').value = destIso;
+                        actualizarColorInputSemana(document.getElementById('filtro-semana'));
+                        cargarDatosServidor();
+                    } else {
+                        alert("❌ Error: " + (data.error || 'No se pudo completar la copia'));
+                    }
+                } catch (e) {
+                    alert("❌ Error de conexión al copiar la semana.");
+                }
+            }
+        }
+    </script>
+</body>
+</html>
