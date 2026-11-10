@@ -304,8 +304,8 @@ app.post('/api/asignaciones/guardar', (req, res) => {
     for (const a of asignaciones) {
         const claveProf = `${a.usuario_id}_${a.fecha}_${a.franja}`;
         conteoProfesorFranjaFecha[claveProf] = (conteoProfesorFranjaFecha[claveProf] || 0) + 1;
-        if (conteoProfesorFranjaFecha[claveProf] > 3) {
-            return res.status(400).json({ error: 'Un profesor no puede tener más de 3 alumnos en la misma fecha y franja horaria.' });
+        if (conteoProfesorFranjaFecha[claveProf] > 6) {
+            return res.status(400).json({ error: 'Un profesor no puede tener más de 6 alumnos en la misma fecha y franja horaria.' });
         }
     }
 
@@ -363,7 +363,7 @@ app.post('/api/asignaciones/copiar', (req, res) => {
             if (err) return res.status(500).json({ error: 'Error al limpiar semana destino' });
 
             // 2. Leemos las asignaciones de la semana origen
-            db.all(`SELECT usuario_id, alumno_id, fecha, franja, tarifa_id FROM asignaciones_semanales WHERE semana = ?`, [semanaOrigen], (err, rows) => {
+            db.all(`SELECT usuario_id, alumno_id, fecha, franja, tarifa_id FROM asignaciones_semanales WHERE semana = ? AND asistencia NOT IN ('REC', 'ADEL', 'EXTR')`, [semanaOrigen], (err, rows) => {
                 if (err) return res.status(500).json({ error: 'Error al leer la semana origen' });
 
                 if (rows.length === 0) {

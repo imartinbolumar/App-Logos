@@ -96,6 +96,49 @@ function inicializarTablas() {
             FOREIGN KEY (alumno_id) REFERENCES alumnos(id),
             FOREIGN KEY (tarifa_id) REFERENCES tarifas_servicios(id)
         )`);
+
+        // Tabla principal para guardar la cabecera de la Hoja de Pago por mes
+        db.run(`CREATE TABLE IF NOT EXISTS hojas_pago (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                mes TEXT NOT NULL, -- Formato 'YYYY-MM'
+                alumno_id INTEGER NOT NULL,
+                modo_pago TEXT DEFAULT NULL,
+                fecha_pago TEXT DEFAULT NULL,
+                
+                -- Conteo de tarifas de clases
+                ref_p INTEGER DEFAULT 0,
+                ref_s INTEGER DEFAULT 0,
+                ref_b INTEGER DEFAULT 0,
+                da INTEGER DEFAULT 0,
+                da_c INTEGER DEFAULT 0,
+                log INTEGER DEFAULT 0,
+                log_m INTEGER DEFAULT 0,
+                
+                -- Descuentos y totales de clases
+                num_clases INTEGER DEFAULT 0,
+                total_clases INTEGER DEFAULT 0,
+                pct_dto REAL DEFAULT 0.0000,
+                importe_clases REAL DEFAULT 0.00,
+                
+                -- 6 Campos de Terapias
+                terapia_1 INTEGER DEFAULT 0,
+                terapia_2 INTEGER DEFAULT 0,
+                terapia_3 INTEGER DEFAULT 0,
+                terapia_4 INTEGER DEFAULT 0,
+                terapia_5 INTEGER DEFAULT 0,
+                terapia_6 INTEGER DEFAULT 0,
+                importe_terapias REAL DEFAULT 0.00,
+                
+                -- Observaciones, Evaluación y Total Final
+                observaciones TEXT DEFAULT NULL,
+                evaluacion INTEGER DEFAULT 0,
+                total_final REAL DEFAULT 0.00,
+                
+                creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+                actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
+                
+                CONSTRAINT unique_mes_alumno UNIQUE (mes, alumno_id)
+            )`);
     });
 }
 

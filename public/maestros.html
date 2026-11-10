@@ -48,10 +48,15 @@
                 <button type="submit" class="w-full bg-blue-600 text-white text-xs font-semibold py-2 rounded-lg hover:bg-blue-700">Añadir Modo de Pago</button>
             </form>
 
-            <div class="overflow-x-auto">
+            <!-- Buscador Modos de Pago -->
+            <div class="mb-4">
+                <input type="text" id="buscador-modos-pago" oninput="filtrarModosPago()" placeholder="🔍 Buscar modo de pago..." class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            </div>
+
+            <div class="overflow-x-auto max-h-[380px] overflow-y-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
-                        <tr class="border-b text-slate-500 text-xs uppercase">
+                        <tr class="border-b text-slate-500 text-xs uppercase sticky top-0 bg-white">
                             <th class="py-2 px-3">Código</th>
                             <th class="py-2 px-3">Descripción</th>
                             <th class="py-2 px-3 text-center">Acción</th>
@@ -75,7 +80,12 @@
                 <button type="submit" class="bg-emerald-600 text-white text-xs font-semibold px-5 py-2 rounded-lg hover:bg-emerald-700">Añadir Centro</button>
             </form>
 
-            <div class="overflow-x-auto max-h-[450px] overflow-y-auto">
+            <!-- Buscador Centros Educativos -->
+            <div class="mb-4">
+                <input type="text" id="buscador-centros" oninput="filtrarCentros()" placeholder="🔍 Buscar centro educativo..." class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
+
+            <div class="overflow-x-auto max-h-[380px] overflow-y-auto">
                 <table class="w-full text-left border-collapse">
                     <thead>
                         <tr class="border-b text-slate-500 text-xs uppercase sticky top-0 bg-white">
@@ -109,35 +119,68 @@
             });
         }
 
+        let listaModosPagoGlobal = [];
+        let listaCentrosGlobal = [];
+
+        function normalizarTexto(texto) {
+            if (!texto) return '';
+            return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+        }
+
         async function cargarDatosMaestros() {
             try {
                 // Cargar Modos de Pago
                 const resMP = await fetch('/api/modos-pago');
-                const modos = await resMP.json();
-                document.getElementById('tabla-modos-pago').innerHTML = modos.map(m => `
-                    <tr class="border-b hover:bg-slate-50">
-                        <td class="py-2 px-3 font-bold">${m.codigo}</td>
-                        <td class="py-2 px-3">${m.descripcion}</td>
-                        <td class="py-2 px-3 text-center">
-                            <button onclick="eliminarModoPago('${m.codigo}')" class="text-red-600 hover:text-red-800 text-xs font-semibold bg-red-50 px-2.5 py-1 rounded transition">Eliminar</button>
-                        </td>
-                    </tr>
-                `).join('') || `<tr><td colspan="3" class="text-center text-slate-400 py-4">Sin registros</td></tr>`;
+                listaModosPagoGlobal = await resMP.json();
+                renderizarModosPago(listaModosPagoGlobal);
 
                 // Cargar Centros
                 const resC = await fetch('/api/centros');
-                const centros = await resC.json();
-                document.getElementById('tabla-centros').innerHTML = centros.map(c => `
-                    <tr class="border-b hover:bg-slate-50">
-                        <td class="py-2 px-3">${c.nombre}</td>
-                        <td class="py-2 px-3 text-center">
-                            <button onclick="eliminarCentro(${c.id})" class="text-red-600 hover:text-red-800 text-xs font-semibold bg-red-50 px-2.5 py-1 rounded transition">Eliminar</button>
-                        </td>
-                    </tr>
-                `).join('') || `<tr><td colspan="2" class="text-center text-slate-400 py-4">Sin registros</td></tr>`;
+                listaCentrosGlobal = await resC.json();
+                renderizarCentros(listaCentrosGlobal);
             } catch (e) {
                 console.error("Error al cargar maestros", e);
             }
+        }
+
+        function renderizarModosPago(modos) {
+            document.getElementById('tabla-modos-pago').innerHTML = modos.map(m => `
+                <tr class="border-b hover:bg-slate-50">
+                    <td class="py-2 px-3 font-bold">${m.codigo}</td>
+                    <td class="py-2 px-3">${m.descripcion}</td>
+                    <td class="py-2 px-3 text-center">
+                        <button onclick="eliminarModoPago('${m.codigo}')" class="text-red-600 hover:text-red-800 text-xs font-semibold bg-red-50 px-2.5 py-1 rounded transition">Eliminar</button>
+                    </td>
+                </tr>
+            `).join('') || `<tr><td colspan="3" class="text-center text-slate-400 py-4">Sin registros</td></tr>`;
+        }
+
+        function renderizarCentros(centros) {
+            document.getElementById('tabla-centros').innerHTML = centros.map(c => `
+                <tr class="border-b hover:bg-slate-50">
+                    <td class="py-2 px-3">${c.nombre}</td>
+                    <td class="py-2 px-3 text-center">
+                        <button onclick="eliminarCentro(${c.id})" class="text-red-600 hover:text-red-800 text-xs font-semibold bg-red-50 px-2.5 py-1 rounded transition">Eliminar</button>
+                    </td>
+                </tr>
+            `).join('') || `<tr><td colspan="2" class="text-center text-slate-400 py-4">Sin registros</td></tr>`;
+        }
+
+        function filtrarModosPago() {
+            const query = normalizarTexto(document.getElementById('buscador-modos-pago').value);
+            const filtrados = listaModosPagoGlobal.filter(m => 
+                normalizarTexto(m.codigo).includes(query) || 
+                normalizarTexto(m.descripcion).includes(query)
+            );
+            renderizarModosPago(filtrados);
+        }
+
+        function filtrarCentros() {
+            const query = normalizarTexto(document.getElementById('buscador-centros').value);
+            const filtrados = listaCentrosGlobal.filter(c => 
+                normalizarTexto(c.nombre).includes(query)
+            );
+            renderizarCentros(filtrados);
         }
 
         async function guardarModoPago(e) {
@@ -153,6 +196,7 @@
             if (res.ok) {
                 document.getElementById('mp-codigo').value = '';
                 document.getElementById('mp-descripcion').value = '';
+                document.getElementById('buscador-modos-pago').value = '';
                 cargarDatosMaestros();
             }
         }
@@ -179,6 +223,7 @@
             });
             if (res.ok) {
                 document.getElementById('centro-nombre').value = '';
+                document.getElementById('buscador-centros').value = '';
                 cargarDatosMaestros();
             } else {
                 alert("No se pudo guardar el centro (puede que ya exista).");

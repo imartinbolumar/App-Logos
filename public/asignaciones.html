@@ -8,42 +8,41 @@
 </head>
 <body class="bg-slate-100 min-h-screen">
     
-    <!-- Navbar superior unificada -->
-    <header class="bg-white shadow-sm">
-        <div class="w-full px-4 sm:px-8 py-4 flex justify-between items-center">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-sm">
-                    <img src="/Logo_Logos.png" alt="Logotipo" class="w-10 h-10 object-contain">
+    <!-- Contenedor Superior Fijo (Navbar + Controles) -->
+    <div class="sticky top-0 z-40 shadow-sm bg-slate-100">
+        <!-- Navbar superior unificada -->
+        <header class="bg-white shadow-sm border-b border-slate-200">
+            <div class="w-full px-4 sm:px-8 py-3.5 flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-sm">
+                        <img src="/Logo_Logos.png" alt="Logotipo" class="w-10 h-10 object-contain">
+                    </div>
+                    <h1 class="text-xl font-bold text-slate-800">📅 Cuadrante Semanal de Asignaciones</h1>
                 </div>
-                <h1 class="text-xl font-bold text-slate-800">📅 Cuadrante Semanal de Asignaciones</h1>
+                <div class="flex items-center gap-4">
+                    <a href="/dashboard.html" id="enlace-volver" class="text-sm font-semibold text-blue-600 hover:underline">← Volver al Panel</a>
+                    <span id="info-usuario" class="text-sm font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg">Cargando...</span>
+                    <button onclick="cerrarSesion()" class="bg-red-50 text-red-600 text-sm font-semibold px-4 py-2 rounded-lg hover:bg-red-100 transition">
+                        Cerrar Sesión
+                    </button>
+                </div>
             </div>
-            <div class="flex items-center gap-4">
-                <a href="/dashboard.html" class="text-sm font-semibold text-blue-600 hover:underline">← Volver al Panel</a>
-                <span id="info-usuario" class="text-sm font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg">Cargando...</span>
-                <button onclick="cerrarSesion()" class="bg-red-50 text-red-600 text-sm font-semibold px-4 py-2 rounded-lg hover:bg-red-100 transition">
-                    Cerrar Sesión
-                </button>
-            </div>
-        </div>
-    </header>
+        </header>
 
-    <!-- Contenido principal -->
-    <main class="w-full mx-auto p-4 sm:p-6 space-y-6">
-        
-        <!-- Controles de semana, filtro de profesor y botones -->
-        <div class="bg-white p-4 rounded-xl shadow-md flex flex-col md:flex-row justify-between items-center gap-4">
+        <!-- Controles de semana, filtro de profesor y botones (Fijos junto al navbar) -->
+        <div class="w-full px-4 sm:px-6 py-3 bg-white/95 backdrop-blur-md border-b border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4 shadow-sm">
             <div class="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1">Semana (Lunes):</label>
                     <div class="flex items-center gap-1.5">
                         <!-- Botón Semana Anterior -->
-                        <button onclick="cambiarSemana(-7)" title="Semana Anterior" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs px-2.5 py-2 rounded-lg transition shadow-sm">
+                        <button onclick="intentarCambiarSemana(-7)" title="Semana Anterior" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs px-2.5 py-2 rounded-lg transition shadow-sm">
                             ◀
                         </button>
                         <!-- Input de fecha -->
-                        <input type="date" id="filtro-semana" onchange="validarYCambiarSemana(this)" onkeydown="return false;" class="px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200">
+                        <input type="date" id="filtro-semana" onchange="intentarCambiarSemanaInput(this)" onkeydown="return false;" class="px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200">
                         <!-- Botón Semana Siguiente -->
-                        <button onclick="cambiarSemana(7)" title="Semana Siguiente" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs px-2.5 py-2 rounded-lg transition shadow-sm">
+                        <button onclick="intentarCambiarSemana(7)" title="Semana Siguiente" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs px-2.5 py-2 rounded-lg transition shadow-sm">
                             ▶
                         </button>
                     </div>
@@ -51,27 +50,59 @@
                 <!-- Contenedor del filtro de profesor -->
                 <div id="contenedor-filtro-profesor">
                     <label class="block text-xs font-semibold text-slate-700 mb-1">Filtrar Profesor:</label>
-                    <select id="filtro-profesor" onchange="renderizarCuadrante()" class="px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <select id="filtro-profesor" onchange="intentarCambiarProfesor(this)" class="px-3 py-2 text-sm border border-slate-300 rounded-lg bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
                         <!-- Dinámico -->
                     </select>
                 </div>
             </div>
             <div class="flex items-center gap-2">
-                <!-- Botón Copiar Semana (Se oculta si no es admin / admin_profesor) -->
+                <!-- Botón Limpiar Semana -->
+                <button id="btn-limpiar-semana" onclick="intentarLimpiarSemana()" class="bg-red-600 text-white text-xs font-semibold px-4 py-2.5 rounded-lg hover:bg-red-700 transition shadow-sm">
+                    🗑️ Limpiar Semana
+                </button>
+                <!-- Botón Copiar Semana -->
                 <button id="btn-copiar-semana" onclick="abrirModalCopiar()" class="bg-amber-600 text-white text-xs font-semibold px-4 py-2.5 rounded-lg hover:bg-amber-700 transition shadow-sm">
                     📋 Copiar Semana
                 </button>
-                <button onclick="guardarAsignaciones()" class="bg-blue-600 text-white text-xs font-semibold px-5 py-2.5 rounded-lg hover:bg-blue-700 transition shadow-sm">
+                <button onclick="guardarAsignaciones(true)" class="bg-blue-600 text-white text-xs font-semibold px-5 py-2.5 rounded-lg hover:bg-blue-700 transition shadow-sm">
                     💾 Guardar Cambios
                 </button>
             </div>
         </div>
+    </div>
 
+    <!-- Contenido principal -->
+    <main class="w-full mx-auto p-4 sm:p-6 space-y-6">
         <!-- Contenedor de Tablas por Profesor -->
         <div id="contenedor-tablas" class="space-y-6">
             <!-- Dinámico -->
         </div>
     </main>
+
+    <!-- Modal Unificado de Cambios Pendientes -->
+    <div id="modal-cambios-pendientes" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4">
+            <div class="flex justify-between items-center pb-3 border-b">
+                <h3 class="text-lg font-bold text-slate-800">⚠️ Cambios sin guardar</h3>
+            </div>
+
+            <p id="modal-texto-aviso" class="text-sm text-slate-600">
+                Tienes modificaciones pendientes en esta pantalla. ¿Qué deseas hacer antes de continuar?
+            </p>
+
+            <div class="flex flex-col sm:flex-row justify-end gap-2 pt-3 border-t">
+                <button id="modal-btn-cancelar" class="bg-slate-200 text-slate-700 text-xs font-semibold px-4 py-2.5 rounded-lg hover:bg-slate-300 transition">
+                    Cancelar
+                </button>
+                <button id="modal-btn-descartar" class="bg-red-50 text-red-600 text-xs font-semibold px-4 py-2.5 rounded-lg hover:bg-red-100 transition">
+                    Salir sin guardar
+                </button>
+                <button id="modal-btn-guardar" class="bg-blue-600 text-white text-xs font-semibold px-4 py-2.5 rounded-lg hover:bg-blue-700 transition shadow-sm">
+                    Guardar Cambios
+                </button>
+            </div>
+        </div>
+    </div>
 
     <!-- Modal para Copiar Semana -->
     <div id="modal-copiar" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden flex items-center justify-center z-50 p-4">
@@ -82,7 +113,7 @@
             </div>
 
             <div class="space-y-3">
-                <p class="text-xs text-slate-500">Selecciona la fecha del Lunes de origen y la fecha del Lunes de destino. Se copiarán los alumnos y sus códigos de tarifa, pero no los estados de asistencia.</p>
+                <p class="text-xs text-slate-500">Selecciona la fecha del Lunes de origen y la fecha del Lunes de destino. Se copiarán todos los alumnos y sus códigos de tarifa, omitiendo aquellos cuja asistencia sea REC, ADEL o EXTR. Los estados de asistencia no se copiarán.</p>
                 
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1">Semana de Origen (Lunes):</label>
@@ -116,13 +147,56 @@
             if (!esAdminOGestion) {
                 const btnCopiar = document.getElementById('btn-copiar-semana');
                 if (btnCopiar) btnCopiar.style.display = 'none';
+                const btnLimpiar = document.getElementById('btn-limpiar-semana');
+                if (btnLimpiar) btnLimpiar.style.display = 'none';
             }
 
             calcularSemanaInicial();
             inicializar();
+
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.relative')) {
+                    document.querySelectorAll('.dropdown-sugerencias').forEach(d => d.classList.add('hidden'));
+                }
+            });
+
+            window.addEventListener('beforeunload', (e) => {
+                if (hayCambiosSinGuardar) {
+                    e.preventDefault();
+                    e.returnValue = '';
+                }
+            });
+
+            const enlaceVolver = document.getElementById('enlace-volver');
+            if (enlaceVolver) {
+                enlaceVolver.addEventListener('click', (e) => {
+                    if (hayCambiosSinGuardar) {
+                        e.preventDefault();
+                        mostrarModalCambios((confirmado) => {
+                            if (confirmado) {
+                                hayCambiosSinGuardar = false;
+                                window.location.href = enlaceVolver.href;
+                            }
+                        }, true);
+                    }
+                });
+            }
         });
 
         function cerrarSesion() {
+            if (hayCambiosSinGuardar) {
+                mostrarModalCambios((confirmado) => {
+                    if (confirmado) {
+                        hayCambiosSinGuardar = false;
+                        ejecutarLogout();
+                    }
+                }, true);
+                return;
+            }
+            ejecutarLogout();
+        }
+
+        function ejecutarLogout() {
             fetch('/api/logout', { method: 'POST' }).finally(() => {
                 localStorage.removeItem('usuario');
                 window.location.replace('/index.html');
@@ -133,6 +207,57 @@
         let alumnosActivos = [];
         let tarifasGlobales = [];
         let asignacionesActuales = [];
+        let slotsExtraPorFranja = {}; 
+        
+        let hayCambiosSinGuardar = false;
+
+        // --- MOTOR DEL MODAL DE CAMBIOS PENDIENTES ---
+        function mostrarModalCambios(onAccionAceptada, mostrarBotonGuardar = true) {
+            const modal = document.getElementById('modal-cambios-pendientes');
+            const btnCancelar = document.getElementById('modal-btn-cancelar');
+            const btnDescartar = document.getElementById('modal-btn-descartar');
+            const btnGuardar = document.getElementById('modal-btn-guardar');
+
+            if (mostrarBotonGuardar) {
+                btnGuardar.classList.remove('hidden');
+            } else {
+                btnGuardar.classList.add('hidden');
+            }
+
+            modal.classList.remove('hidden');
+
+            const nuevoBtnCancelar = btnCancelar.cloneNode(true);
+            const nuevoBtnDescartar = btnDescartar.cloneNode(true);
+            const nuevoBtnGuardar = btnGuardar.cloneNode(true);
+            btnCancelar.parentNode.replaceChild(nuevoBtnCancelar, btnCancelar);
+            btnDescartar.parentNode.replaceChild(nuevoBtnDescartar, btnDescartar);
+            btnGuardar.parentNode.replaceChild(nuevoBtnGuardar, btnGuardar);
+
+            document.getElementById('modal-btn-cancelar').addEventListener('click', () => {
+                modal.classList.add('hidden');
+                if (typeof onAccionAceptada === 'function') {
+                    onAccionAceptada(false);
+                }
+            });
+
+            document.getElementById('modal-btn-descartar').addEventListener('click', () => {
+                modal.classList.add('hidden');
+                hayCambiosSinGuardar = false;
+                if (typeof onAccionAceptada === 'function') {
+                    onAccionAceptada(true);
+                }
+            });
+
+            document.getElementById('modal-btn-guardar').addEventListener('click', async () => {
+                const exito = await guardarAsignaciones(false);
+                if (exito) {
+                    modal.classList.add('hidden');
+                    if (typeof onAccionAceptada === 'function') {
+                        onAccionAceptada(true);
+                    }
+                }
+            });
+        }
 
         const franjasHorarias = [
             "09:00 - 10:00", "10:00 - 11:00", "11:00 - 12:00", 
@@ -140,6 +265,11 @@
             "15:30 - 16:30", "16:30 - 17:30", "17:30 - 18:30", 
             "18:30 - 19:30", "19:30 - 20:30"
         ];
+
+        function normalizarTexto(texto) {
+            if (!texto) return '';
+            return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+        }
 
         function calcularSemanaInicial() {
             const hoy = new Date();
@@ -174,8 +304,7 @@
             return new Date(d.setDate(diff));
         }
 
-        // Función para mover la semana 7 días hacia atrás (-7) o hacia adelante (+7)
-        function cambiarSemana(dias) {
+        function intentarCambiarSemana(dias) {
             const inputSemana = document.getElementById('filtro-semana');
             const valorActual = inputSemana.value;
             if (!valorActual) return;
@@ -184,14 +313,63 @@
             const fecha = new Date(year, month - 1, day);
             fecha.setDate(fecha.getDate() + dias);
 
-            inputSemana.value = formatearFechaIsoLocal(fecha);
-            validarYCambiarSemana(inputSemana);
+            const nuevaSemanaIso = formatearFechaIsoLocal(fecha);
+            verificarCambioSemana(nuevaSemanaIso);
         }
 
-        function validarYCambiarSemana(input) {
+        function intentarCambiarSemanaInput(input) {
             validarInputLunes(input);
-            actualizarColorInputSemana(input);
+            const nuevaSemanaIso = input.value;
+            verificarCambioSemana(nuevaSemanaIso);
+        }
+
+        function verificarCambioSemana(nuevaSemanaIso) {
+            const inputSemana = document.getElementById('filtro-semana');
+            const semanaActual = inputSemana.value;
+
+            if (nuevaSemanaIso === semanaActual) return;
+
+            if (hayCambiosSinGuardar) {
+                mostrarModalCambios((confirmado) => {
+                    if (confirmado) {
+                        aplicarCambioSemana(nuevaSemanaIso);
+                    } else {
+                        inputSemana.value = semanaActual;
+                    }
+                }, true);
+            } else {
+                aplicarCambioSemana(nuevaSemanaIso);
+            }
+        }
+
+        function aplicarCambioSemana(nuevaSemanaIso) {
+            const inputSemana = document.getElementById('filtro-semana');
+            inputSemana.value = nuevaSemanaIso;
+            actualizarColorInputSemana(inputSemana);
+            slotsExtraPorFranja = {}; 
+            hayCambiosSinGuardar = false;
             cargarDatosServidor();
+        }
+
+        function intentarCambiarProfesor(selectElement) {
+            const nuevoProfesorId = selectElement.value;
+            const profesorAnteriorId = selectElement.getAttribute('data-valor-anterior') || '';
+
+            if (nuevoProfesorId === profesorAnteriorId) return;
+
+            if (hayCambiosSinGuardar) {
+                mostrarModalCambios((confirmado) => {
+                    if (confirmado) {
+                        selectElement.setAttribute('data-valor-anterior', nuevoProfesorId);
+                        renderizarCuadrante();
+                    } else {
+                        selectElement.value = profesorAnteriorId;
+                    }
+                }, false);
+            } else {
+                selectElement.setAttribute('data-valor-anterior', nuevoProfesorId);
+                renderizarCuadrante();
+            }
         }
 
         function validarInputLunes(input) {
@@ -254,7 +432,7 @@
                 }
 
                 usuariosActivos = usuarios.filter(u => u.activo === 1 && u.rol !== 'admin');
-                alumnosActivos = alumnos.filter(a => a.activo === 1);
+                alumnosActivos = alumnos.filter(a => a.activo === 1 || a.activo === true || a.estado === 'activo');
 
                 const usuarioEncontrado = usuarios.find(u => u.email === usuarioGuardado.email || u.nombre === usuarioGuardado.nombre);
                 if (usuarioEncontrado) {
@@ -280,6 +458,8 @@
                     selectFiltro.classList.add('bg-slate-100', 'text-slate-600', 'cursor-not-allowed');
                 }
 
+                selectFiltro.setAttribute('data-valor-anterior', selectFiltro.value);
+
                 actualizarColorInputSemana(document.getElementById('filtro-semana'));
 
                 await cargarDatosServidor();
@@ -292,10 +472,38 @@
             const semana = document.getElementById('filtro-semana').value;
             if (!semana) return;
 
+            slotsExtraPorFranja = {}; 
+
             try {
                 const res = await fetch(`/api/asignaciones?semana=${semana}`);
                 if (res.ok) {
                     asignacionesActuales = await res.json();
+                    
+                    const conteoPorProfFranjaDia = {};
+                    asignacionesActuales.forEach(a => {
+                        if (a.alumno_id) {
+                            const claveDia = `${a.usuario_id}_${a.franja}_${a.fecha}`;
+                            conteoPorProfFranjaDia[claveDia] = (conteoPorProfFranjaDia[claveDia] || 0) + 1;
+                        }
+                    });
+
+                    const maxPorFranjaProf = {};
+                    for (let claveDia in conteoPorProfFranjaDia) {
+                        const partes = claveDia.split('_');
+                        const profId = partes[0];
+                        const franja = partes[1];
+                        const claveFranja = `${profId}_${franja}`;
+                        
+                        const total = conteoPorProfFranjaDia[claveDia];
+                        maxPorFranjaProf[claveFranja] = Math.max(maxPorFranjaProf[claveFranja] || 0, total);
+                    }
+
+                    for (let claveFranja in maxPorFranjaProf) {
+                        const maxAlumnos = maxPorFranjaProf[claveFranja];
+                        if (maxAlumnos > 3) {
+                            slotsExtraPorFranja[claveFranja] = maxAlumnos - 3;
+                        }
+                    }
                 } else {
                     asignacionesActuales = [];
                 }
@@ -303,6 +511,7 @@
                 console.error("Error al cargar asignaciones", e);
                 asignacionesActuales = [];
             }
+            hayCambiosSinGuardar = false;
             renderizarCuadrante();
         }
 
@@ -336,6 +545,110 @@
             });
         }
 
+        function agregarFilaExtra(profId, franja) {
+            const clave = `${profId}_${franja}`;
+            slotsExtraPorFranja[clave] = (slotsExtraPorFranja[clave] || 0) + 1;
+            hayCambiosSinGuardar = true;
+            renderizarCuadrante();
+        }
+
+        function marcarCambiosPendientes() {
+            hayCambiosSinGuardar = true;
+        }
+
+        function filtrarSugerenciasAlumno(input) {
+            const query = normalizarTexto(input.value);
+            const contenedorPadre = input.closest('.relative');
+            const dropdown = contenedorPadre.querySelector('.dropdown-sugerencias');
+
+            const profId = input.getAttribute('data-profesor');
+            const fecha = input.getAttribute('data-fecha');
+            const franja = input.getAttribute('data-franja');
+            const slot = input.getAttribute('data-slot');
+
+            if (query.length === 0) {
+                dropdown.innerHTML = '';
+                dropdown.classList.add('hidden');
+                
+                if (input.getAttribute('data-alumno-id')) {
+                    input.setAttribute('data-alumno-id', '');
+                    manejarCambioEstadoSlot(input, false);
+                    marcarCambiosPendientes();
+                }
+                return;
+            }
+
+            const filtrados = alumnosActivos.filter(a => {
+                const nombreCompleto1 = normalizarTexto(`${a.nombre} ${a.apellidos}`);
+                const nombreCompleto2 = normalizarTexto(`${a.apellidos}, ${a.nombre}`);
+                return nombreCompleto1.includes(query) || nombreCompleto2.includes(query);
+            });
+
+            if (filtrados.length === 0) {
+                dropdown.innerHTML = `<div class="px-3 py-2 text-slate-400 text-[11px]">No se encontraron alumnos</div>`;
+                dropdown.classList.remove('hidden');
+                return;
+            }
+
+            let html = '';
+            filtrados.forEach(a => {
+                const nombreMostrar = `${a.nombre} ${a.apellidos}`;
+                html += `<div onclick="seleccionarAlumnoSlot('${profId}', '${fecha}', '${franja}', '${slot}', '${a.id}', '${nombreMostrar.replace(/'/g, "\\'")}')" 
+                              class="px-3 py-1.5 hover:bg-blue-50 cursor-pointer text-slate-700 text-[11px] font-medium border-b border-slate-100 last:border-none">
+                            👤 ${nombreMostrar}
+                         </div>`;
+            });
+
+            dropdown.innerHTML = html;
+            dropdown.classList.remove('hidden');
+        }
+
+        function seleccionarAlumnoSlot(profId, fecha, franja, slot, alumnoId, nombreTexto) {
+            const input = document.querySelector(`.input-alumno[data-profesor="${profId}"][data-fecha="${fecha}"][data-franja="${franja}"][data-slot="${slot}"]`);
+            const dropdown = input.closest('.relative').querySelector('.dropdown-sugerencias');
+
+            input.value = nombreTexto;
+            input.setAttribute('data-alumno-id', alumnoId);
+            dropdown.classList.add('hidden');
+
+            validarDuplicados(input);
+            manejarCambioEstadoSlot(input, true);
+            marcarCambiosPendientes();
+        }
+
+        function manejarCambioEstadoSlot(inputAlumno, tieneAlumno) {
+            const profId = inputAlumno.getAttribute('data-profesor');
+            const fecha = inputAlumno.getAttribute('data-fecha');
+            const franja = inputAlumno.getAttribute('data-franja');
+            const slot = inputAlumno.getAttribute('data-slot');
+
+            const selectTarifa = document.querySelector(`.select-tarifa[data-profesor="${profId}"][data-fecha="${fecha}"][data-franja="${franja}"][data-slot="${slot}"]`);
+            const selectAsistencia = document.querySelector(`.select-asistencia[data-profesor="${profId}"][data-fecha="${fecha}"][data-franja="${franja}"][data-slot="${slot}"]`);
+
+            if (tieneAlumno) {
+                if (selectTarifa) {
+                    selectTarifa.disabled = false;
+                    selectTarifa.classList.remove('bg-slate-100', 'cursor-not-allowed', 'opacity-50');
+                }
+                if (selectAsistencia) {
+                    selectAsistencia.disabled = false;
+                    selectAsistencia.classList.remove('bg-slate-100', 'cursor-not-allowed', 'opacity-50');
+                }
+            } else {
+                if (selectTarifa) {
+                    selectTarifa.value = "";
+                    selectTarifa.disabled = true;
+                    selectTarifa.classList.add('bg-slate-100', 'cursor-not-allowed', 'opacity-50');
+                }
+                if (selectAsistencia) {
+                    selectAsistencia.value = "";
+                    selectAsistencia.disabled = true;
+                    selectAsistencia.classList.add('bg-slate-100', 'cursor-not-allowed', 'opacity-50');
+                    actualizarColorAsistencia(selectAsistencia);
+                }
+            }
+        }
+
         function renderizarCuadrante() {
             const semanaInput = document.getElementById('filtro-semana').value;
             if (!semanaInput) return;
@@ -357,11 +670,6 @@
                 }
             }            
             
-            let optionsAlumnos = '<option value="">-- Alumno --</option>';
-            alumnosActivos.forEach(alumno => {
-                optionsAlumnos += `<option value="${alumno.id}">👤 ${alumno.nombre} ${alumno.apellidos}</option>`;
-            });
-
             const clasesColorSemana = obtenerClasesColorSemana(semanaInput);
             const disabledAttr = esAdminOGestion ? '' : 'disabled';
             const bgDisabledStyle = esAdminOGestion ? '' : 'bg-slate-100 text-slate-500 cursor-not-allowed';
@@ -374,6 +682,15 @@
 
                 let htmlFilasFranjas = '';
                 franjasHorarias.forEach(franja => {
+                    const claveExtra = `${profesor.id}_${franja}`;
+                    const numExtras = slotsExtraPorFranja[claveExtra] || 0;
+                    const totalSlots = 3 + numExtras; 
+
+                    const partesHoras = franja.split(' - ');
+                    const franjaHtml = partesHoras.length === 2 
+                        ? `<span>${partesHoras[0]}</span><span class="block text-[9px] text-slate-400 font-normal leading-tight">-</span><span>${partesHoras[1]}</span>` 
+                        : franja;
+
                     let htmlCeldasDias = '';
                     diasSemana.forEach(diaObj => {
                         let selectsSlot = '';
@@ -384,35 +701,55 @@
                             optionsTarifas += `<option value="${t.id}">${t.codigo}</option>`;
                         });
 
-                        for (let slot = 1; slot <= 3; slot++) {
+                        for (let slot = 1; slot <= totalSlots; slot++) {
                             selectsSlot += `
-                                <div class="flex items-center gap-1 mb-1">
-                                    <select data-profesor="${profesor.id}" data-fecha="${diaObj.fechaIso}" data-franja="${franja}" data-slot="${slot}" data-tipo="alumno"
-                                            onchange="validarDuplicados(this)" ${disabledAttr}
-                                            class="select-alumno w-[62%] px-1 py-1 text-[11px] border rounded focus:ring-1 focus:ring-blue-500 font-medium ${clasesColorSemana} ${bgDisabledStyle}">
-                                        ${optionsAlumnos}
-                                    </select>
-                                    <select data-profesor="${profesor.id}" data-fecha="${diaObj.fechaIso}" data-franja="${franja}" data-slot="${slot}" data-tipo="tarifa" ${disabledAttr}
-                                            class="select-tarifa w-[22%] px-0.5 py-1 text-[9px] border rounded focus:ring-1 focus:ring-blue-500 ${clasesColorSemana} ${bgDisabledStyle}">
+                                <div class="flex items-center gap-1 mb-1 relative h-7">
+                                    <div class="w-[60%] relative h-full">
+                                        <input type="text" placeholder="🔍 Alumno..." autocomplete="off"
+                                               data-profesor="${profesor.id}" data-fecha="${diaObj.fechaIso}" data-franja="${franja}" data-slot="${slot}" data-tipo="alumno" data-alumno-id=""
+                                               oninput="filtrarSugerenciasAlumno(this)" ${disabledAttr}
+                                               class="input-alumno w-full h-full px-1.5 py-0.5 text-[11px] border rounded focus:ring-1 focus:ring-blue-500 font-medium ${clasesColorSemana} ${bgDisabledStyle}">
+                                        <div class="dropdown-sugerencias hidden absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg z-50 max-h-40 overflow-y-auto"></div>
+                                    </div>
+                                    
+                                    <select data-profesor="${profesor.id}" data-fecha="${diaObj.fechaIso}" data-franja="${franja}" data-slot="${slot}" data-tipo="tarifa" 
+                                            onchange="marcarCambiosPendientes()" disabled ${disabledAttr}
+                                            class="select-tarifa w-[20%] h-full px-0.5 py-0.5 text-[9px] border rounded focus:ring-1 focus:ring-blue-500 bg-slate-100 cursor-not-allowed opacity-50 ${clasesColorSemana} ${bgDisabledStyle}">
                                         ${optionsTarifas}
                                     </select>
+
                                     <select data-profesor="${profesor.id}" data-fecha="${diaObj.fechaIso}" data-franja="${franja}" data-slot="${slot}" data-tipo="asistencia"
-                                            class="select-asistencia w-[16%] px-0.5 py-1 text-[9px] border rounded focus:ring-1 focus:ring-blue-500 font-semibold ${clasesColorSemana}">
+                                            onchange="actualizarColorAsistencia(this); marcarCambiosPendientes();" disabled
+                                            class="select-asistencia w-[20%] h-full px-0.5 py-0.5 text-[9px] border rounded focus:ring-1 focus:ring-blue-500 font-semibold bg-slate-100 cursor-not-allowed opacity-50 ${clasesColorSemana}">
                                         <option value="">--</option>
-                                        <option value="na">NA</option>
-                                        <option value="nv">NV</option>
-                                        <option value="rec">REC</option>
+                                        <option value="NVA">NVA</option>
+                                        <option value="NVNA">NVNA</option>
+                                        <option value="REC">REC</option>
+                                        <option value="ADEL">ADEL</option>
+                                        <option value="EXTR">EXTR</option>
                                     </select>
                                 </div>
                             `;
                         }
+
                         htmlCeldasDias += `<td class="py-2 px-1.5 border-t-2 border-b border-slate-200 bg-slate-50/70 align-top">${selectsSlot}</td>`;
                     });
 
+                    const btnAnadirFranja = esAdminOGestion ? `
+                        <div class="mt-1.5 flex justify-center">
+                            <button onclick="agregarFilaExtra('${profesor.id}', '${franja}')" type="button" title="Añadir fila a toda la franja" class="w-6 h-6 rounded-full bg-blue-500 text-white text-xs font-bold hover:bg-blue-600 transition shadow flex items-center justify-center focus:outline-none">
+                                +
+                            </button>
+                        </div>
+                    ` : '';
+
                     htmlFilasFranjas += `
                         <tr class="hover:bg-blue-50/40 border-t-2 border-slate-200 bg-slate-50/60">
-                            <td class="py-3 px-2 font-mono text-[11px] font-bold text-blue-700 bg-slate-100/90 border-t-2 border-b border-slate-200 whitespace-nowrap w-24 text-center">
-                                ${franja}
+                            <td class="py-2 px-1 font-mono text-[13px] font-bold text-blue-700 bg-slate-100/90 border-t-2 border-b border-slate-200 whitespace-nowrap w-20 text-center align-middle">
+                                <div class="flex flex-col items-center justify-center leading-snug">
+                                    ${franjaHtml}
+                                </div>
+                                ${btnAnadirFranja}
                             </td>
                             ${htmlCeldasDias}
                         </tr>
@@ -428,7 +765,7 @@
                             <table class="w-full text-left border-collapse min-w-[900px]">
                                 <thead>
                                     <tr class="bg-slate-100 text-slate-700 text-xs uppercase font-semibold">
-                                        <th class="py-3 px-2 w-24 text-center border-b-2 border-slate-300">Franja Horaria</th>
+                                        <th class="py-3 px-2 w-20 text-center border-b-2 border-slate-300">Franja Horaria</th>
                                         ${htmlCabeceraDias}
                                     </tr>
                                 </thead>
@@ -442,104 +779,149 @@
             });
 
             setTimeout(() => {
-                const contadorSlots = {};
-                document.querySelectorAll('.select-alumno').forEach(sel => {
-                    const profId = sel.getAttribute('data-profesor');
-                    const fecha = sel.getAttribute('data-fecha');
-                    const franja = sel.getAttribute('data-franja');
-                    const slot = sel.getAttribute('data-slot');
-                    const clave = `${profId}_${fecha}_${franja}`;
+                document.querySelectorAll('.input-alumno').forEach(inputAlumno => {
+                    const profId = inputAlumno.getAttribute('data-profesor');
+                    const fecha = inputAlumno.getAttribute('data-fecha');
+                    const franja = inputAlumno.getAttribute('data-franja');
+                    const slot = inputAlumno.getAttribute('data-slot');
 
-                    contadorSlots[clave] = (contadorSlots[clave] || 0);
-                    const indexSlot = contadorSlots[clave];
-                    contadorSlots[clave]++;
+                    const encontradosMismaCelda = asignacionesActuales.filter(a => 
+                        String(a.usuario_id) === String(profId) && 
+                        String(a.fecha) === String(fecha) && 
+                        String(a.franja) === String(franja)
+                    );
 
-                    const encontrados = asignacionesActuales.filter(a => String(a.usuario_id) === String(profId) && a.fecha == fecha && a.franja == franja);
-                    if (encontrados[indexSlot]) {
-                        sel.value = encontrados[indexSlot].alumno_id;
-                        
-                        const selTarifa = document.querySelector(`.select-tarifa[data-profesor="${profId}"][data-fecha="${fecha}"][data-franja="${franja}"][data-slot="${slot}"]`);
-                        if (selTarifa && encontrados[indexSlot].tarifa_id) {
-                            selTarifa.value = encontrados[indexSlot].tarifa_id;
+                    const encontrado = encontradosMismaCelda.find(a => Number(a.slot_index) === Number(slot)) || encontradosMismaCelda[slot - 1];
+
+                    if (encontrado) {
+                        const alumnoObj = alumnosActivos.find(a => String(a.id) === String(encontrado.alumno_id));
+                        if (alumnoObj) {
+                            inputAlumno.value = `${alumnoObj.nombre} ${alumnoObj.apellidos}`;
+                            inputAlumno.setAttribute('data-alumno-id', alumnoObj.id);
                         }
 
+                        const selTarifa = document.querySelector(`.select-tarifa[data-profesor="${profId}"][data-fecha="${fecha}"][data-franja="${franja}"][data-slot="${slot}"]`);
                         const selAsistencia = document.querySelector(`.select-asistencia[data-profesor="${profId}"][data-fecha="${fecha}"][data-franja="${franja}"][data-slot="${slot}"]`);
-                        if (selAsistencia && encontrados[indexSlot].asistencia) {
-                            selAsistencia.value = encontrados[indexSlot].asistencia;
+
+                        if (esAdminOGestion && selTarifa) {
+                            selTarifa.disabled = false;
+                            selTarifa.classList.remove('bg-slate-100', 'cursor-not-allowed', 'opacity-50');
+                        }
+                        if (selAsistencia) {
+                            selAsistencia.disabled = false;
+                            selAsistencia.classList.remove('bg-slate-100', 'cursor-not-allowed', 'opacity-50');
+                        }
+
+                        if (selTarifa && encontrado.tarifa_id) {
+                            selTarifa.value = encontrado.tarifa_id;
+                        }
+
+                        if (selAsistencia && encontrado.asistencia) {
+                            selAsistencia.value = encontrado.asistencia;
+                            actualizarColorAsistencia(selAsistencia);
                         }
                     }
                 });
+                hayCambiosSinGuardar = false; 
             }, 50);
         }
 
-        function validarDuplicados(selectActual) {
-            const alumnoId = selectActual.value;
-            const fechaActual = selectActual.getAttribute('data-fecha');
-            const franjaActual = selectActual.getAttribute('data-franja');
+        function actualizarColorAsistencia(selectAsistencia) {
+            const valor = selectAsistencia.value;
+            const profId = selectAsistencia.getAttribute('data-profesor');
+            const fecha = selectAsistencia.getAttribute('data-fecha');
+            const franja = selectAsistencia.getAttribute('data-franja');
+            const slot = selectAsistencia.getAttribute('data-slot');
+
+            const inputAlumno = document.querySelector(`.input-alumno[data-profesor="${profId}"][data-fecha="${fecha}"][data-franja="${franja}"][data-slot="${slot}"]`);
+            const selectTarifa = document.querySelector(`.select-tarifa[data-profesor="${profId}"][data-fecha="${fecha}"][data-franja="${franja}"][data-slot="${slot}"]`);
+
+            [inputAlumno, selectTarifa, selectAsistencia].forEach(el => {
+                if (el) {
+                    el.classList.remove('!bg-red-200', '!text-red-900', '!border-red-400', 'font-bold');
+                }
+            });
+
+            if (valor === 'NVA' || valor === 'NVNA') {
+                [inputAlumno, selectTarifa, selectAsistencia].forEach(el => {
+                    if (el) {
+                        el.classList.add('!bg-red-200', '!text-red-900', '!border-red-400', 'font-bold');
+                    }
+                });
+            }
+        }
+
+        function validarDuplicados(inputActual) {
+            const alumnoId = inputActual.getAttribute('data-alumno-id');
+            const fechaActual = inputActual.getAttribute('data-fecha');
+            const franjaActual = inputActual.getAttribute('data-franja');
 
             if (!alumnoId) return;
 
             let repetido = false;
-            document.querySelectorAll('.select-alumno').forEach(sel => {
-                if (sel !== selectActual && sel.value == alumnoId && 
-                    sel.getAttribute('data-fecha') === fechaActual && 
-                    sel.getAttribute('data-franja') === franjaActual) {
+            document.querySelectorAll('.input-alumno').forEach(inp => {
+                if (inp !== inputActual && inp.getAttribute('data-alumno-id') == alumnoId && 
+                    inp.getAttribute('data-fecha') === fechaActual && 
+                    inp.getAttribute('data-franja') === franjaActual) {
                     repetido = true;
                 }
             });
 
             if (repetido) {
-                alert("⚠️ Este alumno ya está asignado a otro profesor en esta misma fecha y franja horaria.");
-                selectActual.value = "";
+                alert("⚠️ Este alumno ya está asignado en esta misma fecha y franja horaria (bien con este profesor o con otro usuario).");
+                inputActual.value = "";
+                inputActual.setAttribute('data-alumno-id', '');
+                manejarCambioEstadoSlot(inputActual, false);
             }
         }
 
-        async function guardarAsignaciones() {
+        async function guardarAsignaciones(mostrarAlertaExito = true) {
             const semana = document.getElementById('filtro-semana').value;
             if (!semana) {
                 alert("Por favor, selecciona una fecha de referencia.");
-                return;
+                return false;
             }
 
+            const selectFiltroProf = document.getElementById('filtro-profesor');
+            const profesorFiltradoId = selectFiltroProf ? selectFiltroProf.value : 'todos';
+
             const asignaciones = [];
-            const conteoProfesorFranjaFecha = {};
             const slotsUnicos = {};
 
             let faltaTarifa = false;
-            document.querySelectorAll('.select-alumno').forEach(sel => {
-                const profId = sel.getAttribute('data-profesor');
-                const fecha = sel.getAttribute('data-fecha');
-                const franja = sel.getAttribute('data-franja');
-                const slot = sel.getAttribute('data-slot');
+            document.querySelectorAll('.input-alumno').forEach(inputAlumno => {
+                const profId = inputAlumno.getAttribute('data-profesor');
+                const fecha = inputAlumno.getAttribute('data-fecha');
+                const franja = inputAlumno.getAttribute('data-franja');
+                const slot = inputAlumno.getAttribute('data-slot');
                 const key = `${profId}_${fecha}_${franja}_${slot}`;
 
+                const alumnoId = inputAlumno.getAttribute('data-alumno-id');
                 const selTarifa = document.querySelector(`.select-tarifa[data-profesor="${profId}"][data-fecha="${fecha}"][data-franja="${franja}"][data-slot="${slot}"]`);
 
-                if (sel.value && (!selTarifa || !selTarifa.value)) {
+                if (alumnoId && (!selTarifa || !selTarifa.value)) {
                     faltaTarifa = true;
                     selTarifa.classList.add('ring-2', 'ring-red-500');
                 } else if (selTarifa) {
                     selTarifa.classList.remove('ring-2', 'ring-red-500');
                 }
 
-                if (!slotsUnicos[key]) {
+                if (alumnoId) {
                     slotsUnicos[key] = {
                         usuario_id: profId,
                         fecha: fecha,
                         franja: franja,
-                        alumno_id: sel.value,
+                        slot_index: slot,
+                        alumno_id: alumnoId,
                         tarifa_id: selTarifa ? selTarifa.value || null : null,
                         asistencia: ''
                     };
-                } else {
-                    slotsUnicos[key].alumno_id = sel.value;
-                    slotsUnicos[key].tarifa_id = selTarifa ? selTarifa.value || null : null;
                 }
             });
 
             if (faltaTarifa) {
                 alert("❌ Hay uno o más alumnos seleccionados que no tienen una tarifa asignada. Por favor, selecciona una tarifa para cada alumno.");
-                return;
+                return false;
             }
 
             document.querySelectorAll('.select-tarifa').forEach(sel => {
@@ -563,41 +945,143 @@
             for (let key in slotsUnicos) {
                 const item = slotsUnicos[key];
                 if (item.alumno_id) {
-                    const claveProfFranja = `${item.usuario_id}_${item.fecha}_${item.franja}`;
-                    conteoProfesorFranjaFecha[claveProfFranja] = (conteoProfesorFranjaFecha[claveProfFranja] || 0) + 1;
                     asignaciones.push(item);
                 }
             }
 
-            for (let clave in conteoProfesorFranjaFecha) {
-                if (conteoProfesorFranjaFecha[clave] > 3) {
-                    alert("❌ Un profesor no puede tener más de 3 alumnos asignados en la misma fecha y franja horaria.");
-                    return;
-                }
+            let asignacionesFinales = [];
+            if (profesorFiltradoId !== 'todos') {
+                asignacionesFinales = asignacionesActuales.filter(a => String(a.usuario_id) !== String(profesorFiltradoId));
+                asignacionesFinales = asignacionesFinales.concat(asignaciones);
+            } else {
+                asignacionesFinales = asignaciones;
             }
 
             try {
                 const respuesta = await fetch('/api/asignaciones/guardar', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ semana, asignaciones })
+                    body: JSON.stringify({ 
+                        semana: semana, 
+                        profesorId: profesorFiltradoId,
+                        asignaciones: asignacionesFinales 
+                    })
                 });
 
                 const resultado = await respuesta.json();
                 if (respuesta.ok) {
-                    alert("✅ ¡Asignaciones guardadas correctamente en la base de datos!");
+                    hayCambiosSinGuardar = false;
+                    
+                    if (selectFiltroProf) {
+                        selectFiltroProf.setAttribute('data-valor-anterior', selectFiltroProf.value);
+                    }
+
+                    if (mostrarAlertaExito) {
+                        alert("✅ ¡Asignaciones guardadas correctamente en la base de datos!");
+                    }
                     cargarDatosServidor();
+                    return true;
                 } else {
                     alert("❌ Error: " + resultado.error);
+                    return false;
                 }
             } catch (error) {
                 alert("❌ Error de conexión al guardar.");
+                return false;
+            }
+        }
+
+        // --- FUNCIONALIDAD DE LIMPIAR SEMANA ---
+        function intentarLimpiarSemana() {
+            if (!esAdminOGestion) return;
+
+            const semanaSeleccionada = document.getElementById('filtro-semana').value;
+            if (!semanaSeleccionada) {
+                alert("Por favor, selecciona una semana.");
+                return;
+            }
+
+            const [y, m, d] = semanaSeleccionada.split('-').map(Number);
+            const timeSeleccionado = new Date(y, m - 1, d).setHours(0,0,0,0);
+
+            const hoy = new Date();
+            const diaHoySemana = hoy.getDay(); 
+            const diffActual = hoy.getDate() - diaHoySemana + (diaHoySemana === 0 ? -6 : 1);
+            const timeLunesActual = new Date(hoy.getFullYear(), hoy.getMonth(), diffActual).setHours(0,0,0,0);
+
+            if (timeSeleccionado <= timeLunesActual) {
+                alert("❌ No se permite limpiar semanas pasadas ni la semana actual.");
+                return;
+            }
+
+            if (hayCambiosSinGuardar) {
+                mostrarModalCambios((confirmado) => {
+                    if (confirmado) {
+                        ejecutarLimpiarSemanaConfirmacion(semanaSeleccionada);
+                    }
+                }, true);
+            } else {
+                ejecutarLimpiarSemanaConfirmacion(semanaSeleccionada);
+            }
+        }
+
+        function ejecutarLimpiarSemanaConfirmacion(semana) {
+            const selectFiltroProf = document.getElementById('filtro-profesor');
+            const profesorId = selectFiltroProf ? selectFiltroProf.value : 'todos';
+
+            const textoProfesor = profesorId === 'todos' 
+                ? 'de todos los profesores' 
+                : `para el profesor seleccionado`;
+
+            if (confirm(`⚠️ ¿Estás seguro de limpiar por completo la semana del ${semana} (${textoProfesor})?\n\nSe eliminarán todos los alumnos, tarifas y asistencias de esta vista. Esta acción no se puede deshacer.`)) {
+                
+                let nuevasAsignaciones = [];
+                if (profesorId !== 'todos') {
+                    nuevasAsignaciones = asignacionesActuales.filter(a => String(a.usuario_id) !== String(profesorId));
+                } else {
+                    nuevasAsignaciones = []; 
+                }
+
+                fetch('/api/asignaciones/guardar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        semana: semana, 
+                        profesorId: profesorId,
+                        asignaciones: nuevasAsignaciones 
+                    })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.error) {
+                        alert("❌ Error al limpiar: " + data.error);
+                    } else {
+                        alert("✅ ¡Semana limpiada con éxito!");
+                        cargarDatosServidor();
+                    }
+                })
+                .catch(err => {
+                    console.error("Error al limpiar semana:", err);
+                    alert("❌ Error de conexión al limpiar la semana.");
+                });
             }
         }
 
         function abrirModalCopiar() {
             if (!esAdminOGestion) return;
 
+            if (hayCambiosSinGuardar) {
+                mostrarModalCambios((confirmado) => {
+                    if (confirmado) {
+                        mostrarModalCopiarForm();
+                    }
+                }, true);
+            } else {
+                mostrarModalCopiarForm();
+            }
+        }
+
+        function mostrarModalCopiarForm() {
             const semanaActualEnPantalla = document.getElementById('filtro-semana').value;
             if (!semanaActualEnPantalla) {
                 alert("Por favor, selecciona primero una semana en pantalla.");
@@ -666,12 +1150,50 @@
                 }
             }
 
-            if (confirm(`⚠️ ¿Estás seguro de copiar las asignaciones y tarifas de la semana del ${inputOrigen.value} a la del ${destIso}?\n\nLos estados de asistencia no se copiarán.`)) {
+            if (confirm(`⚠️ ¿Estás seguro de copiar las asignaciones y tarifas de la semana del ${inputOrigen.value} a la del ${destIso}?\n\nSe omitirán los alumnos cuja asistencia sea REC, ADEL o EXTR. Los estados de asistencia no se copiarán.`)) {
                 try {
+                    const asignacionesOrigenFiltradas = [];
+
+                    document.querySelectorAll('.input-alumno').forEach(inputAlumno => {
+                        const alumnoId = inputAlumno.getAttribute('data-alumno-id');
+                        if (!alumnoId) return; 
+
+                        const profId = inputAlumno.getAttribute('data-profesor');
+                        const fecha = inputAlumno.getAttribute('data-fecha');
+                        const franja = inputAlumno.getAttribute('data-franja');
+                        const slot = inputAlumno.getAttribute('data-slot');
+
+                        const selTarifa = document.querySelector(`.select-tarifa[data-profesor="${profId}"][data-fecha="${fecha}"][data-franja="${franja}"][data-slot="${slot}"]`);
+                        const selAsistencia = document.querySelector(`.select-asistencia[data-profesor="${profId}"][data-fecha="${fecha}"][data-franja="${franja}"][data-slot="${slot}"]`);
+
+                        const asistenciaValor = selAsistencia ? (selAsistencia.value || '').trim().toUpperCase() : '';
+                        
+                        if (['REC', 'ADEL', 'EXTR'].includes(asistenciaValor)) {
+                            return; 
+                        }
+
+                        const [y, m, d] = fecha.split('-').map(Number);
+                        const fechaObj = new Date(y, m - 1, d);
+                        const diaSemanaIndex = (fechaObj.getDay() + 6) % 7;
+
+                        asignacionesOrigenFiltradas.push({
+                            usuario_id: profId,
+                            franja: franja,
+                            slot_index: slot,
+                            alumno_id: alumnoId,
+                            tarifa_id: selTarifa ? selTarifa.value || null : null,
+                            fecha_relativa: diaSemanaIndex
+                        });
+                    });
+
                     const res = await fetch('/api/asignaciones/copiar', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ semanaOrigen: inputOrigen.value, semanaDestino: destIso })
+                        body: JSON.stringify({ 
+                            semanaOrigen: inputOrigen.value, 
+                            semanaDestino: destIso,
+                            asignacionesFiltradas: asignacionesOrigenFiltradas 
+                        })
                     });
                     const data = await res.json();
                     
