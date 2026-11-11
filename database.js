@@ -81,20 +81,20 @@ function inicializarTablas() {
             usuario_modificacion TEXT,
             fecha_modificacion DATETIME
         )`);
-
-        // 5. Tabla de Asignaciones (Cuadrante Semanal con tarifa y asistencia)
-        db.run(`CREATE TABLE IF NOT EXISTS asignaciones (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            usuario_id INTEGER NOT NULL,
-            alumno_id INTEGER NOT NULL,
-            fecha TEXT NOT NULL,         -- Formato YYYY-MM-DD
-            franja TEXT NOT NULL,        -- Ejemplo: "15:30 - 16:30"
-            tarifa_id INTEGER,           -- ID de la tarifa aplicada
-            asistencia TEXT DEFAULT '',  -- '', 'na', 'nv', 'rec'
-            semana TEXT NOT NULL,        -- Fecha del Lunes de referencia (YYYY-MM-DD)
-            FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
-            FOREIGN KEY (alumno_id) REFERENCES alumnos(id),
-            FOREIGN KEY (tarifa_id) REFERENCES tarifas_servicios(id)
+         
+       // Tabla de Asignaciones (Cuadrante Semanal con tarifa y asistencia)
+        db.run(`CREATE TABLE IF NOT EXISTS asignaciones_semanales (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                usuario_id INTEGER NOT NULL,
+                alumno_id INTEGER NOT NULL,
+                fecha TEXT NOT NULL,         -- Formato YYYY-MM-DD
+                franja TEXT NOT NULL,        -- Ejemplo: "15:30 - 16:30"
+                tarifa_id INTEGER,           -- ID de la tarifa aplicada
+                asistencia TEXT DEFAULT '',  -- '', 'na', 'nv', 'rec'
+                semana TEXT NOT NULL,        -- Fecha del Lunes de referencia (YYYY-MM-DD)
+                FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
+                FOREIGN KEY (alumno_id) REFERENCES alumnos(id),
+                FOREIGN KEY (tarifa_id) REFERENCES tarifas_servicios(id)
         )`);
 
         // Tabla principal para guardar la cabecera de la Hoja de Pago por mes
@@ -139,6 +139,39 @@ function inicializarTablas() {
                 
                 CONSTRAINT unique_mes_alumno UNIQUE (mes, alumno_id)
             )`);
+
+           // Creación de la tabla para almacenar la hoja de pago guardada por mes y alumno
+        db.run(`CREATE TABLE IF NOT EXISTS hoja_pago_mensual (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    mes TEXT NOT NULL,                     -- Formato YYYY-MM
+                    alumno_id INTEGER NOT NULL,            -- Clave foránea del alumno
+                    modo_pago TEXT,                        -- Ej. Efectivo, Transferencia, Domiciliación
+                    fecha_pago TEXT,                       -- Fecha en la que se realiza el pago
+                    ref_p INTEGER DEFAULT 0,               -- Cantidad tarifa REF P
+                    ref_s INTEGER DEFAULT 0,               -- Cantidad tarifa REF S
+                    ref_b INTEGER DEFAULT 0,               -- Cantidad tarifa REF B
+                    da INTEGER DEFAULT 0,                  -- Cantidad tarifa DA
+                    da_c INTEGER DEFAULT 0,                -- Cantidad tarifa DA C
+                    log INTEGER DEFAULT 0,                 -- Cantidad tarifa LOG
+                    log_m INTEGER DEFAULT 0,               -- Cantidad tarifa LOG M
+                    num_clases INTEGER,                    -- Nº clases asistidas (para dto.)
+                    total_clases INTEGER,                  -- Total clases asignadas (para dto.)
+                    pct_dto REAL DEFAULT 0,                -- Porcentaje de descuento
+                    importe_clases REAL DEFAULT 0,         -- Importe neto de clases
+                    terapia_1 INTEGER DEFAULT 0,           -- Días / sesiones T1
+                    terapia_2 INTEGER DEFAULT 0,           -- Días / sesiones T2
+                    terapia_3 INTEGER DEFAULT 0,           -- Días / sesiones T3
+                    terapia_4 INTEGER DEFAULT 0,           -- Días / sesiones T4
+                    terapia_5 INTEGER DEFAULT 0,           -- Días / sesiones T5
+                    terapia_6 INTEGER DEFAULT 0,           -- Días / sesiones T6
+                    importe_terapias REAL DEFAULT 0,       -- Importe total terapias
+                    observaciones TEXT,                    -- Notas complementarias
+                    evaluacion INTEGER DEFAULT 0,          -- Booleano: si incluye tasa de evaluación
+                    total_final REAL DEFAULT 0,            -- Suma final calculada
+                    FOREIGN KEY(alumno_id) REFERENCES alumnos(id),
+                    UNIQUE(mes, alumno_id)                  -- Garantiza un registro único por alumno y mes
+            )`);    
+
     });
 }
 

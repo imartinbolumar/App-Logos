@@ -64,7 +64,7 @@
                 <button id="btn-copiar-semana" onclick="abrirModalCopiar()" class="bg-amber-600 text-white text-xs font-semibold px-4 py-2.5 rounded-lg hover:bg-amber-700 transition shadow-sm">
                     📋 Copiar Semana
                 </button>
-                <button onclick="guardarAsignaciones(true)" class="bg-blue-600 text-white text-xs font-semibold px-5 py-2.5 rounded-lg hover:bg-blue-700 transition shadow-sm">
+                <button id="btn-guardar-cambios" onclick="guardarAsignaciones(true)" class="bg-blue-600 text-white text-xs font-semibold px-5 py-2.5 rounded-lg hover:bg-blue-700 transition shadow-sm">
                     💾 Guardar Cambios
                 </button>
             </div>
@@ -113,7 +113,7 @@
             </div>
 
             <div class="space-y-3">
-                <p class="text-xs text-slate-500">Selecciona la fecha del Lunes de origen y la fecha del Lunes de destino. Se copiarán todos los alumnos y sus códigos de tarifa, omitiendo aquellos cuja asistencia sea REC, ADEL o EXTR. Los estados de asistencia no se copiarán.</p>
+                <p class="text-xs text-slate-500">Selecciona la fecha del Lunes de origen y la fecha del Lunes de destino. Se copiarán todos los alumnos y sus códigos de tarifa, omitiendo aquellos cuja asistencia seja REC, ADEL o EXTR. Los estados de asistencia no se copiarán.</p>
                 
                 <div>
                     <label class="block text-xs font-semibold text-slate-700 mb-1">Semana de Origen (Lunes):</label>
@@ -204,12 +204,25 @@
         }
 
         let usuariosActivos = [];
+        let alumnosGlobal = [];
         let alumnosActivos = [];
         let tarifasGlobales = [];
         let asignacionesActuales = [];
         let slotsExtraPorFranja = {}; 
+        let indiceAlumnoSeleccionado = -1;
         
         let hayCambiosSinGuardar = false;
+
+        // --- VALIDACIÓN DE SEMANAS ANTIGUAS (>= 3 MESES) ---
+        function esSemanaDemasiadoAntigua(fechaIsoStr) {
+            if (!fechaIsoStr) return false;
+            const [y, m, d] = fechaIsoStr.split('-').map(Number);
+            const fechaSemana = new Date(y, m - 1, d);
+            const hoy = new Date();
+            
+            const diffMonths = (hoy.getFullYear() - fechaSemana.getFullYear()) * 12 + (hoy.getMonth() - fechaSemana.getMonth());
+            return diffMonths >= 3;
+        }
 
         // --- MOTOR DEL MODAL DE CAMBIOS PENDIENTES ---
         function mostrarModalCambios(onAccionAceptada, mostrarBotonGuardar = true) {
@@ -386,6 +399,10 @@
         function obtenerClasesColorSemana(semanaLunesIso) {
             if (!semanaLunesIso) return 'bg-white text-slate-700 border-slate-300';
 
+            if (esSemanaDemasiadoAntigua(semanaLunesIso)) {
+                return 'bg-slate-100 text-slate-500 border-slate-300';
+            }
+
             const [y, m, d] = semanaLunesIso.split('-').map(Number);
             const fechaLunesSeleccionado = new Date(y, m - 1, d).setHours(0,0,0,0);
 
@@ -423,6 +440,9 @@
                 const usuarios = await resUsers.json();
                 const alumnos = await resAlumnos.json();
                 
+                alumnosGlobal = alumnos;
+                alumnosActivos = alumnos.filter(a => a.activo === 1 || a.activo === true || a.estado === 'activo');
+
                 try {
                     if (resTarifas.ok) {
                         tarifasGlobales = await resTarifas.json();
@@ -432,7 +452,6 @@
                 }
 
                 usuariosActivos = usuarios.filter(u => u.activo === 1 && u.rol !== 'admin');
-                alumnosActivos = alumnos.filter(a => a.activo === 1 || a.activo === true || a.estado === 'activo');
 
                 const usuarioEncontrado = usuarios.find(u => u.email === usuarioGuardado.email || u.nombre === usuarioGuardado.nombre);
                 if (usuarioEncontrado) {
@@ -546,6 +565,12 @@
         }
 
         function agregarFilaExtra(profId, franja) {
+            const semanaInput = document.getElementById('filtro-semana').value;
+            if (esSemanaDemasiadoAntigua(semanaInput)) {
+                alert("❌ No se permite modificar semanas pertenecientes a un mes de hace tres meses o más.");
+                return;
+            }
+
             const clave = `${profId}_${franja}`;
             slotsExtraPorFranja[clave] = (slotsExtraPorFranja[clave] || 0) + 1;
             hayCambiosSinGuardar = true;
@@ -553,13 +578,19 @@
         }
 
         function marcarCambiosPendientes() {
+            const semanaInput = document.getElementById('filtro-semana').value;
+            if (esSemanaDemasiadoAntigua(semanaInput)) return;
             hayCambiosSinGuardar = true;
         }
 
         function filtrarSugerenciasAlumno(input) {
+            const semanaInput = document.getElementById('filtro-semana').value;
+            if (esSemanaDemasiadoAntigua(semanaInput)) return;
+
             const query = normalizarTexto(input.value);
             const contenedorPadre = input.closest('.relative');
             const dropdown = contenedorPadre.querySelector('.dropdown-sugerencias');
+            indiceAlumnoSeleccionado = -1;
 
             const profId = input.getAttribute('data-profesor');
             const fecha = input.getAttribute('data-fecha');
@@ -578,6 +609,7 @@
                 return;
             }
 
+            // REGLA: Alumnos inactivos no se permiten seleccionar
             const filtrados = alumnosActivos.filter(a => {
                 const nombreCompleto1 = normalizarTexto(`${a.nombre} ${a.apellidos}`);
                 const nombreCompleto2 = normalizarTexto(`${a.apellidos}, ${a.nombre}`);
@@ -585,22 +617,56 @@
             });
 
             if (filtrados.length === 0) {
-                dropdown.innerHTML = `<div class="px-3 py-2 text-slate-400 text-[11px]">No se encontraron alumnos</div>`;
+                dropdown.innerHTML = `<div class="px-3 py-2 text-slate-400 text-[11px]">No se encontraron alumnos activos</div>`;
                 dropdown.classList.remove('hidden');
                 return;
             }
 
             let html = '';
-            filtrados.forEach(a => {
+            filtrados.forEach((a, idx) => {
                 const nombreMostrar = `${a.nombre} ${a.apellidos}`;
-                html += `<div onclick="seleccionarAlumnoSlot('${profId}', '${fecha}', '${franja}', '${slot}', '${a.id}', '${nombreMostrar.replace(/'/g, "\\'")}')" 
-                              class="px-3 py-1.5 hover:bg-blue-50 cursor-pointer text-slate-700 text-[11px] font-medium border-b border-slate-100 last:border-none">
+                html += `<div data-index="${idx}" onclick="seleccionarAlumnoSlot('${profId}', '${fecha}', '${franja}', '${slot}', '${a.id}', '${nombreMostrar.replace(/'/g, "\\'")}')" 
+                              class="opcion-alumno px-3 py-1.5 hover:bg-blue-50 cursor-pointer text-slate-700 text-[11px] font-medium border-b border-slate-100 last:border-none">
                             👤 ${nombreMostrar}
                          </div>`;
             });
 
             dropdown.innerHTML = html;
             dropdown.classList.remove('hidden');
+        }
+
+        function manejarTecladoAlumno(e, input) {
+            const contenedorPadre = input.closest('.relative');
+            const dropdown = contenedorPadre.querySelector('.dropdown-sugerencias');
+            const opciones = dropdown.querySelectorAll('.opcion-alumno');
+
+            if (dropdown.classList.contains('hidden') || opciones.length === 0) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                indiceAlumnoSeleccionado = (indiceAlumnoSeleccionado + 1) % opciones.length;
+                actualizarSeleccionVisualAlumno(opciones);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                indiceAlumnoSeleccionado = (indiceAlumnoSeleccionado - 1 + opciones.length) % opciones.length;
+                actualizarSeleccionVisualAlumno(opciones);
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (indiceAlumnoSeleccionado >= 0 && opciones[indiceAlumnoSeleccionado]) {
+                    opciones[indiceAlumnoSeleccionado].click();
+                }
+            }
+        }
+
+        function actualizarSeleccionVisualAlumno(opciones) {
+            opciones.forEach((op, idx) => {
+                if (idx === indiceAlumnoSeleccionado) {
+                    op.classList.add('bg-blue-100');
+                    op.scrollIntoView({ block: 'nearest' });
+                } else {
+                    op.classList.remove('bg-blue-100');
+                }
+            });
         }
 
         function seleccionarAlumnoSlot(profId, fecha, franja, slot, alumnoId, nombreTexto) {
@@ -610,6 +676,7 @@
             input.value = nombreTexto;
             input.setAttribute('data-alumno-id', alumnoId);
             dropdown.classList.add('hidden');
+            indiceAlumnoSeleccionado = -1;
 
             validarDuplicados(input);
             manejarCambioEstadoSlot(input, true);
@@ -653,6 +720,23 @@
             const semanaInput = document.getElementById('filtro-semana').value;
             if (!semanaInput) return;
 
+            const esAntigua = esSemanaDemasiadoAntigua(semanaInput);
+
+            // Bloquear botones superiores si la semana es muy antigua
+            const btnGuardar = document.getElementById('btn-guardar-cambios');
+            const btnLimpiar = document.getElementById('btn-limpiar-semana');
+            const btnCopiar = document.getElementById('btn-copiar-semana');
+
+            if (esAntigua) {
+                if (btnGuardar) { btnGuardar.disabled = true; btnGuardar.classList.add('opacity-50', 'cursor-not-allowed'); }
+                if (btnLimpiar) { btnLimpiar.disabled = true; btnLimpiar.classList.add('opacity-50', 'cursor-not-allowed'); }
+                if (btnCopiar) { btnCopiar.disabled = true; btnCopiar.classList.add('opacity-50', 'cursor-not-allowed'); }
+            } else {
+                if (btnGuardar) { btnGuardar.disabled = false; btnGuardar.classList.remove('opacity-50', 'cursor-not-allowed'); }
+                if (btnLimpiar && esAdminOGestion) { btnLimpiar.disabled = false; btnLimpiar.classList.remove('opacity-50', 'cursor-not-allowed'); }
+                if (btnCopiar && esAdminOGestion) { btnCopiar.disabled = false; btnCopiar.classList.remove('opacity-50', 'cursor-not-allowed'); }
+            }
+
             const diasSemana = obtenerDiasDeLaSemana(semanaInput);
             const contenedor = document.getElementById('contenedor-tablas');
             contenedor.innerHTML = '';            
@@ -671,8 +755,8 @@
             }            
             
             const clasesColorSemana = obtenerClasesColorSemana(semanaInput);
-            const disabledAttr = esAdminOGestion ? '' : 'disabled';
-            const bgDisabledStyle = esAdminOGestion ? '' : 'bg-slate-100 text-slate-500 cursor-not-allowed';
+            const disabledAttr = (esAdminOGestion && !esAntigua) ? '' : 'disabled';
+            const bgDisabledStyle = (esAdminOGestion && !esAntigua) ? '' : 'bg-slate-100 text-slate-500 cursor-not-allowed';
 
             profesoresAMostrar.forEach(profesor => {
                 let htmlCabeceraDias = '';
@@ -702,12 +786,13 @@
                         });
 
                         for (let slot = 1; slot <= totalSlots; slot++) {
+                            const asistenciaDisabled = esAntigua ? 'disabled' : '';
                             selectsSlot += `
                                 <div class="flex items-center gap-1 mb-1 relative h-7">
                                     <div class="w-[60%] relative h-full">
                                         <input type="text" placeholder="🔍 Alumno..." autocomplete="off"
                                                data-profesor="${profesor.id}" data-fecha="${diaObj.fechaIso}" data-franja="${franja}" data-slot="${slot}" data-tipo="alumno" data-alumno-id=""
-                                               oninput="filtrarSugerenciasAlumno(this)" ${disabledAttr}
+                                               oninput="filtrarSugerenciasAlumno(this)" onkeydown="manejarTecladoAlumno(event, this)" ${disabledAttr}
                                                class="input-alumno w-full h-full px-1.5 py-0.5 text-[11px] border rounded focus:ring-1 focus:ring-blue-500 font-medium ${clasesColorSemana} ${bgDisabledStyle}">
                                         <div class="dropdown-sugerencias hidden absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg z-50 max-h-40 overflow-y-auto"></div>
                                     </div>
@@ -719,7 +804,7 @@
                                     </select>
 
                                     <select data-profesor="${profesor.id}" data-fecha="${diaObj.fechaIso}" data-franja="${franja}" data-slot="${slot}" data-tipo="asistencia"
-                                            onchange="actualizarColorAsistencia(this); marcarCambiosPendientes();" disabled
+                                            onchange="actualizarColorAsistencia(this); marcarCambiosPendientes();" disabled ${asistenciaDisabled}
                                             class="select-asistencia w-[20%] h-full px-0.5 py-0.5 text-[9px] border rounded focus:ring-1 focus:ring-blue-500 font-semibold bg-slate-100 cursor-not-allowed opacity-50 ${clasesColorSemana}">
                                         <option value="">--</option>
                                         <option value="NVA">NVA</option>
@@ -735,7 +820,7 @@
                         htmlCeldasDias += `<td class="py-2 px-1.5 border-t-2 border-b border-slate-200 bg-slate-50/70 align-top">${selectsSlot}</td>`;
                     });
 
-                    const btnAnadirFranja = esAdminOGestion ? `
+                    const btnAnadirFranja = (esAdminOGestion && !esAntigua) ? `
                         <div class="mt-1.5 flex justify-center">
                             <button onclick="agregarFilaExtra('${profesor.id}', '${franja}')" type="button" title="Añadir fila a toda la franja" class="w-6 h-6 rounded-full bg-blue-500 text-white text-xs font-bold hover:bg-blue-600 transition shadow flex items-center justify-center focus:outline-none">
                                 +
@@ -794,7 +879,7 @@
                     const encontrado = encontradosMismaCelda.find(a => Number(a.slot_index) === Number(slot)) || encontradosMismaCelda[slot - 1];
 
                     if (encontrado) {
-                        const alumnoObj = alumnosActivos.find(a => String(a.id) === String(encontrado.alumno_id));
+                        const alumnoObj = alumnosGlobal.find(a => String(a.id) === String(encontrado.alumno_id));
                         if (alumnoObj) {
                             inputAlumno.value = `${alumnoObj.nombre} ${alumnoObj.apellidos}`;
                             inputAlumno.setAttribute('data-alumno-id', alumnoObj.id);
@@ -803,11 +888,11 @@
                         const selTarifa = document.querySelector(`.select-tarifa[data-profesor="${profId}"][data-fecha="${fecha}"][data-franja="${franja}"][data-slot="${slot}"]`);
                         const selAsistencia = document.querySelector(`.select-asistencia[data-profesor="${profId}"][data-fecha="${fecha}"][data-franja="${franja}"][data-slot="${slot}"]`);
 
-                        if (esAdminOGestion && selTarifa) {
+                        if (esAdminOGestion && !esAntigua && selTarifa) {
                             selTarifa.disabled = false;
                             selTarifa.classList.remove('bg-slate-100', 'cursor-not-allowed', 'opacity-50');
                         }
-                        if (selAsistencia) {
+                        if (!esAntigua && selAsistencia) {
                             selAsistencia.disabled = false;
                             selAsistencia.classList.remove('bg-slate-100', 'cursor-not-allowed', 'opacity-50');
                         }
@@ -879,6 +964,11 @@
             const semana = document.getElementById('filtro-semana').value;
             if (!semana) {
                 alert("Por favor, selecciona una fecha de referencia.");
+                return false;
+            }
+
+            if (esSemanaDemasiadoAntigua(semana)) {
+                alert("❌ No se permite modificar semanas pertenecientes a un mes de hace tres meses o más.");
                 return false;
             }
 
@@ -1001,6 +1091,11 @@
                 return;
             }
 
+            if (esSemanaDemasiadoAntigua(semanaSeleccionada)) {
+                alert("❌ No se permite limpiar semanas pertenecientes a un mes de hace tres meses o más.");
+                return;
+            }
+
             const [y, m, d] = semanaSeleccionada.split('-').map(Number);
             const timeSeleccionado = new Date(y, m - 1, d).setHours(0,0,0,0);
 
@@ -1070,6 +1165,12 @@
         function abrirModalCopiar() {
             if (!esAdminOGestion) return;
 
+            const semanaActualEnPantalla = document.getElementById('filtro-semana').value;
+            if (esSemanaDemasiadoAntigua(semanaActualEnPantalla)) {
+                alert("❌ No se permite realizar operaciones de copia sobre semanas pertenecientes a un mes de hace tres meses o más.");
+                return;
+            }
+
             if (hayCambiosSinGuardar) {
                 mostrarModalCambios((confirmado) => {
                     if (confirmado) {
@@ -1122,6 +1223,11 @@
 
             const destIso = inputDestino.value;
 
+            if (esSemanaDemasiadoAntigua(destIso)) {
+                alert("❌ No se permite copiar sobre semanas pertenecientes a un mes de hace tres meses o más.");
+                return;
+            }
+
             const [yDest, mDest, dDest] = destIso.split('-').map(Number);
             const timeDestino = new Date(yDest, mDest - 1, dDest).setHours(0,0,0,0);
 
@@ -1150,7 +1256,7 @@
                 }
             }
 
-            if (confirm(`⚠️ ¿Estás seguro de copiar las asignaciones y tarifas de la semana del ${inputOrigen.value} a la del ${destIso}?\n\nSe omitirán los alumnos cuja asistencia sea REC, ADEL o EXTR. Los estados de asistencia no se copiarán.`)) {
+            if (confirm(`⚠️ ¿Estás seguro de copiar las asignaciones y tarifas de la semana del ${inputOrigen.value} a la del ${destIso}?\n\nSe omitirán los alumnos cuja asistencia seja REC, ADEL o EXTR. Los estados de asistencia no se copiarán.`)) {
                 try {
                     const asignacionesOrigenFiltradas = [];
 

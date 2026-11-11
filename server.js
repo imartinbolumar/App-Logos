@@ -231,6 +231,61 @@ app.post('/api/alumnos', (req, res) => {
     });
 });
 
+// 2. Carga de alumnos masiva
+app.post('/api/alumnos/masivo', (req, res) => {
+    const alumnos = req.body;
+
+    if (!Array.isArray(alumnos) || alumnos.length === 0) {
+        return res.status(400).json({ error: "Se esperaba un array con los datos de los alumnos" });
+    }
+
+    // Validar que todos tengan nombre y apellidos antes de insertar
+    for (const alu of alumnos) {
+        if (!alu.nombre || !alu.apellidos) {
+            return res.status(400).json({ error: `El alumno con nombre "${alu.nombre || 'Desconocido'}" no tiene nombre o apellidos obligatorios.` });
+        }
+    }
+
+    let insertados = 0;
+    let errores = 0;
+
+    alumnos.forEach(alu => {
+        const {
+            nombre, apellidos, curso, centro, fecha_comienzo, precio_terapia,
+            beca, contacto_padre, telefono_padre, email_padre,
+            contacto_madre, telefono_madre, email_madre, activo, observaciones,
+            creado_por, modificado_por
+        } = alu;
+
+        db.run(
+            `INSERT INTO alumnos (nombre, apellidos, curso, centro, fecha_comienzo, precio_terapia, beca, contacto_padre, telefono_padre, email_padre, contacto_madre, telefono_madre, email_madre, activo, observaciones, creado_por, modificado_por) 
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                nombre, apellidos, curso || '', centro || '', fecha_comienzo || '', precio_terapia || 0,
+                beca || 0, contacto_padre || '', telefono_padre || '', email_padre || '',
+                contacto_madre || '', telefono_madre || '', email_madre || '', activo !== undefined ? activo : 1,
+                observaciones || '', creado_por || 'Sistema', modificado_por || 'Sistema'
+            ],
+            function(err) {
+                if (err) {
+                    errores++;
+                } else {
+                    insertados++;
+                }
+
+                // Cuando termine de procesar todos los elementos del array
+                if (insertados + errores === alumnos.length) {
+                    res.json({ 
+                        mensaje: "Proceso de importación masiva finalizado", 
+                        total_insertados: insertados,
+                        total_errores: errores 
+                    });
+                }
+            }
+        );
+    });
+});
+
 // Ruta para actualizar un alumno existente
 app.put('/api/alumnos/:id', (req, res) => {
     const { id } = req.params;
@@ -279,11 +334,32 @@ app.get('/api/alumnos', (req, res) => {
 // Ruta para eliminar un alumno
 app.delete('/api/alumnos/:id', (req, res) => {
     const { id } = req.params;
-    db.run(`DELETE FROM alumnos WHERE id = ?`, [id], function(err) {
+
+    // 1. Verificar si el alumno está vinculado a alguna asignación
+    db.get(`SELECT COUNT(*) as total FROM asignaciones_semanales WHERE alumno_id = ?`, [id], (err, row) => {
         if (err) {
-            return res.status(500).json({ error: 'Error al eliminar el alumno' });
+            return res.status(500).json({ error: 'Error al verificar las asignaciones del alumno' });
         }
-        res.json({ mensaje: 'Alumno eliminado con éxito' });
+
+        // Si el total es mayor a 0, significa que tiene asignaciones y bloqueamos el borrado    
+        if (row && row.total > 0) {
+            return res.status(400).json({ 
+                error: 'No se puede eliminar el alumno porque ya está en una o más asignaciones.' 
+            });
+        }
+
+        // 2. Si no tiene asignaciones, procedemos a eliminarlo
+        db.run(`DELETE FROM alumnos WHERE id = ?`, [id], function(err) {
+            if (err) {
+                return res.status(500).json({ error: 'Error al eliminar el alumno' });
+            }
+            
+            if (this.changes === 0) {
+                return res.status(404).json({ error: 'Alumno no encontrado' });
+            }
+
+            res.json({ mensaje: 'Alumno eliminado con éxito' });
+        });
     });
 });
 
@@ -552,6 +628,141 @@ app.delete('/api/centros/:id', (req, res) => {
     db.run(`DELETE FROM centros WHERE id = ?`, [id], function(err) {
         if (err) return res.status(500).json({ error: err.message });
         res.json({ success: true });
+    });
+});
+
+// =========================================================================
+// RUTAS API (ENDPOINTS) PARA LA HOJA DE PAGO
+// =========================================================================
+
+/**
+ * GET /api/asignaciones/mes
+ * Obtiene las asignaciones registradas en el cuadrante para un mes determinado (YYYY-MM).
+ * Se utiliza para calcular el conteo automático de tarifas y terapias.
+ */
+app.get('/api/asignaciones/mes', (req, res) => {
+    const { mes } = req.query; // Ejemplo: ?mes=2026-11
+    if (!mes) {
+        return res.status(400).json({ error: "Falta el parámetro obligatorio 'mes' (formato YYYY-MM)" });
+    }
+
+    const query = `
+        SELECT a.*, al.nombre, al.apellidos, al.precio_terapia, t.codigo AS codigo_tarifa
+        FROM asignaciones_semanales a
+        JOIN alumnos al ON a.alumno_id = al.id
+        LEFT JOIN tarifas_servicios t ON a.tarifa_id = t.id
+        WHERE strftime('%Y-%m', a.fecha) = ?
+    `;
+
+    db.all(query, [mes], (err, rows) => {
+        if (err) {
+            return res.status(500).json({ error: "Error al consultar las asignaciones: " + err.message });
+        }
+        res.json(rows);
+    });
+});
+
+/**
+ * GET /api/hoja-pago
+ * Recupera los registros guardados de la hoja de pago para el mes seleccionado.
+ */
+app.get('/api/hoja-pago', (req, res) => {
+    const { mes } = req.query; // Ejemplo: ?mes=2026-11
+    if (!mes) {
+        return res.status(400).json({ error: "Falta el parámetro obligatorio 'mes' (formato YYYY-MM)" });
+    }
+
+    db.all(`SELECT * FROM hoja_pago_mensual WHERE mes = ?`, [mes], (err, rows) => {
+        if (err) {
+            return res.status(500).json({ error: "Error al recuperar la hoja de pago: " + err.message });
+        }
+        res.json(rows);
+    });
+});
+
+/**
+ * POST /api/hoja-pago/guardar
+ * Guarda o actualiza (Upsert) de manera masiva los registros de la hoja de pago mensual.
+ */
+app.post('/api/hoja-pago/guardar', (req, res) => {
+    const { mes, hoja } = req.body;
+
+    if (!mes || !Array.isArray(hoja)) {
+        return res.status(400).json({ error: "Formato de datos no válido. Se requiere 'mes' y el array 'hoja'." });
+    }
+
+    // Consulta con cláusula ON CONFLICT para insertar o actualizar según corresponda
+    const stmt = db.prepare(`
+        INSERT INTO hoja_pago_mensual (
+            mes, alumno_id, modo_pago, fecha_pago,
+            ref_p, ref_s, ref_b, da, da_c, log, log_m,
+            num_clases, total_clases, pct_dto, importe_clases,
+            terapia_1, terapia_2, terapia_3, terapia_4, terapia_5, terapia_6,
+            importe_terapias, observaciones, evaluacion, total_final
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(mes, alumno_id) DO UPDATE SET
+            modo_pago=excluded.modo_pago,
+            fecha_pago=excluded.fecha_pago,
+            ref_p=excluded.ref_p,
+            ref_s=excluded.ref_s,
+            ref_b=excluded.ref_b,
+            da=excluded.da,
+            da_c=excluded.da_c,
+            log=excluded.log,
+            log_m=excluded.log_m,
+            num_clases=excluded.num_clases,
+            total_clases=excluded.total_clases,
+            pct_dto=excluded.pct_dto,
+            importe_clases=excluded.importe_clases,
+            terapia_1=excluded.terapia_1,
+            terapia_2=excluded.terapia_2,
+            terapia_3=excluded.terapia_3,
+            terapia_4=excluded.terapia_4,
+            terapia_5=excluded.terapia_5,
+            terapia_6=excluded.terapia_6,
+            importe_terapias=excluded.importe_terapias,
+            observaciones=excluded.observaciones,
+            evaluacion=excluded.evaluacion,
+            total_final=excluded.total_final
+    `);
+
+    db.serialize(() => {
+        hoja.forEach(f => {
+            stmt.run([
+                mes,
+                f.alumno_id,
+                f.modo_pago || '',
+                f.fecha_pago || '',
+                f.tarifas ? (f.tarifas["REF P"] || 0) : 0,
+                f.tarifas ? (f.tarifas["REF S"] || 0) : 0,
+                f.tarifas ? (f.tarifas["REF B"] || 0) : 0,
+                f.tarifas ? (f.tarifas["DA"] || 0) : 0,
+                f.tarifas ? (f.tarifas["DA C"] || 0) : 0,
+                f.tarifas ? (f.tarifas["LOG"] || 0) : 0,
+                f.tarifas ? (f.tarifas["LOG M"] || 0) : 0,
+                parseInt(f.num_clases) || 0,
+                parseInt(f.total_clases) || 0,
+                parseFloat(f.pct_dto) || 0,
+                parseFloat(f.importe_clases) || 0,
+                f.terapias ? (f.terapias[0] || 0) : 0,
+                f.terapias ? (f.terapias[1] || 0) : 0,
+                f.terapias ? (f.terapias[2] || 0) : 0,
+                f.terapias ? (f.terapias[3] || 0) : 0,
+                f.terapias ? (f.terapias[4] || 0) : 0,
+                f.terapias ? (f.terapias[5] || 0) : 0,
+                parseFloat(f.importe_terapias) || 0,
+                f.observaciones || '',
+                f.evaluacion ? 1 : 0,
+                parseFloat(f.total_final) || 0
+            ]);
+        });
+
+        stmt.finalize((err) => {
+            if (err) {
+                return res.status(500).json({ error: "Error al guardar la hoja de pago: " + err.message });
+            }
+            res.json({ mensaje: "Hoja de pago guardada con éxito" });
+        });
     });
 });
 

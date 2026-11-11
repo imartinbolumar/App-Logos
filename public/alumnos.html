@@ -35,7 +35,7 @@
         
         <!-- Formulario de Registro / Edición (Izquierda - Estrecho: 3 columnas) -->
         <div class="bg-white p-4 sm:p-5 rounded-xl shadow-md lg:col-span-3 h-[calc(100vh-7rem)] overflow-y-auto">
-            <form id="form-alumno" onsubmit="guardarAlumno(event)" class="space-y-2.5">
+            <form id="form-alumno" onsubmit="guardarAlumno(event)" onkeydown="return event.key !== 'Enter' || event.target.tagName === 'TEXTAREA' || event.target.tagName === 'BUTTON'" class="space-y-2.5">
                 <input type="hidden" id="alumno-id">
                 
                 <!-- Cabecera del formulario -->
@@ -75,12 +75,11 @@
                                 <label class="block text-[11px] font-medium text-slate-700 mb-0.5">Curso</label>
                                 <input type="text" id="curso" placeholder="Ej. 3º ESO" class="w-full px-2.5 py-1 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
                             </div>
-                            <div>
+                            <!-- Centro Educativo con Autocompletado y soporte de flechas -->
+                            <div class="relative">
                                 <label class="block text-[11px] font-medium text-slate-700 mb-0.5">Centro Educativo</label>
-                                <select id="centro" class="w-full px-2.5 py-1 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-blue-500">
-                                    <option value="">-- Seleccionar --</option>
-                                    <!-- Carga dinámica de centros -->
-                                </select>
+                                <input type="text" id="centro" autocomplete="off" placeholder="Escribe o busca..." oninput="filtrarSugerenciasCentro(this)" onfocus="filtrarSugerenciasCentro(this)" onkeydown="manejarTecladoCentro(event)" class="w-full px-2.5 py-1 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                <div id="dropdown-centros" class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg z-50 max-h-40 overflow-y-auto"></div>
                             </div>
                         </div>
 
@@ -164,18 +163,31 @@
             <div class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
                 <h2 class="text-lg font-bold text-slate-800">Alumnos Registrados</h2>
                 
-                <!-- Filtros Checkbox + Buscador -->
+                <!-- Filtros + Contador + Buscador -->
                 <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-                    <!-- Checkbox de filtro por activos (Marcado por defecto) -->
-                    <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer bg-slate-50 px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-100 transition">
-                        <input type="checkbox" id="filtro-activos" onchange="filtrarAlumnos()" class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500" checked>
-                        Solo activos
-                    </label>
+                    <!-- Contador de alumnos con el filtro aplicado -->
+                    <div class="flex items-center gap-1.5 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700">
+                        <span>Total:</span>
+                        <span id="contador-alumnos" class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-md font-bold">0</span>
+                    </div>
+
+                    <!-- Selector de Estado (Activos / No activos / Todos) -->
+                    <select id="filtro-estado" onchange="filtrarAlumnos()" class="text-xs font-semibold text-slate-700 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-100 transition focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
+                        <option value="activos" selected>Activos</option>
+                        <option value="no_activos">No activos</option>
+                        <option value="todos">Todos</option>
+                    </select>
 
                     <!-- Checkbox de filtro por beca -->
                     <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer bg-slate-50 px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-100 transition">
                         <input type="checkbox" id="filtro-beca" onchange="filtrarAlumnos()" class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
                         Solo becados
+                    </label>
+
+                    <!-- Checkbox de filtro por tarifa de terapia -->
+                    <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer bg-slate-50 px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-100 transition">
+                        <input type="checkbox" id="filtro-tarifa-terapia" onchange="filtrarAlumnos()" class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
+                        Con tarifa terapia
                     </label>
                     
                     <!-- Buscador -->
@@ -205,6 +217,8 @@
     <script>
         const usuarioGuardado = JSON.parse(localStorage.getItem('usuario') || '{}');
         let alumnosGlobal = [];
+        let centrosGlobal = []; 
+        let indiceCentroSeleccionado = -1;
 
         document.getElementById('info-usuario').textContent = `👤 ${usuarioGuardado.nombre} (${usuarioGuardado.rol.toUpperCase()})`;
 
@@ -213,19 +227,91 @@
             return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^\w\s]/gi, '').trim();
         }
 
-        async function cargarCentrosSelect() {
+        async function cargarCentrosListado() {
             try {
                 const res = await fetch('/api/centros');
                 if (res.ok) {
-                    const centros = await res.json();
-                    const selectCentro = document.getElementById('centro');
-                    selectCentro.innerHTML = '<option value="">-- Seleccionar --</option>' + 
-                        centros.map(c => `<option value="${c.nombre}">${c.nombre}</option>`).join('');
+                    centrosGlobal = await res.json();
                 }
             } catch (e) {
                 console.error("Error al cargar centros", e);
             }
         }
+
+        function filtrarSugerenciasCentro(input) {
+            const query = normalizarTexto(input.value);
+            const dropdown = document.getElementById('dropdown-centros');
+            indiceCentroSeleccionado = -1;
+
+            const filtrados = centrosGlobal.filter(c => {
+                const nombreNorm = normalizarTexto(c.nombre);
+                return nombreNorm.includes(query);
+            });
+
+            if (filtrados.length === 0) {
+                dropdown.innerHTML = `<div class="px-3 py-2 text-slate-400 text-[11px]">No se encontraron centros</div>`;
+                dropdown.classList.remove('hidden');
+                return;
+            }
+
+            let html = '';
+            filtrados.forEach((c, idx) => {
+                const nombreSeguro = c.nombre.replace(/'/g, "\\'");
+                html += `<div data-index="${idx}" onclick="seleccionarCentro('${nombreSeguro}')" 
+                              class="opcion-centro px-3 py-1.5 hover:bg-blue-50 cursor-pointer text-slate-700 text-[11px] font-medium border-b border-slate-100 last:border-none">
+                            🏫 ${c.nombre}
+                         </div>`;
+            });
+
+            dropdown.innerHTML = html;
+            dropdown.classList.remove('hidden');
+        }
+
+        function manejarTecladoCentro(e) {
+            const dropdown = document.getElementById('dropdown-centros');
+            const opciones = dropdown.querySelectorAll('.opcion-centro');
+
+            if (dropdown.classList.contains('hidden') || opciones.length === 0) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                indiceCentroSeleccionado = (indiceCentroSeleccionado + 1) % opciones.length;
+                actualizarSeleccionVisualCentro(opciones);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                indiceCentroSeleccionado = (indiceCentroSeleccionado - 1 + opciones.length) % opciones.length;
+                actualizarSeleccionVisualCentro(opciones);
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (indiceCentroSeleccionado >= 0 && opciones[indiceCentroSeleccionado]) {
+                    opciones[indiceCentroSeleccionado].click();
+                }
+            }
+        }
+
+        function actualizarSeleccionVisualCentro(opciones) {
+            opciones.forEach((op, idx) => {
+                if (idx === indiceCentroSeleccionado) {
+                    op.classList.add('bg-blue-100');
+                    op.scrollIntoView({ block: 'nearest' });
+                } else {
+                    op.classList.remove('bg-blue-100');
+                }
+            });
+        }
+
+        function seleccionarCentro(nombreCentro) {
+            document.getElementById('centro').value = nombreCentro;
+            document.getElementById('dropdown-centros').classList.add('hidden');
+            indiceCentroSeleccionado = -1;
+        }
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#centro') && !e.target.closest('#dropdown-centros')) {
+                const dropdown = document.getElementById('dropdown-centros');
+                if (dropdown) dropdown.classList.add('hidden');
+            }
+        });
 
         async function cargarAlumnos() {
             try {
@@ -298,10 +384,11 @@
 
         function filtrarListaAlumnos(datos) {
             const textoBuscado = normalizarTexto(document.getElementById('buscador').value);
-            const soloActivos = document.getElementById('filtro-activos').checked;
+            const estadoValor = document.getElementById('filtro-estado').value; // 'activos', 'no_activos', 'todos'
             const soloBecados = document.getElementById('filtro-beca').checked;
+            const soloConTarifa = document.getElementById('filtro-tarifa-terapia').checked;
 
-            return datos.filter(a => {
+            const filtrados = datos.filter(a => {
                 const nombreNorm = normalizarTexto(a.nombre);
                 const apellidosNorm = normalizarTexto(a.apellidos);
                 const cursoNorm = normalizarTexto(a.curso);
@@ -315,18 +402,29 @@
                     nombreNorm.includes(textoBuscado) || 
                     apellidosNorm.includes(textoBuscado) ||
                     cursoNorm.includes(textoBuscado) ||
-                    centroNorm.includes(textoBuscado) ||
-                    contactoPadreNorm.includes(textoBuscado) ||
-                    contactoMadreNorm.includes(textoBuscado) ||
-                    emailPadreNorm.includes(textoBuscado) ||
-                    emailMadreNorm.includes(textoBuscado)
+                    centroNorm.includes(textoBuscado)
                 );
 
-                const cumpleActivo = !soloActivos || (a.activo === 1);
-                const cumpleBeca = !soloBecados || (a.beca === 1);
+                let cumpleEstado = true;
+                if (estadoValor === 'activos') {
+                    cumpleEstado = (a.activo === 1 || a.activo === true);
+                } else if (estadoValor === 'no_activos') {
+                    cumpleEstado = (a.activo === 0 || a.activo === false || a.activo === '0');
+                }
 
-                return cumpleTexto && cumpleActivo && cumpleBeca;
+                const cumpleBeca = !soloBecados || (a.beca === 1);
+                const cumpleTarifa = !soloConTarifa || (a.precio_terapia && parseFloat(a.precio_terapia) > 0);
+
+                return cumpleTexto && cumpleEstado && cumpleBeca && cumpleTarifa;
             });
+
+            // Actualizar el contador en pantalla
+            const contadorEl = document.getElementById('contador-alumnos');
+            if (contadorEl) {
+                contadorEl.textContent = filtrados.length;
+            }
+
+            return filtrados;
         }
 
         function filtrarAlumnos() {
@@ -361,7 +459,7 @@
                 nombre: nombreInput,
                 apellidos: apellidosInput,
                 curso: document.getElementById('curso').value.trim(),
-                centro: document.getElementById('centro').value,
+                centro: document.getElementById('centro').value.trim(),
                 fecha_comienzo: document.getElementById('fecha_comienzo').value,
                 precio_terapia: parseFloat(document.getElementById('precio_terapia').value) || 0,
                 beca: document.getElementById('beca').checked ? 1 : 0,
@@ -417,13 +515,14 @@
                     method: 'DELETE'
                 });
 
+                const resultado = await respuesta.json();
+
                 if (respuesta.ok) {
                     alert('🗑️ Alumno eliminado correctamente.');
                     limpiarFormulario();
                     cargarAlumnos();
                 } else {
-                    const resultado = await respuesta.json();
-                    alert('❌ Error: ' + (resultado.error || 'No se pudo eliminar el alumno.'));
+                    alert('❌ No se pudo eliminar: ' + (resultado.error || 'El alumno está vinculado a una asignación.'));
                 }
             } catch (error) {
                 alert('❌ Error de conexión con el servidor.');
@@ -470,7 +569,7 @@
             document.getElementById('btn-borrar').classList.add('hidden');
         }
         
-        cargarCentrosSelect();
+        cargarCentrosListado();
         cargarAlumnos();
     </script>
 </body>
