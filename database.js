@@ -59,7 +59,23 @@ function inicializarTablas() {
             modificado_por TEXT,
             creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
             modificado_en DATETIME
-        )`);
+        )`, () => {
+            // Una vez asegurada la tabla, comprobamos y añadimos los campos nuevos mediante ALTER si no existen
+            const nuevasColumnas = [
+                "ALTER TABLE alumnos ADD COLUMN tarifa_refuerzo_id INTEGER;",
+                "ALTER TABLE alumnos ADD COLUMN horas_refuerzo INTEGER DEFAULT 0;",
+                "ALTER TABLE alumnos ADD COLUMN tarifa_dificultad_id INTEGER;",
+                "ALTER TABLE alumnos ADD COLUMN horas_dificultad INTEGER DEFAULT 0;",
+                "ALTER TABLE alumnos ADD COLUMN tarifa_logopedia_id INTEGER;",
+                "ALTER TABLE alumnos ADD COLUMN horas_logopedia INTEGER DEFAULT 0;"
+            ];
+
+            nuevasColumnas.forEach(sql => {
+                db.run(sql, (err) => {
+                    // Si da error es normalmente porque la columna ya existe, por lo que podemos ignorarlo de forma segura
+                });
+            });
+        });
 
         // 4. Tabla de Tarifas de Servicios
         db.run(`CREATE TABLE IF NOT EXISTS tarifas_servicios (
@@ -95,58 +111,19 @@ function inicializarTablas() {
                 FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
                 FOREIGN KEY (alumno_id) REFERENCES alumnos(id),
                 FOREIGN KEY (tarifa_id) REFERENCES tarifas_servicios(id)
-        )`);
-
-        // Tabla principal para guardar la cabecera de la Hoja de Pago por mes
-        db.run(`CREATE TABLE IF NOT EXISTS hojas_pago (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                mes TEXT NOT NULL, -- Formato 'YYYY-MM'
-                alumno_id INTEGER NOT NULL,
-                modo_pago TEXT DEFAULT NULL,
-                fecha_pago TEXT DEFAULT NULL,
-                
-                -- Conteo de tarifas de clases
-                ref_p INTEGER DEFAULT 0,
-                ref_s INTEGER DEFAULT 0,
-                ref_b INTEGER DEFAULT 0,
-                da INTEGER DEFAULT 0,
-                da_c INTEGER DEFAULT 0,
-                log INTEGER DEFAULT 0,
-                log_m INTEGER DEFAULT 0,
-                
-                -- Descuentos y totales de clases
-                num_clases INTEGER DEFAULT 0,
-                total_clases INTEGER DEFAULT 0,
-                pct_dto REAL DEFAULT 0.0000,
-                importe_clases REAL DEFAULT 0.00,
-                
-                -- 6 Campos de Terapias
-                terapia_1 INTEGER DEFAULT 0,
-                terapia_2 INTEGER DEFAULT 0,
-                terapia_3 INTEGER DEFAULT 0,
-                terapia_4 INTEGER DEFAULT 0,
-                terapia_5 INTEGER DEFAULT 0,
-                terapia_6 INTEGER DEFAULT 0,
-                importe_terapias REAL DEFAULT 0.00,
-                
-                -- Observaciones, Evaluación y Total Final
-                observaciones TEXT DEFAULT NULL,
-                evaluacion INTEGER DEFAULT 0,
-                total_final REAL DEFAULT 0.00,
-                
-                creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
-                actualizado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
-                
-                CONSTRAINT unique_mes_alumno UNIQUE (mes, alumno_id)
-            )`);
+        )`);        
 
            // Creación de la tabla para almacenar la hoja de pago guardada por mes y alumno
+        // Creación de la tabla para almacenar la hoja de pago guardada por mes y alumno              
+        // Creación de la tabla para almacenar la hoja de pago guardada por mes y alumno     
+        // db.run(`DROP TABLE hoja_pago_mensual`);           
         db.run(`CREATE TABLE IF NOT EXISTS hoja_pago_mensual (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     mes TEXT NOT NULL,                     -- Formato YYYY-MM
                     alumno_id INTEGER NOT NULL,            -- Clave foránea del alumno
-                    modo_pago TEXT,                        -- Ej. Efectivo, Transferencia, Domiciliación
-                    fecha_pago TEXT,                       -- Fecha en la que se realiza el pago
+                    pendiente_mes_anterior REAL DEFAULT 0, -- Pendiente de pago del mes anterior
+                    cobro_extra REAL DEFAULT 0,            -- Para añadir cobros (por ejemplo recargos por recibos devueltos)
+                    otros_pagos REAL DEFAULT 0,            -- Otros pagos adicionales
                     ref_p INTEGER DEFAULT 0,               -- Cantidad tarifa REF P
                     ref_s INTEGER DEFAULT 0,               -- Cantidad tarifa REF S
                     ref_b INTEGER DEFAULT 0,               -- Cantidad tarifa REF B
@@ -154,23 +131,32 @@ function inicializarTablas() {
                     da_c INTEGER DEFAULT 0,                -- Cantidad tarifa DA C
                     log INTEGER DEFAULT 0,                 -- Cantidad tarifa LOG
                     log_m INTEGER DEFAULT 0,               -- Cantidad tarifa LOG M
-                    num_clases INTEGER,                    -- Nº clases asistidas (para dto.)
-                    total_clases INTEGER,                  -- Total clases asignadas (para dto.)
+                    num_clases INTEGER,                    -- Nº clases asistidas (no modificable)
+                    total_clases INTEGER,                  -- Total clases asignadas (no modificable)
                     pct_dto REAL DEFAULT 0,                -- Porcentaje de descuento
                     importe_clases REAL DEFAULT 0,         -- Importe neto de clases
-                    terapia_1 INTEGER DEFAULT 0,           -- Días / sesiones T1
-                    terapia_2 INTEGER DEFAULT 0,           -- Días / sesiones T2
-                    terapia_3 INTEGER DEFAULT 0,           -- Días / sesiones T3
-                    terapia_4 INTEGER DEFAULT 0,           -- Días / sesiones T4
-                    terapia_5 INTEGER DEFAULT 0,           -- Días / sesiones T5
-                    terapia_6 INTEGER DEFAULT 0,           -- Días / sesiones T6
+                    importe_pagado_clases REAL DEFAULT 0,  -- Importe pagado de clases (editable)
+                    terapia_1 TEXT DEFAULT '',             -- T1 (alfanumérico máx 5)
+                    terapia_1_pagado INTEGER DEFAULT 0,    -- Check pagado T1 (1/0)
+                    terapia_2 TEXT DEFAULT '',             -- T2 (alfanumérico máx 5)
+                    terapia_2_pagado INTEGER DEFAULT 0,    -- Check pagado T2 (1/0)
+                    terapia_3 TEXT DEFAULT '',             -- T3 (alfanumérico máx 5)
+                    terapia_3_pagado INTEGER DEFAULT 0,    -- Check pagado T3 (1/0)
+                    terapia_4 TEXT DEFAULT '',             -- T4 (alfanumérico máx 5)
+                    terapia_4_pagado INTEGER DEFAULT 0,    -- Check pagado T4 (1/0)
+                    terapia_5 TEXT DEFAULT '',             -- T5 (alfanumérico máx 5)
+                    terapia_5_pagado INTEGER DEFAULT 0,    -- Check pagado T5 (1/0)
+                    terapia_6 TEXT DEFAULT '',             -- T6 (alfanumérico máx 5)
+                    terapia_6_pagado INTEGER DEFAULT 0,    -- Check pagado T6 (1/0)
                     importe_terapias REAL DEFAULT 0,       -- Importe total terapias
+                    importe_pagado_terapias REAL DEFAULT 0,-- Importe pagado terapias (no modificable)
                     observaciones TEXT,                    -- Notas complementarias
                     evaluacion INTEGER DEFAULT 0,          -- Booleano: si incluye tasa de evaluación
                     total_final REAL DEFAULT 0,            -- Suma final calculada
+                    total_pagado REAL DEFAULT 0,           -- Total pagado (no modificable)
                     FOREIGN KEY(alumno_id) REFERENCES alumnos(id),
                     UNIQUE(mes, alumno_id)                  -- Garantiza un registro único por alumno y mes
-            )`);    
+            )`);
 
     });
 }

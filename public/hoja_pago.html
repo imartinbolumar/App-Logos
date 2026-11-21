@@ -5,11 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hoja de Pago</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
 </head>
 <body class="bg-slate-100 min-h-screen relative">
     
-    <!-- Navbar superior super-ancha -->
-    <header class="bg-white shadow-sm w-full">
+    <!-- Navbar superior fija -->
+    <header class="bg-white shadow-sm w-full sticky top-0 z-30">
         <div class="w-full px-4 sm:px-8 py-4 flex justify-between items-center">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-sm">
@@ -18,54 +28,50 @@
                 <h1 class="text-xl font-bold text-slate-800">💳 Hoja de Pago Mensual</h1>
             </div>
             <div class="flex items-center gap-4">
-                <a href="/dashboard.html" class="text-sm font-semibold text-blue-600 hover:underline">← Volver al Panel</a>
+                <button onclick="volverAlPanel()" class="text-sm font-semibold text-blue-600 hover:underline bg-transparent border-none cursor-pointer">← Volver al Panel</button>
                 <span id="info-usuario" class="text-sm font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg">Cargando...</span>
-                <button onclick="cerrarSesion()" class="bg-red-50 text-red-600 text-sm font-semibold px-4 py-2 rounded-lg hover:bg-red-100 transition">
+                <button onclick="intentarCerrarSesion()" class="bg-red-50 text-red-600 text-sm font-semibold px-4 py-2 rounded-lg hover:bg-red-100 transition">
                     Cerrar Sesión
                 </button>
             </div>
         </div>
     </header>
 
-    <!-- Contenido principal ocupando todo el ancho -->
+    <!-- Contenido principal -->
     <main class="w-full px-4 sm:px-8 py-6 space-y-6">
         
-        <!-- Filtros y botones superiores -->
-        <div class="bg-white p-4 rounded-xl shadow-md flex flex-col lg:flex-row justify-between items-center gap-4">
-            <div class="flex flex-wrap items-center gap-4 w-full lg:w-auto">
-                
-                <!-- Selector de Mes con Botones Anterior / Siguiente -->
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Seleccionar Mes/Año:</label>
+        <!-- Filtros y botones superiores fijos -->
+        <div class="bg-white px-4 py-3 rounded-xl shadow-md flex items-center justify-between gap-3 overflow-x-auto whitespace-nowrap sticky top-[73px] z-20 border border-slate-200">
+            <div class="flex items-center gap-3 shrink-0">
+                <div class="flex items-center gap-2">
+                    <label for="filtro-mes" class="text-xs font-semibold text-slate-700">Mes/Año:</label>
                     <div class="flex items-center gap-1">
-                        <button onclick="cambiarMesRelativo(-1)" title="Mes anterior" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-lg border border-slate-300 transition">
-                            ◀
-                        </button>
-                        <input type="month" id="filtro-mes" onchange="intentarCambiarMes(this.value)" class="px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                        <button onclick="cambiarMesRelativo(1)" title="Mes siguiente" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-bold rounded-lg border border-slate-300 transition">
-                            ▶
-                        </button>
+                        <button onclick="cambiarMesRelativo(-1)" title="Mes anterior" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg border border-slate-300 transition">◀</button>
+                        <input type="month" id="filtro-mes" onchange="intentarCambiarMes(this.value)" class="px-2.5 py-1.5 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <button onclick="cambiarMesRelativo(1)" title="Mes siguiente" class="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg border border-slate-300 transition">▶</button>
                     </div>
                 </div>
 
-                <!-- Buscador por nombre y apellidos -->
-                <div>
-                    <label class="block text-xs font-semibold text-slate-700 mb-1">Buscar Alumno:</label>
-                    <input type="text" id="buscador-alumnos" oninput="renderizarGrid()" placeholder="🔍 Nombre o apellidos..." class="px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-full sm:w-64">
+                <div class="flex items-center gap-2">
+                    <label for="buscador-alumnos" class="text-xs font-semibold text-slate-700">Alumno:</label>
+                    <input type="text" id="buscador-alumnos" oninput="renderizarGrid()" placeholder="🔍 Nombre o apellidos..." class="px-3 py-1.5 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-52">
                 </div>
 
-                <!-- Contador de alumnos facturados -->
-                <div class="flex items-center gap-1.5 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 mt-5">
-                    <span>Alumnos facturados:</span>
+                <div class="flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700">
+                    <span>Alumnos:</span>
                     <span id="contador-alumnos" class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-md font-bold">0</span>
                 </div>
             </div>
             
-            <div class="flex items-center gap-3">
-                <button onclick="calcularOActualizarDesdeAsignaciones()" title="Calcula o actualiza el mes incorporando alumnos de las asignaciones del mes" class="bg-amber-600 text-white text-xs font-semibold px-4 py-2.5 rounded-lg hover:bg-amber-700 transition shadow-sm flex items-center gap-1.5">
+            <div class="flex items-center gap-2 shrink-0">
+                <span id="aviso-mes-bloqueado" title="Mes bloqueado: solo consulta" aria-label="Mes bloqueado" class="hidden text-sm leading-none text-amber-800 bg-amber-50 border border-amber-300 p-2 rounded-lg select-none">🔒</span>
+                <button id="btn-anadir-alumno" onclick="abrirModalAnadirAlumno()" title="Añadir un alumno manualmente aunque no esté en las asignaciones del mes" class="bg-emerald-600 text-white text-xs font-semibold px-3.5 py-2 rounded-lg hover:bg-emerald-700 transition shadow-sm flex items-center gap-1">
+                    ➕ Añadir Alumno
+                </button>
+                <button id="btn-calcular-mes" onclick="calcularOActualizarDesdeAsignaciones()" title="Calcula o actualiza el mes incorporando alumnos de las asignaciones del mes" class="bg-amber-600 text-white text-xs font-semibold px-3.5 py-2 rounded-lg hover:bg-amber-700 transition shadow-sm flex items-center gap-1">
                     ⚡ Calcular / Recalcular Mes
                 </button>
-                <button onclick="guardarHojaPago()" class="bg-blue-600 text-white text-xs font-semibold px-5 py-2.5 rounded-lg hover:bg-blue-700 transition shadow-sm">
+                <button id="btn-guardar-cambios" onclick="guardarHojaPago()" class="bg-blue-600 text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-blue-700 transition shadow-sm">
                     💾 Guardar Cambios
                 </button>
             </div>
@@ -73,79 +79,101 @@
 
         <!-- Tabla Grid Edición Directa -->
         <div class="bg-white rounded-xl shadow-md overflow-hidden border border-slate-200">
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse text-xs min-w-[1950px]">
-                    <thead>
-                        <!-- Super-cabeceras con colores requeridos -->
+            <div class="overflow-x-auto max-h-[70vh]">
+                <table class="w-full text-left border-collapse text-xs min-w-[1620px]">
+                    <thead class="sticky top-0 z-20">
                         <tr class="bg-slate-800 text-white font-semibold text-[11px] uppercase tracking-wider text-center">
-                            <th colspan="5" class="py-2 px-2 border-r border-slate-700 bg-slate-800">Información General</th>
-                            <th colspan="7" class="py-2 px-2 border-r border-slate-700 bg-sky-900">Conteo Tarifas Clases</th>
-                            <th colspan="3" class="py-2 px-2 border-r border-slate-700 bg-sky-900">Descuentos Clases</th>
-                            <th colspan="1" class="py-2 px-2 border-r border-slate-700 bg-sky-900">Importe Clases</th>
-                            <th colspan="6" class="py-2 px-2 border-r border-slate-700 bg-teal-900">Terapias (Días)</th>
-                            <th colspan="1" class="py-2 px-2 border-r border-slate-700 bg-teal-900">Importe Terapias</th>
-                            <th colspan="1" class="py-2 px-2 border-r border-slate-700 bg-purple-900">Evaluación</th>
-                            <th colspan="1" class="py-2 px-2 border-r border-slate-700 bg-slate-900">Total Final</th>
-                            <th colspan="1" class="py-2 px-2 bg-slate-700">Observaciones</th>
+                            <th colspan="1" class="py-2 px-2 border-r border-slate-700 bg-slate-800 sticky left-0 z-30">Información General</th>
+                            <th colspan="3" class="py-2 px-2 border-r border-slate-700 bg-amber-900">Otros</th>
+                            <th colspan="1" class="py-2 px-2 border-r border-slate-700 bg-sky-900">Clases</th>
+                            <th colspan="2" class="py-2 px-2 border-r border-slate-700 bg-sky-900">Importe Clases (€)</th>
+                            <th colspan="1" class="py-2 px-1 border-r border-slate-700 bg-teal-900">Terapias</th>
+                            <th colspan="2" class="py-2 px-2 border-r border-slate-700 bg-teal-900">Importe Terapias (€)</th>
+                            <th colspan="1" class="py-2 px-2 border-r border-slate-700 bg-purple-900">Evaluac.</th>
+                            <th colspan="2" class="py-2 px-2 border-r border-slate-700 bg-slate-900">Total Final (€)</th>
+                            <th colspan="2" class="py-2 px-2 bg-slate-700">Acciones / Observaciones</th>
                         </tr>
-                        <tr class="bg-slate-100 text-slate-700 border-b border-slate-300 font-bold uppercase text-[10px]">
-                            <!-- Info General -->
-                            <th class="py-2 px-2 w-8 text-center border-r">
-                                <input type="checkbox" id="check-todos" onchange="toggleSeleccionarTodos(this)" class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer">
+                        <tr class="bg-slate-100 text-slate-700 border-b border-t  border-slate-300 font-bold uppercase text-[10px] text-center">
+                            <th class="py-2 px-2 w-48 border-r sticky left-0 bg-slate-200 z-30">Alumno</th>
+                            <th class="py-2 px-0.5 w-16 border-r bg-amber-50">Pdte. Mes Ant.</th>
+                            <th class="py-2 px-0.5 w-16 border-r bg-orange-50">Cobro Extra</th>
+                            <th class="py-2 px-0.5 w-16 border-r bg-emerald-50">Otros Pagos</th>
+
+                            <!-- Bloque unificado de Tarifas + Sub-fila de Clases integradas -->
+                            <th class="py-1 px-1 border-r border-t  bg-blue-50/50 w-[212px]">
+                                <div class="grid grid-cols-7 gap-0.5 text-center w-full mx-auto">
+                                    <span class="text-[9px] leading-tight">REF P</span>
+                                    <span class="text-[9px] leading-tight">REF S</span>
+                                    <span class="text-[9px] leading-tight">REF B</span>
+                                    <span class="text-[9px] leading-tight">DA</span>
+                                    <span class="text-[9px] leading-tight">DA C</span>
+                                    <span class="text-[9px] leading-tight">LOG</span>
+                                    <span class="text-[9px] leading-tight">LOG M</span>
+                                </div>
                             </th>
-                            <th class="py-2 px-2 w-48 border-r">Alumno</th>
-                            <th class="py-2 px-1 w-12 text-center border-r">Mes</th>
-                            <th class="py-2 px-2 w-32 border-r">Modo Pago</th>
-                            <th class="py-2 px-1 w-24 text-center border-r">Fecha Pago</th>
 
-                            <!-- Conteo Tarifas Clases -->
-                            <th class="py-2 px-1 w-11 text-center bg-blue-50/50">REF P</th>
-                            <th class="py-2 px-1 w-11 text-center bg-blue-50/50">REF S</th>
-                            <th class="py-2 px-1 w-11 text-center bg-blue-50/50">REF B</th>
-                            <th class="py-2 px-1 w-11 text-center bg-blue-50/50">DA</th>
-                            <th class="py-2 px-1 w-11 text-center bg-blue-50/50">DA C</th>
-                            <th class="py-2 px-1 w-11 text-center bg-blue-50/50">LOG</th>
-                            <th class="py-2 px-1 w-11 text-center border-r bg-blue-50/50">LOG M</th>
+                            <th class="py-2 px-1 w-16 border text-sky-700 bg-sky-50/30">Importe</th>
+                            <th class="py-1 px-1 w-16 border border-r text-teal-700 bg-sky-50/30 leading-tight">
+                                <div>Pagado</div>
+                                <div class="text-[9px] text-amber-700 border-t border-sky-200 mt-0.5 pt-0.5">Pendiente</div>
+                            </th>
 
-                            <!-- Descuento Clases -->
-                            <th class="py-2 px-1 w-12 text-center bg-indigo-50/30">Nº Clases</th>
-                            <th class="py-2 px-1 w-14 text-center bg-indigo-50/30">Total Clases</th>
-                            <th class="py-2 px-1 w-12 text-center border-r bg-indigo-50/30">% Dto</th>
+                            <!-- Cabecera Terapias (T1 a T6 compacta) -->
+                            <th class="py-1.5 px-1 border-t border-r bg-teal-50/50 w-[304px]">
+                                <div class="grid grid-cols-6 gap-0.5 text-center w-full mx-auto">
+                                    <span class="text-[10px] font-bold text-teal-800">T1</span>
+                                    <span class="text-[10px] font-bold text-teal-800">T2</span>
+                                    <span class="text-[10px] font-bold text-teal-800">T3</span>
+                                    <span class="text-[10px] font-bold text-teal-800">T4</span>
+                                    <span class="text-[10px] font-bold text-teal-800">T5</span>
+                                    <span class="text-[10px] font-bold text-teal-800">T6</span>
+                                </div>
+                            </th>
 
-                            <!-- Importe Clases -->
-                            <th class="py-2 px-1 w-20 text-right border-r bg-sky-50/30">Imp. Clases (€)</th>
+                            <th class="py-2 px-1 w-16 border text-sky-700 bg-teal-50/30">Importe</th>
+                            <th class="py-1 px-1 w-16 border text-teal-700 border-r bg-teal-50/30 leading-tight">
+                                <div>Pagado</div>
+                                <div class="text-[9px] text-amber-700 border-t border-teal-200 mt-0.5 pt-0.5">Pendiente</div>
+                            </th>
 
-                            <!-- Terapias Días -->
-                            <th class="py-2 px-1 w-10 text-center bg-emerald-50/30">T1</th>
-                            <th class="py-2 px-1 w-10 text-center bg-emerald-50/30">T2</th>
-                            <th class="py-2 px-1 w-10 text-center bg-emerald-50/30">T3</th>
-                            <th class="py-2 px-1 w-10 text-center bg-emerald-50/30">T4</th>
-                            <th class="py-2 px-1 w-10 text-center bg-emerald-50/30">T5</th>
-                            <th class="py-2 px-1 w-10 text-center border-r bg-emerald-50/30">T6</th>
+                            <th class="py-2 px-1 w-10 text-center border border-r bg-purple-50/30">Evaluac.</th>
 
-                            <!-- Importe Terapias -->
-                            <th class="py-2 px-1 w-20 text-right border-r bg-teal-50/30">Imp. Terapias (€)</th>
+                            <th class="py-2 px-1 w-16 border text-sky-700 bg-slate-200">IMPORTE TOTAL</th>
+                            <th class="py-1 px-1 w-16 border border-r text-teal-700 bg-slate-200 leading-tight">
+                                <div>PAGADO</div>
+                                <div class="text-[9px] text-amber-800 border-t border-slate-300 mt-0.5 pt-0.5">PENDIENTE</div>
+                            </th>
 
-                            <!-- Evaluación -->
-                            <th class="py-2 px-1 w-12 text-center border-r bg-purple-50/30">Eval. (EV)</th>
-
-                            <!-- Total Final -->
-                            <th class="py-2 px-2 w-24 text-right border-r bg-slate-200">TOTAL (€)</th>
-
-                            <!-- Observaciones -->
-                            <th class="py-2 px-2 w-48">Observaciones</th>
+                            <th class="py-2 px-2 w-48 border">Observaciones</th>
+                            <th class="py-2 px-1 w-14 border text-center">Borrar</th>
                         </tr>
                     </thead>
                     <tbody id="tabla-hoja-pago" class="divide-y divide-slate-200"></tbody>
-                    <tfoot class="bg-slate-100 font-bold text-slate-800 border-t-2 border-slate-300 text-xs">
+                    <tfoot class="bg-slate-100 font-bold text-slate-800 border-t-2 border-slate-300 text-xs sticky bottom-0 z-20">
                         <tr>
-                            <td colspan="15" class="py-3 px-4 text-right">TOTALES GENERALES DEL MES:</td>
-                            <td class="py-3 px-1 text-right text-teal-700 text-sm bg-slate-200 border-x border-slate-300" id="total-clases-general">0.00 €</td>
-                            <td colspan="6"></td>
-                            <td colspan="1" class="py-3 px-1 text-right text-teal-700 text-sm bg-slate-200 border-x border-slate-300" id="total-terapias-general">0.00 €</td>
+                            <td class="py-3 px-4 text-right bg-slate-200 sticky left-0 z-30 border-r">TOTALES MES:</td>
+                            <td class="py-3 px-1 text-right text-sky-700 text-xs bg-slate-200 border-r" id="total-pendiente-ant-general">0,00</td>
+                            <td class="py-3 px-1 text-right text-sky-700 text-xs bg-slate-200 border-r" id="total-cobro-extra-general">0,00</td>
+                            <td class="py-3 px-1 text-right text-teal-700 text-xs bg-slate-200 border-r" id="total-otros-pagos-general">0,00</td>
                             <td colspan="1"></td>
-                            <td colspan="1" class="py-3 px-1 text-right text-blue-900 text-sm bg-slate-200 border-x border-slate-300" id="total-general">0.00 €</td>
-                            <td></td>
+                            <td class="py-2 px-1 text-right text-sky-700 text-xs bg-slate-200 border-l border-slate-300" id="total-clases-general">0,00</td>
+                            <td class="py-1.5 px-1 text-right text-xs bg-slate-200 border-r border-slate-300">
+                                <div class="text-teal-700" id="total-pagado-clases-general">0,00</div>
+                                <div class="text-amber-700 border-t border-slate-300 mt-0.5 pt-0.5" id="total-pendiente-clases-general">0,00</div>
+                            </td>
+                            <td colspan="1"></td>
+                            <td class="py-2 px-1 text-right text-sky-700 text-xs bg-slate-200 border-l border-slate-300" id="total-terapias-general">0,00</td>
+                            <td class="py-1.5 px-1 text-right text-xs bg-slate-200 border-r border-slate-300">
+                                <div class="text-teal-700" id="total-pagado-terapias-general">0,00</div>
+                                <div class="text-amber-700 border-t border-slate-300 mt-0.5 pt-0.5" id="total-pendiente-terapias-general">0,00</div>
+                            </td>
+                            <td colspan="1"></td>
+                            <td class="py-2 px-1 text-right  text-sky-700 text-xs bg-slate-200 border-l border-slate-300" id="total-general">0,00</td>
+                            <td class="py-1.5 px-1 text-right text-xs bg-slate-200 border-r border-slate-300">
+                                <div class="text-teal-700" id="total-pagado-general">0,00</div>
+                                <div class="text-amber-700 border-t border-slate-300 mt-0.5 pt-0.5" id="total-pendiente-general">0,00</div>
+                            </td>
+                            <td colspan="2"></td>
                         </tr>
                     </tfoot>
                 </table>
@@ -153,30 +181,48 @@
         </div>
     </main>
 
-    <!-- MODAL PERSONALIZADO: CAMBIOS SIN GUARDAR -->
+    <!-- Modal añadir alumno manualmente -->
+    <div id="modal-anadir-alumno" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 m-4 transform transition-all scale-100">
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 text-xl font-bold">➕</div>
+                <h3 class="text-lg font-bold text-slate-800">Añadir alumno a la hoja de pago</h3>
+            </div>
+            <p class="text-sm text-slate-600 mb-4">Escribe el nombre o apellidos del alumno para ver sugerencias. Solo aparecen alumnos que aún no estén en este mes y se traerá su importe pendiente del mes anterior.</p>
+            <div class="mb-6 relative">
+                <label for="input-alumno-anadir" class="block text-xs font-semibold text-slate-700 mb-1.5">Buscar y elegir alumno:</label>
+                <input type="text" id="input-alumno-anadir"
+                       oninput="filtrarSugerenciasAlumnoAnadir()"
+                       onfocus="filtrarSugerenciasAlumnoAnadir()"
+                       autocomplete="off"
+                       placeholder="🔍 Escribe nombre o apellidos..."
+                       class="w-full px-3 py-2.5 text-sm border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 bg-white">
+                <input type="hidden" id="alumno-anadir-id-seleccionado" value="">
+                <div id="lista-sugerencias-alumno-anadir"
+                     class="mt-1.5 max-h-48 overflow-y-auto border border-slate-200 rounded-xl bg-white shadow-lg divide-y divide-slate-100 hidden">
+                </div>
+                <p id="mensaje-sin-alumnos-disponibles" class="text-xs text-amber-700 mt-2 hidden">Todos los alumnos registrados ya figuran en la hoja de pagos de este mes.</p>
+                <p id="mensaje-error-seleccion-alumno" class="text-xs text-red-600 mt-1.5 hidden">Selecciona un alumno válido de las sugerencias.</p>
+            </div>
+            <div class="flex items-center justify-end gap-2.5">
+                <button onclick="cerrarModalAnadirAlumno()" class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition">Cancelar</button>
+                <button id="btn-confirmar-anadir-alumno" onclick="confirmarAnadirAlumno()" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-xl shadow-md transition">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de cambios sin guardar -->
     <div id="modal-cambios" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center hidden">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 m-4 transform transition-all scale-100">
             <div class="flex items-center gap-3 mb-4">
-                <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 text-xl font-bold">
-                    ⚠️
-                </div>
+                <div class="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center text-amber-600 text-xl font-bold">⚠️</div>
                 <h3 class="text-lg font-bold text-slate-800">Cambios sin guardar</h3>
             </div>
-            
-            <p class="text-sm text-slate-600 mb-6">
-                Tienes modificaciones pendientes en esta pantalla. ¿Qué deseas hacer antes de continuar?
-            </p>
-            
+            <p class="text-sm text-slate-600 mb-6">Tienes modificaciones pendientes en esta pantalla. ¿Qué deseas hacer antes de continuar?</p>
             <div class="flex flex-wrap sm:flex-nowrap items-center justify-end gap-2.5">
-                <button onclick="cerrarModalCambios()" class="w-full sm:w-auto px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition">
-                    Cancelar
-                </button>
-                <button onclick="ejecutarAccionPendiente(false)" class="w-full sm:w-auto px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 font-semibold text-xs rounded-xl transition">
-                    Salir sin guardar
-                </button>
-                <button onclick="ejecutarAccionPendiente(true)" class="w-full sm:w-auto px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-xl shadow-md transition">
-                    Guardar Cambios
-                </button>
+                <button onclick="cerrarModalCambios()" class="w-full sm:w-auto px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-xl transition">Cancelar</button>
+                <button onclick="ejecutarAccionPendiente(false)" class="w-full sm:w-auto px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 font-semibold text-xs rounded-xl transition">Salir sin guardar</button>
+                <button onclick="ejecutarAccionPendiente(true)" class="w-full sm:w-auto px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs rounded-xl shadow-md transition">Guardar Cambios</button>
             </div>
         </div>
     </div>
@@ -187,13 +233,46 @@
        
         let alumnos = [];
         let tarifasMap = {};
-        let modosPago = [];
         let filasEstado = []; 
         let asignacionesMesCache = []; 
         let hayCambiosPendientes = false;
         let mesPendienteDestino = '';
+        let accionPendienteTipo = null; 
+        let indiceSiguienteFoco = null;
         
         const codigosTarifasOrden = ["REF P", "REF S", "REF B", "DA", "DA C", "LOG", "LOG M"];
+
+        function formatearMoneda(valor) {
+            const num = parseFloat(valor) || 0;
+            const partes = num.toFixed(2).split('.');
+            partes[0] = partes[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            return partes.join(',');
+        }
+
+        function parsearImporteTexto(texto) {
+            if (typeof texto === 'number') return texto;
+            if (!texto) return 0;
+            const limpio = String(texto).replace(/€/g, '').replace(/\./g, '').replace(/,/g, '.').trim();
+            return parseFloat(limpio) || 0;
+        }
+
+        function prepararInputEdicion(inputEl, valorNumerico) {
+            inputEl.value = valorNumerico === 0 ? '' : String(valorNumerico).replace('.', ',');
+            inputEl.select();
+        }
+
+        function obtenerInputsEditablesTabla() {
+            return Array.from(document.querySelectorAll('#tabla-hoja-pago input:not([readonly]):not([disabled]):not([type="hidden"])'))
+                .filter(el => !el.closest('button') && el.offsetParent !== null);
+        }
+
+        function registrarAvanceFoco(inputEl, avanzar = true) {
+            const inputs = obtenerInputsEditablesTabla();
+            const idx = inputs.indexOf(inputEl);
+            if (idx !== -1) {
+                indiceSiguienteFoco = avanzar ? (idx + 1) % inputs.length : idx;
+            }
+        }
 
         async function fetchAPI(url, options) {
             try {
@@ -207,9 +286,77 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            history.pushState({ page: 'hoja_pago' }, '', window.location.href);
+
+            window.addEventListener('popstate', (event) => {
+                if (hayCambiosPendientes) {
+                    history.pushState({ page: 'hoja_pago' }, '', window.location.href);
+                    accionPendienteTipo = 'historial_atras';
+                    document.getElementById('modal-cambios').classList.remove('hidden');
+                }
+            });
+
+            window.addEventListener('beforeunload', (event) => {
+                if (hayCambiosPendientes) {
+                    event.preventDefault();
+                    event.returnValue = '';
+                }
+            });
+
+            document.addEventListener('input', (e) => {
+                if (e.target.id === 'filtro-mes' || e.target.id === 'buscador-alumnos') return;
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
+                    const mesActual = document.getElementById('filtro-mes').value;
+                    if (!esMesEditable(mesActual)) {
+                        e.preventDefault();
+                        alert(`🔒 Solo se permite modificar en el mes inmediatamente anterior (${obtenerMesMinimoPermitido()}), en el mes actual o en posteriores.`);
+                        renderizarGrid();
+                        return;
+                    }
+                    hayCambiosPendientes = true;
+                }
+            });
+            document.addEventListener('change', (e) => {
+                if (e.target.id === 'filtro-mes' || e.target.id === 'buscador-alumnos') return;
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
+                    const mesActual = document.getElementById('filtro-mes').value;
+                    if (!esMesEditable(mesActual)) {
+                        e.preventDefault();
+                        alert(`🔒 Solo se permite modificar en el mes inmediatamente anterior (${obtenerMesMinimoPermitido()}), en el mes actual o en posteriores.`);
+                        renderizarGrid();
+                        return;
+                    }
+                    hayCambiosPendientes = true;
+                }
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Tab' || e.key === 'Enter') {
+                    const target = e.target;
+                    if (target && target.tagName === 'INPUT' && target.closest('#tabla-hoja-pago')) {
+                        const inputsEditables = obtenerInputsEditablesTabla();
+                        const indexActual = inputsEditables.indexOf(target);
+                        if (indexActual !== -1) {
+                            let siguienteIndex;
+                            if (e.shiftKey && e.key === 'Tab') {
+                                siguienteIndex = (indexActual - 1 + inputsEditables.length) % inputsEditables.length;
+                            } else {
+                                siguienteIndex = (indexActual + 1) % inputsEditables.length;
+                            }
+                            
+                            e.preventDefault();
+                            indiceSiguienteFoco = siguienteIndex;
+                            inputsEditables[siguienteIndex].focus();
+                            if (typeof inputsEditables[siguienteIndex].select === 'function') {
+                                inputsEditables[siguienteIndex].select();
+                            }
+                        }
+                    }
+                }
+            });
+
             const hoy = new Date();
             const diaActual = hoy.getDate();
-            
             let fechaMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
             if (diaActual <= 25) {
                 fechaMes.setMonth(fechaMes.getMonth() - 1);
@@ -229,6 +376,24 @@
             });
         }
 
+        function intentarCerrarSesion() {
+            if (hayCambiosPendientes) {
+                accionPendienteTipo = 'cerrar_sesion';
+                document.getElementById('modal-cambios').classList.remove('hidden');
+                return;
+            }
+            cerrarSesion();
+        }
+
+        function volverAlPanel() {
+            if (hayCambiosPendientes) {
+                accionPendienteTipo = 'volver_panel';
+                document.getElementById('modal-cambios').classList.remove('hidden');
+                return;
+            }
+            window.location.href = '/dashboard.html';
+        }
+
         function normalizarTexto(texto) {
             if (!texto) return '';
             return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^\w\s]/gi, '').trim();
@@ -236,23 +401,22 @@
 
         async function inicializarDatos() {
             try {
-                const [alumnosData, tarifasList, modosPagoData] = await Promise.all([
+                const [alumnosData, tarifasList] = await Promise.all([
                     fetchAPI('/api/alumnos'),
-                    fetchAPI('/api/tarifas'),
-                    fetchAPI('/api/modos-pago')
+                    fetchAPI('/api/tarifas')
                 ]);
 
                 alumnos = alumnosData || [];
+                window.tarifasListaCompleta = tarifasList || [];
+                
                 tarifasMap = {};
                 (tarifasList || []).forEach(t => {
-                    tarifasMap[t.codigo] = parseFloat(t.precio || t.importe || 0);
+                    const codigoTarifa = String(t.codigo || t.tipo_servicio || '').toUpperCase().trim();
+                    const val = (codigoTarifa === 'TE' || codigoTarifa === 'EV')
+                        ? extraerPrecioSesionTarifa(t)
+                        : parsearImporteTexto(t.precio_1h || t.tarifa_por_sesion || t.precio || t.importe || 0);
+                    if (codigoTarifa) tarifasMap[codigoTarifa] = val;
                 });
-
-                modosPago = modosPagoData.length > 0 ? modosPagoData : [
-                    { id: 1, nombre: 'Efectivo' }, 
-                    { id: 2, nombre: 'Transferencia' }, 
-                    { id: 3, nombre: 'Domiciliación' }
-                ];
 
                 await cargarOHojaPago();
             } catch (e) {
@@ -266,12 +430,9 @@
 
             const [año, mes] = inputMes.value.split('-').map(Number);
             const fecha = new Date(año, mes - 1 + delta, 1);
-            
             const nuevoAnio = fecha.getFullYear();
             const nuevoMes = String(fecha.getMonth() + 1).padStart(2, '0');
-            const nuevoValorMes = `${nuevoAnio}-${nuevoMes}`;
-
-            intentarCambiarMes(nuevoValorMes);
+            intentarCambiarMes(`${nuevoAnio}-${nuevoMes}`);
         }
 
         function intentarCambiarMes(nuevoMes) {
@@ -280,6 +441,7 @@
 
             if (hayCambiosPendientes) {
                 mesPendienteDestino = nuevoMes;
+                accionPendienteTipo = 'cambiar_mes';
                 document.getElementById('modal-cambios').classList.remove('hidden');
                 inputMes.value = filasEstado.length > 0 && filasEstado[0].mes ? filasEstado[0].mes : nuevoMes;
                 return;
@@ -292,10 +454,12 @@
         function cerrarModalCambios() {
             document.getElementById('modal-cambios').classList.add('hidden');
             mesPendienteDestino = '';
+            accionPendienteTipo = null;
         }
 
         async function ejecutarAccionPendiente(guardarPrimero) {
             const destino = mesPendienteDestino;
+            const tipo = accionPendienteTipo;
             cerrarModalCambios();
 
             if (guardarPrimero) {
@@ -303,10 +467,352 @@
             }
 
             hayCambiosPendientes = false;
-            if (destino) {
+            if (tipo === 'cambiar_mes' && destino) {
                 document.getElementById('filtro-mes').value = destino;
                 await cargarOHojaPago();
+            } else if (tipo === 'calcular') {
+                ejecutarCalculoAsignacionesReal();
+            } else if (tipo === 'volver_panel') {
+                window.location.href = '/dashboard.html';
+            } else if (tipo === 'cerrar_sesion') {
+                cerrarSesion();
+            } else if (tipo === 'historial_atras') {
+                window.history.go(-2);
             }
+        }
+
+        let alumnosDisponiblesAnadirCache = [];
+
+        function obtenerAlumnosDisponiblesParaAnadir() {
+            const idsYaEnHoja = new Set(filasEstado.map(f => String(f.alumno_id)));
+            return (alumnos || [])
+                .filter(a => !idsYaEnHoja.has(String(a.id)))
+                .sort((a, b) => `${a.nombre || ''} ${a.apellidos || ''}`.localeCompare(`${b.nombre || ''} ${b.apellidos || ''}`, 'es', { sensitivity: 'base' }));
+        }
+
+        function seleccionarSugerenciaAlumnoAnadir(alumnoId, nombreCompleto) {
+            const inputEl = document.getElementById('input-alumno-anadir');
+            const hiddenIdEl = document.getElementById('alumno-anadir-id-seleccionado');
+            const listaEl = document.getElementById('lista-sugerencias-alumno-anadir');
+            const msgError = document.getElementById('mensaje-error-seleccion-alumno');
+
+            inputEl.value = nombreCompleto;
+            hiddenIdEl.value = String(alumnoId);
+            msgError.classList.add('hidden');
+            listaEl.classList.add('hidden');
+        }
+
+        function filtrarSugerenciasAlumnoAnadir() {
+            const inputEl = document.getElementById('input-alumno-anadir');
+            const hiddenIdEl = document.getElementById('alumno-anadir-id-seleccionado');
+            const listaEl = document.getElementById('lista-sugerencias-alumno-anadir');
+            const msgError = document.getElementById('mensaje-error-seleccion-alumno');
+
+            if (inputEl.disabled) {
+                listaEl.classList.add('hidden');
+                return;
+            }
+
+            const textoNorm = normalizarTexto(inputEl.value);
+            const coincidencias = alumnosDisponiblesAnadirCache.filter(a => {
+                const nombreComp = `${a.nombre || ''} ${a.apellidos || ''}`.trim();
+                return !textoNorm || normalizarTexto(nombreComp).includes(textoNorm);
+            });
+
+            // Si el usuario editó el texto y ya no coincide exactamente con el seleccionado, limpiar id seleccionado
+            if (hiddenIdEl.value) {
+                const elegido = alumnosDisponiblesAnadirCache.find(a => String(a.id) === String(hiddenIdEl.value));
+                const nombreElegido = elegido ? `${elegido.nombre || ''} ${elegido.apellidos || ''}`.trim() : '';
+                if (inputEl.value.trim() !== nombreElegido) {
+                    hiddenIdEl.value = '';
+                }
+            }
+
+            msgError.classList.add('hidden');
+            listaEl.innerHTML = '';
+
+            if (coincidencias.length === 0) {
+                listaEl.innerHTML = `<div class="px-3 py-2 text-xs text-slate-400">No hay alumnos disponibles que coincidan.</div>`;
+                listaEl.classList.remove('hidden');
+                return;
+            }
+
+            coincidencias.slice(0, 15).forEach(a => {
+                const nombreComp = `${a.nombre || ''} ${a.apellidos || ''}`.trim();
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'w-full text-left px-3 py-2 text-xs font-medium text-slate-700 hover:bg-emerald-50 hover:text-emerald-800 transition flex items-center justify-between';
+                btn.textContent = nombreComp;
+                btn.onclick = () => seleccionarSugerenciaAlumnoAnadir(a.id, nombreComp);
+                listaEl.appendChild(btn);
+            });
+
+            listaEl.classList.remove('hidden');
+        }
+
+        function obtenerMesMinimoPermitido() {
+            const hoy = new Date();
+            const fechaMin = new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1);
+            return `${fechaMin.getFullYear()}-${String(fechaMin.getMonth() + 1).padStart(2, '0')}`;
+        }
+
+        function esMesEditable(mesStr) {
+            if (!mesStr || !/^\d{4}-\d{2}$/.test(mesStr)) return false;
+            return mesStr >= obtenerMesMinimoPermitido();
+        }
+
+        function verificarYNotificarMesEditable(mesStr, accionDesc = 'realizar esta acción') {
+            if (!esMesEditable(mesStr)) {
+                const mesMin = obtenerMesMinimoPermitido();
+                alert(`🔒 No se puede ${accionDesc} en ${mesStr}. Solo está permitido en el mes inmediatamente anterior (${mesMin}), en el mes actual o en meses posteriores.`);
+                return false;
+            }
+            return true;
+        }
+
+        function aplicarEstadoEdicionMes() {
+            const mesActual = document.getElementById('filtro-mes').value;
+            const editable = esMesEditable(mesActual);
+
+            const avisoEl = document.getElementById('aviso-mes-bloqueado');
+            const btnAnadir = document.getElementById('btn-anadir-alumno');
+            const btnCalcular = document.getElementById('btn-calcular-mes');
+            const btnGuardar = document.getElementById('btn-guardar-cambios');
+
+            if (avisoEl) {
+                avisoEl.classList.toggle('hidden', editable);
+                avisoEl.textContent = '🔒';
+                avisoEl.title = `Mes bloqueado (anterior a ${obtenerMesMinimoPermitido()}): solo consulta`;
+            }
+
+            [btnAnadir, btnCalcular, btnGuardar].forEach(btn => {
+                if (!btn) return;
+                btn.disabled = !editable;
+                btn.classList.toggle('opacity-50', !editable);
+                btn.classList.toggle('cursor-not-allowed', !editable);
+            });
+        }
+
+        function abrirModalAnadirAlumno() {
+            const mesActual = document.getElementById('filtro-mes').value;
+            if (!verificarYNotificarMesEditable(mesActual, 'añadir alumnos')) return;
+
+            const inputEl = document.getElementById('input-alumno-anadir');
+            const hiddenIdEl = document.getElementById('alumno-anadir-id-seleccionado');
+            const listaEl = document.getElementById('lista-sugerencias-alumno-anadir');
+            const msgVacio = document.getElementById('mensaje-sin-alumnos-disponibles');
+            const msgError = document.getElementById('mensaje-error-seleccion-alumno');
+            const btnOk = document.getElementById('btn-confirmar-anadir-alumno');
+
+            alumnosDisponiblesAnadirCache = obtenerAlumnosDisponiblesParaAnadir();
+            inputEl.value = '';
+            hiddenIdEl.value = '';
+            listaEl.innerHTML = '';
+            listaEl.classList.add('hidden');
+            msgError.classList.add('hidden');
+
+            if (alumnosDisponiblesAnadirCache.length === 0) {
+                inputEl.disabled = true;
+                btnOk.disabled = true;
+                btnOk.classList.add('opacity-50', 'cursor-not-allowed');
+                msgVacio.classList.remove('hidden');
+            } else {
+                inputEl.disabled = false;
+                btnOk.disabled = false;
+                btnOk.classList.remove('opacity-50', 'cursor-not-allowed');
+                msgVacio.classList.add('hidden');
+            }
+
+            document.getElementById('modal-anadir-alumno').classList.remove('hidden');
+            if (!inputEl.disabled) {
+                setTimeout(() => {
+                    inputEl.focus();
+                    filtrarSugerenciasAlumnoAnadir();
+                }, 10);
+            }
+        }
+
+        function cerrarModalAnadirAlumno() {
+            document.getElementById('lista-sugerencias-alumno-anadir').classList.add('hidden');
+            document.getElementById('modal-anadir-alumno').classList.add('hidden');
+        }
+
+        async function confirmarAnadirAlumno() {
+            const inputEl = document.getElementById('input-alumno-anadir');
+            const hiddenIdEl = document.getElementById('alumno-anadir-id-seleccionado');
+            const msgError = document.getElementById('mensaje-error-seleccion-alumno');
+            const mesAño = document.getElementById('filtro-mes').value;
+
+            if (!verificarYNotificarMesEditable(mesAño, 'añadir alumnos')) return;
+
+            let alumnoId = hiddenIdEl.value;
+            if (!alumnoId && inputEl.value.trim()) {
+                const textoBuscado = normalizarTexto(inputEl.value);
+                const exactas = alumnosDisponiblesAnadirCache.filter(a =>
+                    normalizarTexto(`${a.nombre || ''} ${a.apellidos || ''}`.trim()) === textoBuscado
+                );
+                if (exactas.length === 1) {
+                    alumnoId = String(exactas[0].id);
+                }
+            }
+
+            if (!alumnoId || !mesAño) {
+                msgError.classList.remove('hidden');
+                return;
+            }
+            if (filasEstado.some(f => String(f.alumno_id) === String(alumnoId))) {
+                alert("⚠️ Este alumno ya está en la hoja de pagos de este mes.");
+                return;
+            }
+
+            const alumno = alumnos.find(a => String(a.id) === String(alumnoId));
+            if (!alumno) return;
+
+            const btnOk = document.getElementById('btn-confirmar-anadir-alumno');
+            const textoOriginal = btnOk.textContent;
+            btnOk.disabled = true;
+            btnOk.textContent = 'Añadiendo...';
+
+            try {
+                const pendAnt = await calcularPendienteMesAnterior(alumno.id, mesAño);
+                const precioAlumno = parsearImporteTexto(alumno.precio_tarifa ?? alumno.precio_terapia ?? 0);
+
+                const nuevaFila = {
+                    alumno_id: alumno.id,
+                    nombreAlumno: `${alumno.nombre || ''} ${alumno.apellidos || ''}`.trim(),
+                    precioTerapiaAlumno: precioAlumno,
+                    mes: mesAño,
+                    pendiente_mes_anterior: parseFloat(pendAnt || 0),
+                    cobro_extra: 0,
+                    otros_pagos: 0,
+                    tarifas: {
+                        "REF P": 0,
+                        "REF S": 0,
+                        "REF B": 0,
+                        "DA": 0,
+                        "DA C": 0,
+                        "LOG": 0,
+                        "LOG M": 0
+                    },
+                    num_clases: '',
+                    total_clases: '',
+                    pct_dto: 0,
+                    importe_clases: 0,
+                    importe_pagado_clases: 0,
+                    terapias: ['', '', '', '', '', ''],
+                    terapias_pagado: [false, false, false, false, false, false],
+                    importe_terapias: 0,
+                    importe_pagado_terapias: 0,
+                    observaciones: '',
+                    evaluacion: false,
+                    total_final: 0,
+                    total_pagado: 0
+                };
+
+                calcularImportesFilaObjeto(nuevaFila);
+                filasEstado.push(nuevaFila);
+                hayCambiosPendientes = true;
+                cerrarModalAnadirAlumno();
+                renderizarGrid();
+            } finally {
+                btnOk.disabled = false;
+                btnOk.textContent = textoOriginal;
+            }
+        }
+
+        async function calcularPendienteMesAnterior(alumnoId, mesActualStr) {
+            const [anio, mes] = mesActualStr.split('-').map(Number);
+            const fechaAnt = new Date(anio, mes - 2, 1);
+            const mesAntStr = `${fechaAnt.getFullYear()}-${String(fechaAnt.getMonth() + 1).padStart(2, '0')}`;
+
+            try {
+                const hojaAnt = await fetchAPI(`/api/hoja-pago?mes=${mesAntStr}`);
+                if (hojaAnt && hojaAnt.length > 0) {
+                    const regAnt = hojaAnt.find(g => String(g.alumno_id) === String(alumnoId));
+                    if (regAnt) {
+                        const totalAnt = parseFloat(regAnt.total_final || 0);
+                        const pagadoAnt = parseFloat(regAnt.total_pagado || 0);
+                        return totalAnt - pagadoAnt;
+                    }
+                }
+            } catch (e) {
+                console.warn("No se pudo calcular el pendiente del mes anterior automáticamente", e);
+            }
+            return 0;
+        }
+
+        function normalizarFechaISO(fechaRaw) {
+            if (!fechaRaw) return '';
+            const s = String(fechaRaw).trim();
+            const mIso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (mIso) return `${mIso[1]}-${mIso[2]}-${mIso[3]}`;
+            const mEs = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+            if (mEs) return `${mEs[3]}-${mEs[2].padStart(2, '0')}-${mEs[1].padStart(2, '0')}`;
+            return '';
+        }
+
+        function extraerPrecioSesionTarifa(t) {
+            if (!t) return 0;
+            const raw = t.tarifa_por_sesion ?? t.tarifa_por_Sesion ?? t.precio_sesion ?? t.precio_1h ?? t.precio ?? t.importe ?? 0;
+            return parsearImporteTexto(raw);
+        }
+
+        function obtenerTarifaGeneralPorTipo(tipoBuscado, mesStr, codigosAlternativos = [], fallbackMapKey = null) {
+            const lista = window.tarifasListaCompleta || [];
+            const objetivo = String(tipoBuscado || '').toUpperCase().trim();
+            const alternativos = (codigosAlternativos || []).map(c => String(c).toUpperCase().trim());
+            const claveMap = fallbackMapKey || objetivo;
+
+            const coincideTipo = (t) => {
+                const tipo = String(t.tipo_servicio ?? t.tipo_Servicio ?? '').toUpperCase().trim();
+                const codigo = String(t.codigo ?? '').toUpperCase().trim();
+                if (tipo === objetivo) return true;
+                if (!tipo && codigo === objetivo) return true;
+                return alternativos.includes(tipo) || alternativos.includes(codigo);
+            };
+            const estaActiva = (t) => t.activa === undefined || t.activa === null || Number(t.activa) !== 0;
+
+            if (!mesStr) {
+                const tarifaFallback = lista.find(t => coincideTipo(t) && estaActiva(t));
+                return tarifaFallback ? extraerPrecioSesionTarifa(tarifaFallback) : (tarifasMap[claveMap] || 0);
+            }
+
+            const [anio, mes] = mesStr.split('-').map(Number);
+            const inicioMes = `${anio}-${String(mes).padStart(2, '0')}-01`;
+            const ultimoDia = new Date(anio, mes, 0).getDate();
+            const finMes = `${anio}-${String(mes).padStart(2, '0')}-${String(ultimoDia).padStart(2, '0')}`;
+
+            const candidatas = lista.filter(t => {
+                if (!coincideTipo(t) || !estaActiva(t)) return false;
+
+                const fIni = normalizarFechaISO(t.fecha_inicio);
+                const fFin = normalizarFechaISO(t.fecha_fin);
+
+                const cumpleInicio = !fIni || fIni <= finMes;
+                const cumpleFin = !fFin || fFin >= inicioMes;
+                return cumpleInicio && cumpleFin;
+            });
+
+            if (candidatas.length > 0) {
+                candidatas.sort((a, b) => normalizarFechaISO(b.fecha_inicio).localeCompare(normalizarFechaISO(a.fecha_inicio)));
+                const elegida = candidatas[0];
+                const precio = extraerPrecioSesionTarifa(elegida);
+                if (precio > 0) return precio;
+            }
+
+            // Respaldo si ninguna encaja exactamente por fechas pero existe una tarifa activa del tipo
+            const fallbackTipo = lista.find(t => coincideTipo(t) && estaActiva(t) && extraerPrecioSesionTarifa(t) > 0);
+            if (fallbackTipo) return extraerPrecioSesionTarifa(fallbackTipo);
+
+            return tarifasMap[claveMap] || 0;
+        }
+
+        function obtenerTarifaGeneralTE(mesStr) {
+            return obtenerTarifaGeneralPorTipo('TE', mesStr, ['TERAPIA', 'TERAPIAS'], 'TE');
+        }
+
+        function obtenerTarifaGeneralEV(mesStr) {
+            return obtenerTarifaGeneralPorTipo('EV', mesStr, ['EVALUACION', 'EVALUACIONES'], 'EV');
         }
 
         async function cargarOHojaPago() {
@@ -320,16 +826,23 @@
                     const idsGuardados = new Set(hojaGuardada.map(g => String(g.alumno_id)));
                     const listaAlumnosGuardados = alumnos.filter(a => idsGuardados.has(String(a.id)));
 
-                    filasEstado = listaAlumnosGuardados.map(alumno => {
+                    filasEstado = await Promise.all(listaAlumnosGuardados.map(async alumno => {
                         const guardado = hojaGuardada.find(g => String(g.alumno_id) === String(alumno.id));
-                        return {
-                            seleccionado: false,
+                        let pendAnt = guardado.pendiente_mes_anterior;
+                        if (pendAnt === undefined || pendAnt === null) {
+                            pendAnt = await calcularPendienteMesAnterior(alumno.id, mesAño);
+                        }
+
+                        const precioAlumno = parseFloat(alumno.precio_tarifa ?? alumno.precio_terapia ?? 0);
+
+                        const filaObj = {
                             alumno_id: alumno.id,
-                            nombreAlumno: `${alumno.apellidos}, ${alumno.nombre}`,
-                            precioTerapiaAlumno: parseFloat(alumno.precio_terapia || 0),
+                            nombreAlumno: `${alumno.nombre} ${alumno.apellidos}`,
+                            precioTerapiaAlumno: precioAlumno,
                             mes: mesAño,
-                            modo_pago: guardado.modo_pago || '',
-                            fecha_pago: guardado.fecha_pago || '',
+                            pendiente_mes_anterior: parseFloat(pendAnt || 0),
+                            cobro_extra: parseFloat(guardado.cobro_extra || 0),
+                            otros_pagos: parseFloat(guardado.otros_pagos || 0),
                             tarifas: {
                                 "REF P": guardado.ref_p || 0,
                                 "REF S": guardado.ref_s || 0,
@@ -339,20 +852,34 @@
                                 "LOG": guardado.log || 0,
                                 "LOG M": guardado.log_m || 0
                             },
-                            num_clases: guardado.num_clases !== null ? guardado.num_clases : '',
-                            total_clases: guardado.total_clases !== null ? guardado.total_clases : '',
+                            num_clases: (guardado.num_clases !== null && guardado.num_clases !== undefined && guardado.num_clases !== 0) ? guardado.num_clases : '',
+                            total_clases: (guardado.total_clases !== null && guardado.total_clases !== undefined && guardado.total_clases !== 0) ? guardado.total_clases : '',
                             pct_dto: guardado.pct_dto || 0,
                             importe_clases: guardado.importe_clases || 0,
+                            importe_pagado_clases: guardado.importe_pagado_clases || 0,
                             terapias: [
-                                guardado.terapia_1 || 0, guardado.terapia_2 || 0, guardado.terapia_3 || 0,
-                                guardado.terapia_4 || 0, guardado.terapia_5 || 0, guardado.terapia_6 || 0
+                                guardado.terapia_1 || '', guardado.terapia_2 || '', guardado.terapia_3 || '',
+                                guardado.terapia_4 || '', guardado.terapia_5 || '', guardado.terapia_6 || ''
+                            ],
+                            terapias_pagado: [
+                                guardado.terapia_1_pagado === 1 || guardado.terapia_1_pagado === true,
+                                guardado.terapia_2_pagado === 1 || guardado.terapia_2_pagado === true,
+                                guardado.terapia_3_pagado === 1 || guardado.terapia_3_pagado === true,
+                                guardado.terapia_4_pagado === 1 || guardado.terapia_4_pagado === true,
+                                guardado.terapia_5_pagado === 1 || guardado.terapia_5_pagado === true,
+                                guardado.terapia_6_pagado === 1 || guardado.terapia_6_pagado === true
                             ],
                             importe_terapias: guardado.importe_terapias || 0,
+                            importe_pagado_terapias: guardado.importe_pagado_terapias || 0,
                             observaciones: guardado.observaciones || '',
                             evaluacion: guardado.evaluacion === 1 || guardado.evaluacion === true,
-                            total_final: guardado.total_final || 0
+                            total_final: guardado.total_final || 0,
+                            total_pagado: guardado.total_pagado || 0
                         };
-                    });
+
+                        calcularImportesFilaObjeto(filaObj);
+                        return filaObj;
+                    }));
                 } else {
                     filasEstado = [];
                 }
@@ -364,7 +891,63 @@
             }
         }
 
-        function construirFilaDesdeAsignaciones(alumno, mesAño) {
+        function obtenerDiasTerapiasTE(alumnoId) {
+            const candidatosFecha = ['fecha', 'fecha_clase', 'fecha_asignacion', 'dia_fecha', 'start', 'date'];
+            const dias = [];
+
+            (asignacionesMesCache || []).forEach(a => {
+                if (String(a.alumno_id) !== String(alumnoId)) return;
+
+                const estadoAsistencia = (a.asistencia || '').toUpperCase();
+                if (estadoAsistencia === 'REC') return;
+
+                const codigo = (a.codigo_tarifa || a.tarifa_codigo || a.codigo || '').toUpperCase().trim();
+                if (codigo !== 'TE') return;
+
+                let diaNum = null;
+
+                if (a.dia !== undefined && a.dia !== null && a.dia !== '') {
+                    const parsedDia = parseInt(a.dia, 10);
+                    if (!isNaN(parsedDia) && parsedDia >= 1 && parsedDia <= 31) {
+                        diaNum = parsedDia;
+                    }
+                }
+
+                if (diaNum === null) {
+                    for (const campo of candidatosFecha) {
+                        const valorFecha = a[campo];
+                        if (!valorFecha) continue;
+
+                        const strFecha = String(valorFecha).trim();
+                        const matchIso = strFecha.match(/^(\d{4})-(\d{2})-(\d{2})/);
+                        if (matchIso) {
+                            diaNum = parseInt(matchIso[3], 10);
+                            break;
+                        }
+
+                        const matchEs = strFecha.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+                        if (matchEs) {
+                            diaNum = parseInt(matchEs[1], 10);
+                            break;
+                        }
+                    }
+                }
+
+                if (diaNum !== null && diaNum >= 1 && diaNum <= 31) {
+                    dias.push(diaNum);
+                }
+            });
+
+            dias.sort((x, y) => x - y);
+
+            const resultado = ['', '', '', '', '', ''];
+            for (let i = 0; i < Math.min(dias.length, 6); i++) {
+                resultado[i] = String(dias[i]);
+            }
+            return resultado;
+        }
+
+        async function construirFilaDesdeAsignaciones(alumno, mesAño) {
             const asignacionesAlumno = (asignacionesMesCache || []).filter(a => 
                 String(a.alumno_id) === String(alumno.id) && 
                 (a.asistencia || '').toUpperCase() !== 'REC'
@@ -377,37 +960,55 @@
                 ).length;
             });
 
-            const clasesTE = asignacionesAlumno.filter(a => 
-                (a.codigo_tarifa || a.tarifa_codigo || a.codigo) === 'TE'
-            ).length;
+            const pendAnt = await calcularPendienteMesAnterior(alumno.id, mesAño);
+            const diasTE = obtenerDiasTerapiasTE(alumno.id);
+            const precioAlumno = parseFloat(alumno.precio_tarifa ?? alumno.precio_terapia ?? 0);
 
             return {
-                seleccionado: false,
                 alumno_id: alumno.id,
-                nombreAlumno: `${alumno.apellidos}, ${alumno.nombre}`,
-                precioTerapiaAlumno: parseFloat(alumno.precio_terapia || 0),
+                nombreAlumno: `${alumno.nombre} ${alumno.apellidos}`,
+                precioTerapiaAlumno: precioAlumno,
                 mes: mesAño,
-                modo_pago: '',
-                fecha_pago: '',
+                pendiente_mes_anterior: pendAnt,
+                cobro_extra: 0,
+                otros_pagos: 0,
                 tarifas: clasesTarifa,
                 num_clases: '',
                 total_clases: '',
                 pct_dto: 0,
                 importe_clases: 0,
-                terapias: [clasesTE, 0, 0, 0, 0, 0],
+                importe_pagado_clases: 0,
+                terapias: diasTE,
+                terapias_pagado: [false, false, false, false, false, false],
                 importe_terapias: 0,
+                importe_pagado_terapias: 0,
                 observaciones: '',
                 evaluacion: false,
-                total_final: 0
+                total_final: 0,
+                total_pagado: 0
             };
         }
 
         async function calcularOActualizarDesdeAsignaciones() {
             const mesAño = document.getElementById('filtro-mes').value;
             if (!mesAño) return;
+            if (!verificarYNotificarMesEditable(mesAño, 'calcular o recalcular el mes')) return;
 
-            const confirmacion = confirm(`⚠️ ¿Deseas recalcular los datos del mes (${mesAño}) desde las asignaciones?`);
+            if (hayCambiosPendientes) {
+                accionPendienteTipo = 'calcular';
+                document.getElementById('modal-cambios').classList.remove('hidden');
+                return;
+            }
+
+            const confirmacion = confirm(`⚠️ ¿Deseas recalcular los datos del mes (${mesAño}) desde las asignaciones? Esto actualizará el pendiente del mes anterior, los registros existentes e incorporará los nuevos.`);
             if (!confirmacion) return;
+
+            await ejecutarCalculoAsignacionesReal();
+        }
+
+        async function ejecutarCalculoAsignacionesReal() {
+            const mesAño = document.getElementById('filtro-mes').value;
+            if (!verificarYNotificarMesEditable(mesAño, 'calcular o recalcular el mes')) return;
 
             try {
                 asignacionesMesCache = await fetchAPI(`/api/asignaciones/mes?mes=${mesAño}`);
@@ -419,43 +1020,39 @@
                 filasEstado.forEach(f => idsAlumnosAsignados.add(String(f.alumno_id)));
 
                 const listaAlumnosRelevantes = alumnos.filter(a => idsAlumnosAsignados.has(String(a.id)));
-                const seleccionados = filasEstado.filter(f => f.seleccionado);
 
-                filasEstado = listaAlumnosRelevantes.map(alumno => {
+                filasEstado = await Promise.all(listaAlumnosRelevantes.map(async alumno => {
                     const existente = filasEstado.find(f => String(f.alumno_id) === String(alumno.id));
-                    const debeRecalcular = seleccionados.length === 0 || (existente && existente.seleccionado) || !existente;
-
-                    if (debeRecalcular) {
-                        const filaNueva = construirFilaDesdeAsignaciones(alumno, mesAño);
-                        if (existente) {
-                            filaNueva.modo_pago = existente.modo_pago;
-                            filaNueva.fecha_pago = existente.fecha_pago;
-                            filaNueva.observaciones = existente.observaciones;
-                            filaNueva.evaluacion = existente.evaluacion;
-                            filaNueva.num_clases = existente.num_clases;
-                            filaNueva.total_clases = existente.total_clases;
-                            filaNueva.seleccionado = existente.seleccionado;
-                        }
-                        return filaNueva;
-                    } else {
-                        return existente;
+                    const filaNueva = await construirFilaDesdeAsignaciones(alumno, mesAño);
+                    // Al calcular/recalcular siempre se toma el pendiente actualizado del mes anterior
+                    filaNueva.pendiente_mes_anterior = await calcularPendienteMesAnterior(alumno.id, mesAño);
+                    
+                    if (existente) {
+                        filaNueva.cobro_extra = existente.cobro_extra;
+                        filaNueva.otros_pagos = existente.otros_pagos;
+                        filaNueva.importe_pagado_clases = existente.importe_pagado_clases;
+                        // filaNueva.terapias mantiene los días TE calculados del mes
+                        filaNueva.terapias_pagado = [...existente.terapias_pagado];
+                        filaNueva.importe_pagado_terapias = existente.importe_pagado_terapias;
+                        filaNueva.total_pagado = existente.total_pagado;
+                        filaNueva.observaciones = existente.observaciones;
+                        filaNueva.evaluacion = existente.evaluacion;
+                        filaNueva.num_clases = existente.num_clases;
+                        filaNueva.total_clases = existente.total_clases;
                     }
-                });
+                    
+                    calcularImportesFilaObjeto(filaNueva);
+                    return filaNueva;
+                }));
 
                 document.getElementById('buscador-alumnos').value = '';
                 hayCambiosPendientes = true;
                 renderizarGrid();
-                alert(`✅ Recálculo finalizado con éxito para el mes ${mesAño}.`);
+                alert(`✅ Recálculo completo finalizado con éxito para el mes ${mesAño}.`);
             } catch (e) {
                 console.error("Error durante el recálculo:", e);
                 alert("❌ Error al obtener los datos de las asignaciones.");
             }
-        }
-
-        function toggleSeleccionarTodos(checkboxMaster) {
-            const filasVisibles = obtenerFilasFiltradas();
-            filasVisibles.forEach(f => f.seleccionado = checkboxMaster.checked);
-            document.querySelectorAll('.check-alumno').forEach(c => c.checked = checkboxMaster.checked);
         }
 
         function obtenerFilasFiltradas() {
@@ -474,135 +1071,307 @@
             document.getElementById('contador-alumnos').textContent = filasEstado.length;
 
             if (filasVisibles.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="23" class="py-8 text-center text-slate-400">No hay alumnos asignados o que coincidan con la búsqueda en este mes.</td></tr>`;
-                actualizarTotalesGenerales();
+                tbody.innerHTML = `<tr><td colspan="32" class="py-8 text-center text-slate-400">No hay alumnos asignados o que coincidan con la búsqueda en este mes.</td></tr>`;
+                aplicarEstadoEdicionMes();
+            const esEditableActual = esMesEditable(document.getElementById('filtro-mes').value);
+            if (!esEditableActual) {
+                tbody.querySelectorAll('input, select, button').forEach(ctrl => {
+                    ctrl.disabled = true;
+                    ctrl.classList.add('opacity-75', 'cursor-not-allowed');
+                });
+            }
+            actualizarTotalesGenerales();
                 return;
             }
 
-            let optionsModoPago = '<option value="">-- Seleccionar --</option>';
-            modosPago.forEach(m => {
-                const val = typeof m === 'string' ? m : (m.nombre || m.descripcion);
-                optionsModoPago += `<option value="${val}">${val}</option>`;
-            });
-
             filasVisibles.forEach((fila) => {
                 const index = filasEstado.indexOf(fila);
-                recalcularFila(index, false);
 
-                let htmlTarifasInputs = '';
-                codigosTarifasOrden.forEach(cod => {
-                    htmlTarifasInputs += `
-                        <td class="py-1.5 px-1 text-center bg-blue-50/30">
-                            <input type="number" min="0" value="${fila.tarifas[cod] || 0}" 
-                                   onchange="actualizarTarifaFila(${index}, '${cod}', this.value)"
-                                   class="w-10 px-1 py-1 text-center border rounded font-semibold bg-white focus:ring-1 focus:ring-blue-500">
-                        </td>
-                    `;
+                // Celda unificada para Tarifas y Clases integradas con etiqueta Dto:
+                let htmlTarifasYClases = `
+                    <td class="py-1 px-1 border-r bg-blue-50/20 w-[212px]">
+                        <div class="grid grid-cols-7 gap-0.5 w-full mx-auto">
+                `;
+
+                codigosTarifasOrden.forEach((cod, i) => {
+                    const valTarifa = fila.tarifas[cod] ? fila.tarifas[cod] : '';
+                    const tieneError = fila.erroresTarifas && fila.erroresTarifas[cod];
+                    const claseColor = tieneError
+                        ? 'border-red-500 bg-red-100 text-red-900 ring-1 ring-red-400'
+                        : 'border bg-white';
+                    const tituloError = tieneError ? `${cod} - Error: no se encontró tarifa válida` : cod;
+
+                    htmlTarifasYClases += `<input type="number" min="0" maxlength="3" value="${valTarifa}" oninput="if(this.value.length > 3) this.value = this.value.slice(0, 3); if(parseInt(this.value) > 99) this.value = 99;" onchange="actualizarTarifaFila(${index}, '${cod}', this.value, this)" class="w-full max-w-[28px] mx-auto px-0 py-0.5 text-center rounded font-semibold ${claseColor} focus:ring-1 focus:ring-blue-500 focus:z-10 text-xs" title="${tituloError}">`;
                 });
 
-                let htmlTerapiasInputs = '';
+                htmlTarifasYClases += `
+                        </div>
+                        <div class="flex items-center justify-end mt-1 gap-0.5 pt-1 border-t border-blue-200 w-full mx-auto">
+                            <div class="flex items-center gap-0.5">
+                                <span class="text-[11px] font-bold text-indigo-800">Dto:</span>
+                                <input type="number" min="0" value="${fila.num_clases}" title="Nº Clases"
+                                    onchange="actualizarDescuentoFila(${index}, 'num_clases', this.value, this)"
+                                    class="w-10 px-0.5 py-0.5 text-center border rounded font-medium bg-white focus:ring-1 focus:ring-indigo-500 text-xs" placeholder="Nº">
+                            </div>
+                            <div class="text-center">
+                                <input type="number" min="0" value="${fila.total_clases}" title="Total Clases"
+                                    onchange="actualizarDescuentoFila(${index}, 'total_clases', this.value, this)"
+                                    class="w-10 px-0.5 py-0.5 text-center border rounded font-medium bg-white focus:ring-1 focus:ring-indigo-500 text-xs" placeholder="Tot">
+                            </div>
+                            <div class="w-12 text-center font-bold text-indigo-700 text-[11px] px-0.5 py-0.5 bg-indigo-50/50 rounded border border-indigo-100">
+                                ${(fila.pct_dto * 100).toFixed(1)}%
+                            </div>
+                        </div>
+                    </td>
+                `;
+
+                // Terapias (T1 a T6) con el input arriba y el checkbox abajo en la segunda línea
+                let htmlTerapiasInputs = `
+                    <td class="py-1.5 px-1 text-center bg-teal-50/30 border-r w-[304px]">
+                        <div class="grid grid-cols-6 gap-0.5 w-full mx-auto">
+                `;
                 for (let i = 0; i < 6; i++) {
                     htmlTerapiasInputs += `
-                        <td class="py-1.5 px-1 text-center bg-teal-50/30">
-                            <input type="number" min="0" value="${fila.terapias[i] || 0}" 
-                                   onchange="actualizarTerapiaFila(${index}, ${i}, this.value)"
-                                   class="w-9 px-1 py-1 text-center border rounded font-semibold bg-white focus:ring-1 focus:ring-teal-500">
-                        </td>
+                            <div class="flex flex-col items-center gap-1">
+                                <input type="text" maxlength="5" value="${fila.terapias[i] || ''}" 
+                                       oninput="this.value = this.value.toUpperCase().slice(0, 5)"
+                                       onchange="actualizarTerapiaFila(${index}, ${i}, this.value, this)"
+                                       class="w-12 px-0.5 py-1 text-center border rounded font-semibold bg-white focus:ring-1 focus:ring-teal-500 uppercase text-xs">
+                                <input type="checkbox" ${fila.terapias_pagado[i] ? 'checked' : ''}
+                                       onchange="actualizarTerapiaPagadoFila(${index}, ${i}, this.checked, this)"
+                                       class="w-3.5 h-3.5 text-teal-600 rounded border-slate-300 focus:ring-teal-500 cursor-pointer" title="Pagado T${i+1}">
+                            </div>
                     `;
                 }
+                htmlTerapiasInputs += `
+                        </div>
+                    </td>
+                `;
+
+                let htmlBotonBorrar = fila.total_final === 0 ? `
+                    <button onclick="intentarBorrarFila(${index})" title="Eliminar registro (Total es 0)" class="bg-red-50 text-red-600 hover:bg-red-100 p-1 rounded-lg transition font-bold text-xs flex items-center justify-center mx-auto">🗑️</button>
+                ` : `<span title="No se puede borrar (Total distinto de 0)" class="text-slate-300 text-center block cursor-not-allowed">🔒</span>`;
+
+                const importePendienteClases = (fila.importe_clases || 0) - (fila.importe_pagado_clases || 0);
+                const importePendienteTerapias = (fila.importe_terapias || 0) - (fila.importe_pagado_terapias || 0);
+                const totalPendiente = (fila.total_final || 0) - (fila.total_pagado || 0);
 
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 border-b border-slate-200 transition-colors";
+                const bgFila = index % 2 === 0 ? 'bg-white' : 'bg-green-100/80';
+                tr.className = `${bgFila} hover:bg-blue-100/50 border-b border-slate-200 transition-colors`;
                 tr.innerHTML = `
-                    <td class="py-2 px-2 text-center border-r">
-                        <input type="checkbox" ${fila.seleccionado ? 'checked' : ''} 
-                               onchange="filasEstado[${index}].seleccionado = this.checked"
-                               class="check-alumno w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer">
+                    <td class="py-2 px-2 font-semibold text-slate-800 border-r sticky left-0 bg-white z-10">${fila.nombreAlumno}</td>
+                    <td class="py-2 px-1 text-right font-semibold border-r bg-emerald-50/30 text-xs">
+                        ${formatearMoneda(fila.pendiente_mes_anterior)}
                     </td>
-                    <td class="py-2 px-2 font-bold text-slate-800 border-r">${fila.nombreAlumno}</td>
-                    <td class="py-2 px-1 text-center text-slate-500 border-r text-[11px]">${fila.mes}</td>
+                    <td class="py-1.5 px-1 text-right border-r bg-emerald-50/30">
+                        <input type="text" value="${formatearMoneda(fila.cobro_extra)}"
+                               onfocus="prepararInputEdicion(this, ${fila.cobro_extra})"
+                               onblur="actualizarCobroExtraFila(${index}, this.value, this)"
+                               class="w-full px-0.5 py-1 text-right border rounded font-semibold bg-white focus:ring-1 focus:ring-orange-500 text-xs">
+                    </td>
+                    <td class="py-1.5 px-1 text-right border-r bg-emerald-50/30">
+                        <input type="text" value="${formatearMoneda(fila.otros_pagos)}"
+                               onfocus="prepararInputEdicion(this, ${fila.otros_pagos})"
+                               onblur="actualizarOtrosPagosFila(${index}, this.value, this)"
+                               class="w-full px-0.5 py-1 text-right border rounded font-semibold bg-white focus:ring-1 focus:ring-emerald-500 text-xs">
+                    </td>
                     
-                    <td class="py-1.5 px-1 border-r">
-                        <select onchange="hayCambiosPendientes = true; filasEstado[${index}].modo_pago = this.value" 
-                                class="w-full px-2 py-1 border rounded bg-white text-xs focus:ring-1 focus:ring-blue-500">
-                            ${optionsModoPago}
-                        </select>
-                    </td>
+                    ${htmlTarifasYClases}
 
-                    <td class="py-1.5 px-1 text-center border-r">
-                        <input type="date" value="${fila.fecha_pago}" 
-                               onchange="hayCambiosPendientes = true; filasEstado[${index}].fecha_pago = this.value"
-                               class="w-full px-1 py-1 text-[11px] border rounded bg-white focus:ring-1 focus:ring-blue-500">
+                    <td class="w-16 border py-2 px-1 text-right font-semibold text-sky-700 text-xs bg-slate-100">
+                        ${formatearMoneda(fila.importe_clases)}
                     </td>
-
-                    ${htmlTarifasInputs}
-
-                    <td class="py-1.5 px-1 text-center bg-indigo-50/30">
-                        <input type="number" min="0" value="${fila.num_clases}" placeholder="0"
-                               onchange="actualizarDescuentoFila(${index}, 'num_clases', this.value)"
-                               class="w-12 px-1 py-1 text-center border rounded font-medium bg-white focus:ring-1 focus:ring-indigo-500">
-                    </td>
-                    <td class="py-1.5 px-1 text-center bg-indigo-50/30">
-                        <input type="number" min="0" value="${fila.total_clases}" placeholder="0"
-                               onchange="actualizarDescuentoFila(${index}, 'total_clases', this.value)"
-                               class="w-12 px-1 py-1 text-center border rounded font-medium bg-white focus:ring-1 focus:ring-indigo-500">
-                    </td>
-                    <td class="py-2 px-1 text-center font-bold text-indigo-700 bg-indigo-50/30 border-r" id="pct-dto-${index}">
-                        ${(fila.pct_dto * 100).toFixed(1)}%
-                    </td>
-
-                    <td class="py-2 px-1 text-right font-bold text-slate-800 border-r bg-sky-50/30" id="imp-clases-${index}">
-                        ${fila.importe_clases.toFixed(2)} €
+                    <td class="w-16 border py-1 px-1 text-right bg-slate-100 border-r">
+                        <div class="flex flex-col items-end gap-1">
+                            <input type="text" value="${formatearMoneda(fila.importe_pagado_clases)}"
+                                   onfocus="prepararInputEdicion(this, ${fila.importe_pagado_clases})"
+                                   onblur="actualizarPagadoClasesFila(${index}, this.value, this)"
+                                   class="w-full px-0.5 py-1 text-teal-700 text-right border rounded font-semibold bg-white focus:ring-1 focus:ring-sky-500 text-xs">
+                            <div class="w-full text-right font-semibold text-amber-700 text-xs pt-0.5 border-t border-blue-200" title="Pendiente Clases">
+                                ${formatearMoneda(importePendienteClases)}
+                            </div>
+                        </div>
                     </td>
 
                     ${htmlTerapiasInputs}
 
-                    <td class="py-2 px-1 text-right font-bold text-teal-700 border-r bg-teal-50/30" id="imp-terapias-${index}">
-                        ${fila.importe_terapias.toFixed(2)} €
+                   <td class="w-16 border py-2 px-1 text-right font-semibold text-sky-700 text-xs bg-slate-100">
+                        ${formatearMoneda(fila.importe_terapias)}
+                    </td>
+                    <td class="w-16 border py-1 px-1 text-right bg-slate-100 border-r">
+                        <div class="flex flex-col items-end gap-1">
+                            <input type="text" value="${formatearMoneda(fila.importe_pagado_terapias)}" readonly
+                                   class="w-full px-1 py-1 text-right font-semibold text-teal-700 bg-transparent cursor-not-allowed text-xs" title="Pagado Terapias (No modificable)">
+                            <div class="w-full text-right font-semibold text-amber-700 text-xs pt-0.5 border-t border-blue-200" title="Pendiente Terapias">
+                                ${formatearMoneda(importePendienteTerapias)}
+                            </div>
+                        </div>
                     </td>
 
                     <td class="py-2 px-1 text-center border-r bg-purple-50/30">
                         <input type="checkbox" ${fila.evaluacion ? 'checked' : ''}
-                               onchange="actualizarEvaluacionFila(${index}, this.checked)"
+                               onchange="actualizarEvaluacionFila(${index}, this.checked, this)"
                                class="w-4 h-4 text-purple-600 rounded border-slate-300 focus:ring-purple-500 cursor-pointer">
                     </td>
 
-                    <td class="py-2 px-2 text-right font-extrabold text-blue-700 text-sm bg-slate-100 border-r" id="total-fila-${index}">
-                        ${fila.total_final.toFixed(2)} €
+                    <td class="w-16 border py-2 px-1 text-right font-extrabold text-sky-700 text-xs bg-slate-100">
+                        ${formatearMoneda(fila.total_final)}
+                    </td>
+                    <td class="w-16 border py-1 px-1 text-right bg-slate-100 border-r">
+                        <div class="flex flex-col items-end gap-1">
+                            <input type="text" value="${formatearMoneda(fila.total_pagado)}" readonly
+                                   class="w-full px-1 py-1 text-right font-extrabold text-teal-700 bg-transparent cursor-not-allowed text-xs" title="Total Pagado (No modificable)">
+                            <div class="w-full text-right font-extrabold text-amber-700 text-xs pt-0.5 border-t border-blue-200" title="Total Pendiente">
+                                ${formatearMoneda(totalPendiente)}
+                            </div>
+                        </div>
                     </td>
 
-                    <td class="py-1.5 px-1">
+                    <td class="py-1.5 px-1 border-r">
                         <input type="text" value="${fila.observaciones}" placeholder="Observaciones..."
-                               onchange="hayCambiosPendientes = true; filasEstado[${index}].observaciones = this.value"
+                               onchange="filasEstado[${index}].observaciones = this.value"
                                class="w-full px-2 py-1 text-xs border rounded bg-white focus:ring-1 focus:ring-blue-500">
+                    </td>
+
+                    <td class="py-1.5 px-1 text-center">
+                        ${htmlBotonBorrar}
                     </td>
                 `;
 
                 tbody.appendChild(tr);
-
-                if(fila.modo_pago) {
-                    tr.querySelector('select').value = fila.modo_pago;
-                }
             });
 
+            aplicarEstadoEdicionMes();
+            const esEditableActual = esMesEditable(document.getElementById('filtro-mes').value);
+            if (!esEditableActual) {
+                tbody.querySelectorAll('input, select, button').forEach(ctrl => {
+                    ctrl.disabled = true;
+                    ctrl.classList.add('opacity-75', 'cursor-not-allowed');
+                });
+            }
             actualizarTotalesGenerales();
+
+            if (indiceSiguienteFoco !== null) {
+                const inputsNuevos = obtenerInputsEditablesTabla();
+                if (inputsNuevos[indiceSiguienteFoco]) {
+                    inputsNuevos[indiceSiguienteFoco].focus();
+                    if (typeof inputsNuevos[indiceSiguienteFoco].select === 'function') {
+                        inputsNuevos[indiceSiguienteFoco].select();
+                    }
+                }
+                indiceSiguienteFoco = null;
+            }
         }
 
-        function recalcularFila(index, actualizarDOM = true) {
-            const fila = filasEstado[index];
+        function intentarBorrarFila(index) {
+            if (document.activeElement && typeof document.activeElement.blur === 'function') {
+                document.activeElement.blur();
+            }
 
+            if (hayCambiosPendientes) {
+                if (!confirm("⚠️ Tienes cambios pendientes sin guardar. ¿Deseas continuar con el borrado de este registro?")) {
+                    return;
+                }
+            }
+            borrarFila(index);
+        }
+
+        async function borrarFila(index) {
+            const fila = filasEstado[index];
+            if (!verificarYNotificarMesEditable(fila?.mes || document.getElementById('filtro-mes').value, 'eliminar registros')) return;
+            if (fila.total_final !== 0) {
+                alert("❌ Solo se pueden borrar registros cuyo total final sea 0.");
+                return;
+            }
+
+            if (!confirm("¿Estás seguro de que deseas eliminar este registro de la hoja de pago?")) return;
+
+            if (fila.alumno_id && fila.mes) {
+                try {
+                    await fetch(`/api/hoja-pago/eliminar?mes=${fila.mes}&alumno_id=${fila.alumno_id}`, { method: 'DELETE' });
+                } catch (error) {
+                    console.error("Error al eliminar en BD:", error);
+                }
+            }
+
+            filasEstado.splice(index, 1);
+            hayCambiosPendientes = true;
+            renderizarGrid();
+            alert("🗑️ Registro eliminado correctamente.");
+        }
+
+        function calcularImportesFilaObjeto(fila) {
+            const alumnoObj = alumnos.find(a => String(a.id) === String(fila.alumno_id)) || {};        
             let subtotalClases = 0;
-            codigosTarifasOrden.forEach(cod => {
-                const cant = parseInt(fila.tarifas[cod]) || 0;
-                const precioUnidad = tarifasMap[cod] || 0;
-                subtotalClases += cant * precioUnidad;
-            });
+
+            fila.erroresTarifas = {};
+
+            // Cálculo específico para REF P
+            const cantidadRefP = parseInt(fila.tarifas["REF P"]) || 0;
+            if (cantidadRefP > 0) {
+                const tarifaRefId = alumnoObj.tarifa_refuerzo_id;
+                const horasRef = parseInt(alumnoObj.horas_refuerzo, 10);
+                const tarifaObj = tarifaRefId
+                    ? (window.tarifasListaCompleta || []).find(t =>
+                        String(t.id) === String(tarifaRefId) &&
+                        String(t.codigo || '').toUpperCase().trim() === 'REF P'
+                    )
+                    : null;
+
+                let precioRefP = null;
+                if (tarifaObj && horasRef >= 1 && horasRef <= 5) {
+                    const rawPrecio = tarifaObj[`precio_${horasRef}h`];
+                    if (rawPrecio !== undefined && rawPrecio !== null && String(rawPrecio).trim() !== '') {
+                        const parsed = parsearImporteTexto(rawPrecio);
+                        if (!isNaN(parsed) && parsed > 0) {
+                            precioRefP = parsed;
+                        }
+                    }
+                }
+
+                if (precioRefP !== null) {
+                    subtotalClases += precioRefP;
+                } else {
+                    fila.erroresTarifas["REF P"] = true;
+                }
+            }
+
+            const mappingServicios = {
+                "REF S": { tarifaId: alumnoObj.tarifa_refuerzo_id, horas: alumnoObj.horas_refuerzo },
+                "REF B": { tarifaId: alumnoObj.tarifa_refuerzo_id, horas: alumnoObj.horas_refuerzo },
+                "DA":    { tarifaId: alumnoObj.tarifa_dificultad_id, horas: alumnoObj.horas_dificultad },
+                "DA C":  { tarifaId: alumnoObj.tarifa_dificultad_id, horas: alumnoObj.horas_dificultad },
+                "LOG":   { tarifaId: alumnoObj.tarifa_logopedia_id, horas: alumnoObj.horas_logopedia },
+                "LOG M": { tarifaId: alumnoObj.tarifa_logopedia_id, horas: alumnoObj.horas_logopedia }
+            };            
+
+            Object.keys(mappingServicios).forEach(cod => {
+                const cantidadIndicada = parseInt(fila.tarifas[cod]) || 0;                
+                if (cantidadIndicada > 0) {
+                    const configServicio = mappingServicios[cod];                    
+                    let precioUnitario = 0;
+                    
+                    if (configServicio && configServicio.tarifaId && configServicio.horas > 0) {
+                        const tarifaObj = (window.tarifasListaCompleta || []).find(t => String(t.id) === String(configServicio.tarifaId));
+                        if (tarifaObj) {
+                            const h = configServicio.horas;
+                            if (h === 1) precioUnitario = parsearImporteTexto(tarifaObj.precio_1h);
+                            else if (h === 2) precioUnitario = parsearImporteTexto(tarifaObj.precio_2h);
+                            else if (h === 3) precioUnitario = parsearImporteTexto(tarifaObj.precio_3h);
+                            else if (h === 4) precioUnitario = parsearImporteTexto(tarifaObj.precio_4h);
+                            else if (h === 5) precioUnitario = parsearImporteTexto(tarifaObj.precio_5h);
+                        }
+                    }
+                    subtotalClases += precioUnitario;
+                }
+            });            
 
             const totalC = parseFloat(fila.total_clases);
-            const numC = parseFloat(fila.num_clases);
+            const numC = parseFloat(fila.num_clases);            
 
             if (!isNaN(totalC) && totalC > 0 && !isNaN(numC)) {
-                fila.pct_dto = 1 - (numC / totalC);
+                fila.pct_dto = numC / totalC;
                 if (fila.pct_dto < 0) fila.pct_dto = 0;
             } else {
                 fila.pct_dto = 0;
@@ -610,70 +1379,154 @@
 
             fila.importe_clases = subtotalClases * (1 - fila.pct_dto);
 
-            const totalDiasTerapia = fila.terapias.reduce((acc, val) => acc + (parseInt(val) || 0), 0);
-            const precioTerapiaAplicar = fila.precioTerapiaAlumno > 0 ? fila.precioTerapiaAlumno : (tarifasMap['TE'] || 0);
-            fila.importe_terapias = totalDiasTerapia * precioTerapiaAplicar;
+            let totalTerapiasValidas = 0;
+            let totalTerapiasPagadas = 0;
+            fila.terapias.forEach((t, idx) => {
+                if (t && String(t).trim() !== '') {
+                    totalTerapiasValidas++;
+                    if (fila.terapias_pagado && fila.terapias_pagado[idx]) {
+                        totalTerapiasPagadas++;
+                    }
+                }
+            });
 
-            const importeEvaluacion = fila.evaluacion ? (tarifasMap['EV'] || 0) : 0;
-            fila.total_final = fila.importe_clases + fila.importe_terapias + importeEvaluacion;
+            const rawAlumno = alumnoObj.precio_tarifa ?? alumnoObj.precio_terapia ?? fila.precioTerapiaAlumno ?? 0;
+            const precioAlumno = parsearImporteTexto(rawAlumno);
+            const mesActual = fila.mes || document.getElementById('filtro-mes').value;
+            const precioTerapiaAplicar = precioAlumno > 0 ? precioAlumno : obtenerTarifaGeneralTE(mesActual);
 
+            fila.importe_terapias = totalTerapiasValidas * precioTerapiaAplicar;
+            fila.importe_pagado_terapias = totalTerapiasPagadas * precioTerapiaAplicar;
+
+            const importeEvaluacion = fila.evaluacion ? obtenerTarifaGeneralEV(mesActual) : 0;
+
+            fila.total_final = (parseFloat(fila.pendiente_mes_anterior) || 0) + 
+                               (parseFloat(fila.cobro_extra) || 0) + 
+                               (parseFloat(fila.importe_clases) || 0) + 
+                               (parseFloat(fila.importe_terapias) || 0) + 
+                               importeEvaluacion;
+
+            fila.total_pagado = (parseFloat(fila.otros_pagos) || 0) + 
+                                (parseFloat(fila.importe_pagado_clases) || 0) + 
+                                (parseFloat(fila.importe_pagado_terapias) || 0);
+        }
+
+        function recalcularFila(index, actualizarDOM = true) {
+            const fila = filasEstado[index];
+            if (!verificarYNotificarMesEditable(fila?.mes || document.getElementById('filtro-mes').value, 'modificar datos')) {
+                if (actualizarDOM) renderizarGrid();
+                return;
+            }
+            calcularImportesFilaObjeto(fila);
             if (actualizarDOM) {
-                const elPct = document.getElementById(`pct-dto-${index}`);
-                const elImpC = document.getElementById(`imp-clases-${index}`);
-                const elImpT = document.getElementById(`imp-terapias-${index}`);
-                const elTotF = document.getElementById(`total-fila-${index}`);
-
-                if (elPct) elPct.textContent = `${(fila.pct_dto * 100).toFixed(1)}%`;
-                if (elImpC) elImpC.textContent = `${fila.importe_clases.toFixed(2)} €`;
-                if (elImpT) elImpT.textContent = `${fila.importe_terapias.toFixed(2)} €`;
-                if (elTotF) elTotF.textContent = `${fila.total_final.toFixed(2)} €`;
-                
-                actualizarTotalesGenerales();
+                renderizarGrid();
             }
         }
 
-        function actualizarTarifaFila(index, codigo, valor) {
-            hayCambiosPendientes = true;
+        function actualizarTarifaFila(index, codigo, valor, inputEl) {
+            if (indiceSiguienteFoco === null && inputEl) registrarAvanceFoco(inputEl, true);
             filasEstado[index].tarifas[codigo] = parseInt(valor) || 0;
             recalcularFila(index, true);
         }
 
-        function actualizarDescuentoFila(index, campo, valor) {
-            hayCambiosPendientes = true;
-            filasEstado[index][campo] = valor;
+        function actualizarDescuentoFila(index, campo, valor, inputEl) {
+            if (indiceSiguienteFoco === null && inputEl) registrarAvanceFoco(inputEl, true);
+            filasEstado[index][campo] = valor === '' ? '' : (parseFloat(valor) || 0);
             recalcularFila(index, true);
         }
 
-        function actualizarTerapiaFila(index, posTerapia, valor) {
-            hayCambiosPendientes = true;
-            filasEstado[index].terapias[posTerapia] = parseInt(valor) || 0;
+        function actualizarPagadoClasesFila(index, valor, inputEl) {
+            if (indiceSiguienteFoco === null && inputEl) registrarAvanceFoco(inputEl, true);
+            filasEstado[index].importe_pagado_clases = parsearImporteTexto(valor);
             recalcularFila(index, true);
         }
 
-        function actualizarEvaluacionFila(index, valorChecked) {
-            hayCambiosPendientes = true;
+        function actualizarTerapiaFila(index, posTerapia, valor, inputEl) {
+            if (indiceSiguienteFoco === null && inputEl) registrarAvanceFoco(inputEl, true);
+            filasEstado[index].terapias[posTerapia] = String(valor).toUpperCase().slice(0, 5);
+            recalcularFila(index, true);
+        }
+
+        function actualizarTerapiaPagadoFila(index, posTerapia, valorChecked, inputEl) {
+            if (indiceSiguienteFoco === null && inputEl) registrarAvanceFoco(inputEl, true);
+            filasEstado[index].terapias_pagado[posTerapia] = valorChecked;
+            recalcularFila(index, true);
+        }
+
+        function actualizarPendienteMesAnteriorFila(index, valor, inputEl) {
+            if (indiceSiguienteFoco === null && inputEl) registrarAvanceFoco(inputEl, true);
+            filasEstado[index].pendiente_mes_anterior = parsearImporteTexto(valor);
+            recalcularFila(index, true);
+        }
+
+        function actualizarCobroExtraFila(index, valor, inputEl) {
+            if (indiceSiguienteFoco === null && inputEl) registrarAvanceFoco(inputEl, true);
+            filasEstado[index].cobro_extra = parsearImporteTexto(valor);
+            recalcularFila(index, true);
+        }
+
+        function actualizarOtrosPagosFila(index, valor, inputEl) {
+            if (indiceSiguienteFoco === null && inputEl) registrarAvanceFoco(inputEl, true);
+            filasEstado[index].otros_pagos = parsearImporteTexto(valor);
+            recalcularFila(index, true);
+        }
+
+        function actualizarEvaluacionFila(index, valorChecked, inputEl) {
+            if (indiceSiguienteFoco === null && inputEl) registrarAvanceFoco(inputEl, true);
             filasEstado[index].evaluacion = valorChecked;
             recalcularFila(index, true);
         }
 
         function actualizarTotalesGenerales() {
-            let totalGeneral = 0;
-            let totalTerapias = 0;
-            let totalClases = 0;
+            let totalPendienteAnt = 0, totalCobroExtra = 0, totalOtrosPagos = 0;
+            let totalClases = 0, totalPagadoClases = 0, totalPendienteClases = 0;
+            let totalTerapias = 0, totalPagadoTerapias = 0, totalPendienteTerapias = 0;
+            let totalGeneral = 0, totalPagadoGeneral = 0, totalPendienteGeneral = 0;
 
             filasEstado.forEach(f => {
-                totalGeneral += f.total_final;
-                totalTerapias += f.importe_terapias;
-                totalClases += f.importe_clases;
+                totalPendienteAnt += (f.pendiente_mes_anterior || 0);
+                totalCobroExtra += (f.cobro_extra || 0);
+                totalOtrosPagos += (f.otros_pagos || 0);
+
+                const impC = f.importe_clases || 0;
+                const pagC = f.importe_pagado_clases || 0;
+                totalClases += impC;
+                totalPagadoClases += pagC;
+                totalPendienteClases += (impC - pagC);
+
+                const impT = f.importe_terapias || 0;
+                const pagT = f.importe_pagado_terapias || 0;
+                totalTerapias += impT;
+                totalPagadoTerapias += pagT;
+                totalPendienteTerapias += (impT - pagT);
+
+                const totF = f.total_final || 0;
+                const totP = f.total_pagado || 0;
+                totalGeneral += totF;
+                totalPagadoGeneral += totP;
+                totalPendienteGeneral += (totF - totP);
             });
 
-            document.getElementById('total-clases-general').textContent = `${totalClases.toFixed(2)} €`;
-            document.getElementById('total-terapias-general').textContent = `${totalTerapias.toFixed(2)} €`;
-            document.getElementById('total-general').textContent = `${totalGeneral.toFixed(2)} €`;
+            document.getElementById('total-pendiente-ant-general').textContent = formatearMoneda(totalPendienteAnt);
+            document.getElementById('total-cobro-extra-general').textContent = formatearMoneda(totalCobroExtra);
+            document.getElementById('total-otros-pagos-general').textContent = formatearMoneda(totalOtrosPagos);
+
+            document.getElementById('total-clases-general').textContent = formatearMoneda(totalClases);
+            document.getElementById('total-pagado-clases-general').textContent = formatearMoneda(totalPagadoClases);
+            document.getElementById('total-pendiente-clases-general').textContent = formatearMoneda(totalPendienteClases);
+
+            document.getElementById('total-terapias-general').textContent = formatearMoneda(totalTerapias);
+            document.getElementById('total-pagado-terapias-general').textContent = formatearMoneda(totalPagadoTerapias);
+            document.getElementById('total-pendiente-terapias-general').textContent = formatearMoneda(totalPendienteTerapias);
+
+            document.getElementById('total-general').textContent = formatearMoneda(totalGeneral);
+            document.getElementById('total-pagado-general').textContent = formatearMoneda(totalPagadoGeneral);
+            document.getElementById('total-pendiente-general').textContent = formatearMoneda(totalPendienteGeneral);
         }
 
         async function guardarHojaPago() {
             const mes = document.getElementById('filtro-mes').value;
+            if (!verificarYNotificarMesEditable(mes, 'guardar cambios')) return;
             if (!mes || filasEstado.length === 0) {
                 alert("❌ No hay datos para guardar.");
                 return;
@@ -698,5 +1551,5 @@
             }
         }
     </script>
-</body>
+</body> 
 </html>

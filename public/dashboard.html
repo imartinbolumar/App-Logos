@@ -87,6 +87,16 @@
                 </div>                
                 <h3 class="font-bold text-lg text-slate-800 mb-1">Hoja de Pago</h3>
                 <p class="text-xs text-slate-500 mt-1">Cálculo mensual de importes</p>
+            </a>
+
+            <!-- Opción: Informe de Pagos (Solo Administrador / Administrador-Profesor) -->
+            <a href="/informe_pagos.html" id="card-informe-pagos" class="hidden bg-white p-6 rounded-xl shadow-md border-l-4 border-blue-600 hover:shadow-lg transition group">
+                <div class="flex justify-between items-start mb-4">
+                    <span class="text-3xl mb-2">📊</span>
+                    <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full group-hover:bg-blue-600 group-hover:text-white transition">Acceder →</span>
+                </div>
+                <h3 class="font-bold text-lg text-slate-800 mb-1">Informe de Pagos</h3>
+                <p class="text-xs text-slate-500 mt-1">Consulta, agrupación e impresión de pagos</p>
             </a> 
 
         </div>
@@ -128,10 +138,18 @@
 
     <script>
         const usuarioLogueado = JSON.parse(localStorage.getItem('usuario') || '{}');
-        if (usuarioLogueado.rol === 'admin' || usuarioLogueado.rol === 'admin_profesor'){
+        const rolNormalizado = String(usuarioLogueado.rol || '').trim().toLowerCase();
+        if (
+            rolNormalizado === 'admin' ||
+            rolNormalizado === 'administrador' ||
+            rolNormalizado === 'admin_profesor' ||
+            rolNormalizado === 'administrador/profesor' ||
+            rolNormalizado === 'administrador_profesor'
+        ) {
             document.getElementById('card-maestros').classList.remove('hidden');
             document.getElementById('card-usuarios').classList.remove('hidden');
             document.getElementById('card-tarifas').classList.remove('hidden');
+            document.getElementById('card-informe-pagos').classList.remove('hidden');
         }
     </script>
     

@@ -186,10 +186,13 @@ app.delete('/api/usuarios/:id', (req, res) => {
 // RUTAS GESTIÓN DE ALUMNOS
 // ----------------------------------------------------
 
-// Crear un nuevo alumno
+// 1. Crear un alumno
 app.post('/api/alumnos', (req, res) => {
     const { 
         nombre, apellidos, curso, beca, centro, fecha_comienzo, precio_terapia,
+        tarifa_refuerzo_id, horas_refuerzo,
+        tarifa_dificultad_id, horas_dificultad,
+        tarifa_logopedia_id, horas_logopedia,
         contacto_padre, telefono_padre, email_padre, 
         contacto_madre, telefono_madre, email_madre, 
         observaciones, creado_por, activo 
@@ -199,26 +202,37 @@ app.post('/api/alumnos', (req, res) => {
     const estBeca = beca !== undefined ? beca : 0;
     const estPrecio = precio_terapia !== undefined && precio_terapia !== '' ? parseFloat(precio_terapia) : 0;
 
+    // Procesamiento seguro de los 6 nuevos campos
+    const estTarifaRef = tarifa_refuerzo_id ? parseInt(tarifa_refuerzo_id) : null;
+    const estHorasRef = horas_refuerzo ? parseInt(horas_refuerzo) : 0;
+    const estTarifaDif = tarifa_dificultad_id ? parseInt(tarifa_dificultad_id) : null;
+    const estHorasDif = horas_dificultad ? parseInt(horas_dificultad) : 0;
+    const estTarifaLog = tarifa_logopedia_id ? parseInt(tarifa_logopedia_id) : null;
+    const estHorasLog = horas_logopedia ? parseInt(horas_logopedia) : 0;
+
     if (!nombre || !apellidos) {
         return res.status(400).json({ error: 'El nombre y los apellidos son obligatorios' });
     }
 
     const query = `INSERT INTO alumnos (
         nombre, apellidos, curso, beca, centro, fecha_comienzo, precio_terapia,
+        tarifa_refuerzo_id, horas_refuerzo,
+        tarifa_dificultad_id, horas_dificultad,
+        tarifa_logopedia_id, horas_logopedia,
         contacto_padre, telefono_padre, email_padre, 
         contacto_madre, telefono_madre, email_madre, 
         observaciones, creado_por, activo
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     
     db.run(query, [
         nombre, apellidos, 
         curso || '', estBeca, centro || '', fecha_comienzo || '', estPrecio,
+        estTarifaRef, estHorasRef, estTarifaDif, estHorasDif, estTarifaLog, estHorasLog,
         contacto_padre || '', telefono_padre || '', email_padre || '', 
         contacto_madre || '', telefono_madre || '', email_madre || '', 
         observaciones || '', creado_por || 'Sistema', estActivo
     ], function(err) {
         if (err) {            
-            // Si el error es por duplicidad de nombre y apellidos
             if (err.message.includes('UNIQUE constraint failed')) {
                 return res.status(400).json({ error: 'YA_EXISTE' });
             }
@@ -239,7 +253,6 @@ app.post('/api/alumnos/masivo', (req, res) => {
         return res.status(400).json({ error: "Se esperaba un array con los datos de los alumnos" });
     }
 
-    // Validar que todos tengan nombre y apellidos antes de insertar
     for (const alu of alumnos) {
         if (!alu.nombre || !alu.apellidos) {
             return res.status(400).json({ error: `El alumno con nombre "${alu.nombre || 'Desconocido'}" no tiene nombre o apellidos obligatorios.` });
@@ -252,16 +265,25 @@ app.post('/api/alumnos/masivo', (req, res) => {
     alumnos.forEach(alu => {
         const {
             nombre, apellidos, curso, centro, fecha_comienzo, precio_terapia,
+            tarifa_refuerzo_id, horas_refuerzo,
+            tarifa_dificultad_id, horas_dificultad,
+            tarifa_logopedia_id, horas_logopedia,
             beca, contacto_padre, telefono_padre, email_padre,
             contacto_madre, telefono_madre, email_madre, activo, observaciones,
             creado_por, modificado_por
         } = alu;
 
         db.run(
-            `INSERT INTO alumnos (nombre, apellidos, curso, centro, fecha_comienzo, precio_terapia, beca, contacto_padre, telefono_padre, email_padre, contacto_madre, telefono_madre, email_madre, activo, observaciones, creado_por, modificado_por) 
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            `INSERT INTO alumnos (
+                nombre, apellidos, curso, centro, fecha_comienzo, precio_terapia, 
+                tarifa_refuerzo_id, horas_refuerzo, tarifa_dificultad_id, horas_dificultad, tarifa_logopedia_id, horas_logopedia,
+                beca, contacto_padre, telefono_padre, email_padre, contacto_madre, telefono_madre, email_madre, activo, observaciones, creado_por, modificado_por
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             [
                 nombre, apellidos, curso || '', centro || '', fecha_comienzo || '', precio_terapia || 0,
+                tarifa_refuerzo_id ? parseInt(tarifa_refuerzo_id) : null, horas_refuerzo ? parseInt(horas_refuerzo) : 0,
+                tarifa_dificultad_id ? parseInt(tarifa_dificultad_id) : null, horas_dificultad ? parseInt(horas_dificultad) : 0,
+                tarifa_logopedia_id ? parseInt(tarifa_logopedia_id) : null, horas_logopedia ? parseInt(horas_logopedia) : 0,
                 beca || 0, contacto_padre || '', telefono_padre || '', email_padre || '',
                 contacto_madre || '', telefono_madre || '', email_madre || '', activo !== undefined ? activo : 1,
                 observaciones || '', creado_por || 'Sistema', modificado_por || 'Sistema'
@@ -273,7 +295,6 @@ app.post('/api/alumnos/masivo', (req, res) => {
                     insertados++;
                 }
 
-                // Cuando termine de procesar todos los elementos del array
                 if (insertados + errores === alumnos.length) {
                     res.json({ 
                         mensaje: "Proceso de importación masiva finalizado", 
@@ -291,6 +312,9 @@ app.put('/api/alumnos/:id', (req, res) => {
     const { id } = req.params;
     const { 
         nombre, apellidos, curso, beca, centro, fecha_comienzo, precio_terapia,
+        tarifa_refuerzo_id, horas_refuerzo,
+        tarifa_dificultad_id, horas_dificultad,
+        tarifa_logopedia_id, horas_logopedia,
         contacto_padre, telefono_padre, email_padre, 
         contacto_madre, telefono_madre, email_madre, 
         observaciones, modificado_por, activo
@@ -299,8 +323,18 @@ app.put('/api/alumnos/:id', (req, res) => {
     const estBeca = beca !== undefined ? beca : 0;
     const estPrecio = precio_terapia !== undefined && precio_terapia !== '' ? parseFloat(precio_terapia) : 0;
 
+    const estTarifaRef = tarifa_refuerzo_id ? parseInt(tarifa_refuerzo_id) : null;
+    const estHorasRef = horas_refuerzo ? parseInt(horas_refuerzo) : 0;
+    const estTarifaDif = tarifa_dificultad_id ? parseInt(tarifa_dificultad_id) : null;
+    const estHorasDif = horas_dificultad ? parseInt(horas_dificultad) : 0;
+    const estTarifaLog = tarifa_logopedia_id ? parseInt(tarifa_logopedia_id) : null;
+    const estHorasLog = horas_logopedia ? parseInt(horas_logopedia) : 0;
+
     const query = `UPDATE alumnos SET 
         nombre = ?, apellidos = ?, curso = ?, beca = ?, centro = ?, fecha_comienzo = ?, precio_terapia = ?,
+        tarifa_refuerzo_id = ?, horas_refuerzo = ?,
+        tarifa_dificultad_id = ?, horas_dificultad = ?,
+        tarifa_logopedia_id = ?, horas_logopedia = ?,
         contacto_padre = ?, telefono_padre = ?, email_padre = ?, 
         contacto_madre = ?, telefono_madre = ?, email_madre = ?, 
         observaciones = ?, modificado_por = ?, modificado_en = CURRENT_TIMESTAMP, activo = ?
@@ -309,6 +343,7 @@ app.put('/api/alumnos/:id', (req, res) => {
     db.run(query, [
         nombre, apellidos, 
         curso || '', estBeca, centro || '', fecha_comienzo || '', estPrecio,
+        estTarifaRef, estHorasRef, estTarifaDif, estHorasDif, estTarifaLog, estHorasLog,
         contacto_padre || '', telefono_padre || '', email_padre || '', 
         contacto_madre || '', telefono_madre || '', email_madre || '', 
         observaciones || '', modificado_por || 'Sistema', 
@@ -321,7 +356,7 @@ app.put('/api/alumnos/:id', (req, res) => {
     });
 });
 
-// Ruta para cargar alumnos
+// Ruta para cargar alumnos (SELECT * ya incluye automáticamente todas las columnas nuevas)
 app.get('/api/alumnos', (req, res) => {
     db.all(`SELECT * FROM alumnos ORDER BY creado_en DESC`, [], (err, rows) => {
         if (err) {
@@ -335,20 +370,17 @@ app.get('/api/alumnos', (req, res) => {
 app.delete('/api/alumnos/:id', (req, res) => {
     const { id } = req.params;
 
-    // 1. Verificar si el alumno está vinculado a alguna asignación
     db.get(`SELECT COUNT(*) as total FROM asignaciones_semanales WHERE alumno_id = ?`, [id], (err, row) => {
         if (err) {
             return res.status(500).json({ error: 'Error al verificar las asignaciones del alumno' });
         }
 
-        // Si el total es mayor a 0, significa que tiene asignaciones y bloqueamos el borrado    
         if (row && row.total > 0) {
             return res.status(400).json({ 
                 error: 'No se puede eliminar el alumno porque ya está en una o más asignaciones.' 
             });
         }
 
-        // 2. Si no tiene asignaciones, procedemos a eliminarlo
         db.run(`DELETE FROM alumnos WHERE id = ?`, [id], function(err) {
             if (err) {
                 return res.status(500).json({ error: 'Error al eliminar el alumno' });
@@ -565,6 +597,23 @@ app.put('/api/tarifas/:id', (req, res) => {
     });
 });
 
+// Endpoint para obtener todas las tarifas de servicios
+app.get('/api/tarifas-servicios', (req, res) => {
+    const query = `
+        SELECT * FROM tarifas_servicios 
+        WHERE (fecha_inicio IS NULL OR fecha_inicio <= DATE('now')) 
+          AND (fecha_fin IS NULL OR fecha_fin >= DATE('now'))
+    `;
+    db.all(query, [], (err, rows) => {
+        if (err) {
+            console.error("Error al obtener tarifas de servicios:", err.message);
+            res.status(500).json({ error: "Error al obtener las tarifas de servicios" });
+        } else {
+            res.json(rows);
+        }
+    });
+});
+
 // Ruta para eliminar una tarifa
 app.delete('/api/tarifas/:id', (req, res) => {
     const { id } = req.params;
@@ -691,18 +740,19 @@ app.post('/api/hoja-pago/guardar', (req, res) => {
         return res.status(400).json({ error: "Formato de datos no válido. Se requiere 'mes' y el array 'hoja'." });
     }
 
-    // Consulta con cláusula ON CONFLICT para insertar o actualizar según corresponda
-    const stmt = db.prepare(`
+    const sqlQuery = `
         INSERT INTO hoja_pago_mensual (
-            mes, alumno_id, modo_pago, fecha_pago,
+            mes, alumno_id, pendiente_mes_anterior, cobro_extra, otros_pagos,
             ref_p, ref_s, ref_b, da, da_c, log, log_m,
-            num_clases, total_clases, pct_dto, importe_clases,
-            terapia_1, terapia_2, terapia_3, terapia_4, terapia_5, terapia_6,
-            importe_terapias, observaciones, evaluacion, total_final
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            num_clases, total_clases, pct_dto, importe_clases, importe_pagado_clases,
+            terapia_1, terapia_1_pagado, terapia_2, terapia_2_pagado, terapia_3, terapia_3_pagado,
+            terapia_4, terapia_4_pagado, terapia_5, terapia_5_pagado, terapia_6, terapia_6_pagado,
+            importe_terapias, importe_pagado_terapias, observaciones, evaluacion, total_final, total_pagado
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(mes, alumno_id) DO UPDATE SET
-            modo_pago=excluded.modo_pago,
-            fecha_pago=excluded.fecha_pago,
+            pendiente_mes_anterior=excluded.pendiente_mes_anterior,
+            cobro_extra=excluded.cobro_extra,
+            otros_pagos=excluded.otros_pagos,
             ref_p=excluded.ref_p,
             ref_s=excluded.ref_s,
             ref_b=excluded.ref_b,
@@ -714,25 +764,47 @@ app.post('/api/hoja-pago/guardar', (req, res) => {
             total_clases=excluded.total_clases,
             pct_dto=excluded.pct_dto,
             importe_clases=excluded.importe_clases,
+            importe_pagado_clases=excluded.importe_pagado_clases,
             terapia_1=excluded.terapia_1,
+            terapia_1_pagado=excluded.terapia_1_pagado,
             terapia_2=excluded.terapia_2,
+            terapia_2_pagado=excluded.terapia_2_pagado,
             terapia_3=excluded.terapia_3,
+            terapia_3_pagado=excluded.terapia_3_pagado,
             terapia_4=excluded.terapia_4,
+            terapia_4_pagado=excluded.terapia_4_pagado,
             terapia_5=excluded.terapia_5,
+            terapia_5_pagado=excluded.terapia_5_pagado,
             terapia_6=excluded.terapia_6,
+            terapia_6_pagado=excluded.terapia_6_pagado,
             importe_terapias=excluded.importe_terapias,
+            importe_pagado_terapias=excluded.importe_pagado_terapias,
             observaciones=excluded.observaciones,
             evaluacion=excluded.evaluacion,
-            total_final=excluded.total_final
-    `);
+            total_final=excluded.total_final,
+            total_pagado=excluded.total_pagado
+    `;
 
     db.serialize(() => {
+        const stmt = db.prepare(sqlQuery, (prepErr) => {
+            if (prepErr) {
+                console.error("❌ Error al preparar la sentencia:", prepErr.message);
+                return res.status(500).json({ error: "Error interno al preparar la consulta: " + prepErr.message });
+            }
+        });
+
+        let errorOcurrido = false;
+
         hoja.forEach(f => {
-            stmt.run([
+            if (errorOcurrido) return;
+
+            // Aseguramos que ningún campo numérico o de texto sea undefined
+            const params = [
                 mes,
                 f.alumno_id,
-                f.modo_pago || '',
-                f.fecha_pago || '',
+                parseFloat(f.pendiente_mes_anterior) || 0,
+                parseFloat(f.cobro_extra) || 0,
+                parseFloat(f.otros_pagos) || 0,
                 f.tarifas ? (f.tarifas["REF P"] || 0) : 0,
                 f.tarifas ? (f.tarifas["REF S"] || 0) : 0,
                 f.tarifas ? (f.tarifas["REF B"] || 0) : 0,
@@ -740,30 +812,78 @@ app.post('/api/hoja-pago/guardar', (req, res) => {
                 f.tarifas ? (f.tarifas["DA C"] || 0) : 0,
                 f.tarifas ? (f.tarifas["LOG"] || 0) : 0,
                 f.tarifas ? (f.tarifas["LOG M"] || 0) : 0,
-                parseInt(f.num_clases) || 0,
-                parseInt(f.total_clases) || 0,
+                (f.num_clases !== '' && f.num_clases !== null && !isNaN(f.num_clases)) ? parseInt(f.num_clases) : 0,
+                (f.total_clases !== '' && f.total_clases !== null && !isNaN(f.total_clases)) ? parseInt(f.total_clases) : 0,
                 parseFloat(f.pct_dto) || 0,
                 parseFloat(f.importe_clases) || 0,
-                f.terapias ? (f.terapias[0] || 0) : 0,
-                f.terapias ? (f.terapias[1] || 0) : 0,
-                f.terapias ? (f.terapias[2] || 0) : 0,
-                f.terapias ? (f.terapias[3] || 0) : 0,
-                f.terapias ? (f.terapias[4] || 0) : 0,
-                f.terapias ? (f.terapias[5] || 0) : 0,
+                parseFloat(f.importe_pagado_clases) || 0,
+                f.terapias ? String(f.terapias[0] || '') : '',
+                f.terapias_pagado && f.terapias_pagado[0] ? 1 : 0,
+                f.terapias ? String(f.terapias[1] || '') : '',
+                f.terapias_pagado && f.terapias_pagado[1] ? 1 : 0,
+                f.terapias ? String(f.terapias[2] || '') : '',
+                f.terapias_pagado && f.terapias_pagado[2] ? 1 : 0,
+                f.terapias ? String(f.terapias[3] || '') : '',
+                f.terapias_pagado && f.terapias_pagado[3] ? 1 : 0,
+                f.terapias ? String(f.terapias[4] || '') : '',
+                f.terapias_pagado && f.terapias_pagado[4] ? 1 : 0,
+                f.terapias ? String(f.terapias[5] || '') : '',
+                f.terapias_pagado && f.terapias_pagado[5] ? 1 : 0,
                 parseFloat(f.importe_terapias) || 0,
+                parseFloat(f.importe_pagado_terapias) || 0,
                 f.observaciones || '',
                 f.evaluacion ? 1 : 0,
-                parseFloat(f.total_final) || 0
-            ]);
+                parseFloat(f.total_final) || 0,
+                parseFloat(f.total_pagado) || 0
+            ];
+
+            stmt.run(params, (err) => {
+                if (err && !errorOcurrido) {
+                    errorOcurrido = true;
+                    console.error("❌ Error en stmt.run:", err.message);
+                }
+            });
         });
 
         stmt.finalize((err) => {
-            if (err) {
-                return res.status(500).json({ error: "Error al guardar la hoja de pago: " + err.message });
+            if (err || errorOcurrido) {
+                return res.status(500).json({ error: "Error al guardar la hoja de pago en la base de datos." });
             }
             res.json({ mensaje: "Hoja de pago guardada con éxito" });
         });
     });
+});
+
+// Endpoint para eliminar un registro individual de la hoja de pago de un mes
+app.delete('/api/hoja-pago/eliminar', async (req, res) => {
+    try {
+        const { mes, alumno_id } = req.query; // O req.body según prefieras
+
+        if (!mes || !alumno_id) {
+            return res.status(400).json({ error: 'Faltan parámetros requeridos: mes o alumno_id' });
+        }
+        
+        // Ejemplo con SQL (ajusta la consulta según tu gestor de base de datos, ej. sqlite/mysql/pg)
+        const query = `DELETE FROM hoja_pago_mensual WHERE mes = ? AND alumno_id = ?`;
+        
+        // Si usas db.run (sqlite):
+        db.run(query, [mes, alumno_id], function(err) {
+            if (err) {
+                console.error("Error al eliminar registro de la hoja de pago:", err);
+                return res.status(500).json({ error: 'Error en la base de datos al eliminar el registro.' });
+            }
+
+            if (this.changes === 0) {
+                return res.status(404).json({ error: 'No se encontró el registro para eliminar.' });
+            }
+
+            res.json({ success: true, message: 'Registro eliminado correctamente.' });
+        });
+
+    } catch (error) {
+        console.error("Error en servidor al eliminar:", error);
+        res.status(500).json({ error: 'Error interno del servidor.' });
+    }
 });
 
 // ----------------------------------------------------

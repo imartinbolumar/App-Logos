@@ -5,12 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Alumnos</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Ocultar flechas de incremento/decremento en inputs numéricos */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
 </head>
 <body class="bg-slate-100 min-h-screen overflow-hidden">
     
     <!-- Contenedor Superior Fijo (Navbar) -->
     <div class="z-40 bg-slate-100 shadow-sm">
-        <!-- Navbar superior -->
         <header class="bg-white shadow-sm border-b border-slate-200">
             <div class="w-full px-4 sm:px-8 py-3.5 flex justify-between items-center">
                 <div class="flex items-center gap-3">
@@ -30,10 +40,10 @@
         </header>
     </div>
 
-    <!-- Contenido principal con Grid adaptable y scroll independiente por bloque -->
+    <!-- Contenido principal -->
     <main class="w-full mx-auto p-4 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
-        <!-- Formulario de Registro / Edición (Izquierda - Estrecho: 3 columnas) -->
+        <!-- Formulario de Registro / Edición (Izquierda - 3 columnas) -->
         <div class="bg-white p-4 sm:p-5 rounded-xl shadow-md lg:col-span-3 h-[calc(100vh-7rem)] overflow-y-auto">
             <form id="form-alumno" onsubmit="guardarAlumno(event)" onkeydown="return event.key !== 'Enter' || event.target.tagName === 'TEXTAREA' || event.target.tagName === 'BUTTON'" class="space-y-2.5">
                 <input type="hidden" id="alumno-id">
@@ -58,15 +68,14 @@
                 <div class="border-b pb-2">
                     <h3 class="text-[11px] font-semibold text-blue-600 uppercase tracking-wider mb-1.5">Datos del Alumno</h3>
                     <div class="space-y-2">
-                        <!-- Nombre (1 col) y Apellidos (2 cols) -->
                         <div class="grid grid-cols-3 gap-2">
                             <div>
                                 <label class="block text-[11px] font-medium text-slate-700 mb-0.5">Nombre</label>
-                                <input type="text" id="nombre" required class="w-full px-2.5 py-1 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                <input type="text" id="nombre" required oninput="this.value = this.value.toUpperCase()" class="w-full px-2.5 py-1 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 uppercase">
                             </div>
                             <div class="col-span-2">
                                 <label class="block text-[11px] font-medium text-slate-700 mb-0.5">Apellidos</label>
-                                <input type="text" id="apellidos" required class="w-full px-2.5 py-1 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                <input type="text" id="apellidos" required oninput="this.value = this.value.toUpperCase()" class="w-full px-2.5 py-1 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 uppercase">
                             </div>
                         </div>
 
@@ -75,7 +84,6 @@
                                 <label class="block text-[11px] font-medium text-slate-700 mb-0.5">Curso</label>
                                 <input type="text" id="curso" placeholder="Ej. 3º ESO" class="w-full px-2.5 py-1 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
                             </div>
-                            <!-- Centro Educativo con Autocompletado y soporte de flechas -->
                             <div class="relative">
                                 <label class="block text-[11px] font-medium text-slate-700 mb-0.5">Centro Educativo</label>
                                 <input type="text" id="centro" autocomplete="off" placeholder="Escribe o busca..." oninput="filtrarSugerenciasCentro(this)" onfocus="filtrarSugerenciasCentro(this)" onkeydown="manejarTecladoCentro(event)" class="w-full px-2.5 py-1 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-blue-500">
@@ -88,16 +96,84 @@
                                 <label class="block text-[11px] font-medium text-slate-700 mb-0.5">Fecha Comienzo</label>
                                 <input type="date" id="fecha_comienzo" class="w-full px-2.5 py-1 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
                             </div>
-                            <div>
-                                <label class="block text-[11px] font-medium text-slate-700 mb-0.5">Precio Terapia (€)</label>
-                                <input type="number" step="0.01" id="precio_terapia" placeholder="0.00" class="w-full px-2.5 py-1 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            <div class="flex items-center pt-4">
+                                <input type="checkbox" id="beca" class="w-3.5 h-3.5 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
+                                <label for="beca" class="text-[11px] font-medium text-slate-700 ml-1.5">¿Tiene Beca?</label>
                             </div>
                         </div>
+                    </div>
+                </div>
 
-                        <!-- Check Beca -->
-                        <div class="flex items-center gap-1.5 pt-0.5">
-                            <input type="checkbox" id="beca" class="w-3.5 h-3.5 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
-                            <label for="beca" class="text-[11px] font-medium text-slate-700">¿Tiene Beca?</label>
+                <!-- Bloque Tarifas y Servicios -->
+                <div class="border-b pb-2 space-y-2">
+                    <h3 class="text-[11px] font-semibold text-blue-600 uppercase tracking-wider mb-1">Tarifas y Servicios</h3>
+                    
+                    <div>
+                        <label class="block text-[10px] font-medium text-slate-700 mb-0.5">Precio Terapia (€)</label>
+                        <!-- Sin decimales y sin flechas de incremento/decremento -->
+                        <input type="number" step="1" id="precio_terapia" placeholder="0" class="w-full px-2.5 py-1 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+                    </div>
+
+                    <!-- 1. Refuerzo -->
+                    <div class="grid grid-cols-3 gap-2 bg-slate-50 p-2 rounded-md border border-slate-200">
+                        <div class="col-span-2">
+                            <label class="block text-[10px] font-medium text-slate-700 mb-0.5">Tarifa Refuerzo</label>
+                            <select id="tarifa_refuerzo_id" class="w-full px-2 py-1 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                <option value="">-- Ninguna --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-medium text-slate-700 mb-0.5">Horas/Sem</label>
+                            <select id="horas_refuerzo" class="w-full px-2 py-1 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                <option value="0">0</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 2. Dificultad Aprendizaje -->
+                    <div class="grid grid-cols-3 gap-2 bg-slate-50 p-2 rounded-md border border-slate-200">
+                        <div class="col-span-2">
+                            <label class="block text-[10px] font-medium text-slate-700 mb-0.5">Tarifa Dificultad</label>
+                            <select id="tarifa_dificultad_id" class="w-full px-2 py-1 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                <option value="">-- Ninguna --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-medium text-slate-700 mb-0.5">Horas/Sem</label>
+                            <select id="horas_dificultad" class="w-full px-2 py-1 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                <option value="0">0</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 3. Logopedia -->
+                    <div class="grid grid-cols-3 gap-2 bg-slate-50 p-2 rounded-md border border-slate-200">
+                        <div class="col-span-2">
+                            <label class="block text-[10px] font-medium text-slate-700 mb-0.5">Tarifa Logopedia</label>
+                            <select id="tarifa_logopedia_id" class="w-full px-2 py-1 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                <option value="">-- Ninguna --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-medium text-slate-700 mb-0.5">Horas/Sem</label>
+                            <select id="horas_logopedia" class="w-full px-2 py-1 text-xs border border-slate-300 rounded-md bg-white focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                <option value="0">0</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -158,56 +234,46 @@
             </form>
         </div>
 
-        <!-- Listado de Alumnos Registrados (Derecha - Ancho: 9 columnas) -->
+        <!-- Listado de Alumnos Registrados (Derecha - 9 columnas) -->
         <div class="bg-white p-6 rounded-xl shadow-md lg:col-span-9 h-[calc(100vh-7rem)] overflow-hidden flex flex-col">
             <div class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
                 <h2 class="text-lg font-bold text-slate-800">Alumnos Registrados</h2>
                 
-                <!-- Filtros + Contador + Buscador -->
                 <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-                    <!-- Contador de alumnos con el filtro aplicado -->
                     <div class="flex items-center gap-1.5 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700">
                         <span>Total:</span>
                         <span id="contador-alumnos" class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-md font-bold">0</span>
                     </div>
 
-                    <!-- Selector de Estado (Activos / No activos / Todos) -->
                     <select id="filtro-estado" onchange="filtrarAlumnos()" class="text-xs font-semibold text-slate-700 bg-slate-50 px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-100 transition focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer">
                         <option value="activos" selected>Activos</option>
                         <option value="no_activos">No activos</option>
                         <option value="todos">Todos</option>
                     </select>
 
-                    <!-- Checkbox de filtro por beca -->
                     <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer bg-slate-50 px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-100 transition">
                         <input type="checkbox" id="filtro-beca" onchange="filtrarAlumnos()" class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
                         Solo becados
                     </label>
 
-                    <!-- Checkbox de filtro por tarifa de terapia -->
-                    <label class="flex items-center gap-2 text-xs font-semibold text-slate-700 cursor-pointer bg-slate-50 px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-100 transition">
-                        <input type="checkbox" id="filtro-tarifa-terapia" onchange="filtrarAlumnos()" class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
-                        Con tarifa terapia
-                    </label>
-                    
-                    <!-- Buscador -->
                     <input type="text" id="buscador" oninput="filtrarAlumnos()" placeholder="🔍 Buscar por nombre, apellidos, centro..." class="w-full sm:w-56 px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
             </div>
 
             <div class="overflow-x-auto overflow-y-auto flex-1">
-                <table class="w-full text-left border-collapse min-w-[700px]">
+                <table class="w-full text-left border-collapse min-w-[950px]">
                     <thead>
                         <tr class="border-b border-slate-200 text-slate-500 text-xs uppercase sticky top-0 bg-white shadow-sm z-10">
-                            <th class="py-2 px-3">Alumno / Curso</th>
-                            <th class="py-2 px-3">Centro / Beca</th>
-                            <th class="py-2 px-3">Contacto / Padres y Emails</th>
-                            <th class="py-2 px-3">Condiciones / Obs.</th>
-                            <th class="py-2 px-3 text-center">Acción</th>
+                            <th class="py-2 px-3 w-[27%]">Alumno / Curso</th>
+                            <th class="py-2 px-3 w-[16%]">Centro / Beca</th>
+                            <th class="py-2 px-3 w-[15%]">Tarifas</th> 
+                            <th class="py-2 px-3 w-[19%]">Contacto</th>
+                            <th class="py-2 px-3 w-[22%]">Otros / Obs.</th>
+                            <th class="py-2 px-3 w-[6%] text-center">Acción</th>
                         </tr>
                     </thead>
                     <tbody id="tabla-alumnos" class="text-slate-700 text-sm">
-                        <!-- Carga dinámica automática -->
+                        <!-- Carga dinámica -->
                     </tbody>
                 </table>
             </div>
@@ -218,6 +284,7 @@
         const usuarioGuardado = JSON.parse(localStorage.getItem('usuario') || '{}');
         let alumnosGlobal = [];
         let centrosGlobal = []; 
+        let tarifasGlobal = [];
         let indiceCentroSeleccionado = -1;
 
         document.getElementById('info-usuario').textContent = `👤 ${usuarioGuardado.nombre} (${usuarioGuardado.rol.toUpperCase()})`;
@@ -227,15 +294,51 @@
             return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^\w\s]/gi, '').trim();
         }
 
-        async function cargarCentrosListado() {
+        async function cargarDatosGenerales() {
             try {
-                const res = await fetch('/api/centros');
-                if (res.ok) {
-                    centrosGlobal = await res.json();
+                const [resCentros, resTarifas] = await Promise.all([
+                    fetch('/api/centros'),
+                    fetch('/api/tarifas-servicios')
+                ]);
+                if (resCentros.ok) centrosGlobal = await resCentros.json();
+                if (resTarifas.ok) {
+                    tarifasGlobal = await resTarifas.json();
+                    poblarSelectsTarifas();
                 }
             } catch (e) {
-                console.error("Error al cargar centros", e);
+                console.error("Error al cargar centros o tarifas", e);
             }
+        }
+
+        function poblarSelectsTarifas() {            
+            const selectRef = document.getElementById('tarifa_refuerzo_id');            
+            const selectDif = document.getElementById('tarifa_dificultad_id');
+            const selectLog = document.getElementById('tarifa_logopedia_id');            
+
+            selectRef.innerHTML = '<option value="">-- Ninguna --</option>';
+            selectDif.innerHTML = '<option value="">-- Ninguna --</option>';
+            selectLog.innerHTML = '<option value="">-- Ninguna --</option>';
+
+            const hoy = new Date().toISOString().split('T')[0];
+
+            tarifasGlobal.forEach(t => {
+                const inicioValido = !t.fecha_inicio || t.fecha_inicio <= hoy;
+                const finValido = !t.fecha_fin || t.fecha_fin >= hoy;
+                if (!inicioValido || !finValido) return;
+
+                const tipo = (t.tipo_servicio || '').trim().toLowerCase();
+                const opt = document.createElement('option');
+                opt.value = t.id;
+                opt.textContent = t.codigo;
+                
+                if (tipo === 'refuerzo') {
+                    selectRef.appendChild(opt);
+                } else if (tipo === 'dificultad') {
+                    selectDif.appendChild(opt);
+                } else if (tipo === 'logopedia') {
+                    selectLog.appendChild(opt);
+                }
+            });
         }
 
         function filtrarSugerenciasCentro(input) {
@@ -243,10 +346,7 @@
             const dropdown = document.getElementById('dropdown-centros');
             indiceCentroSeleccionado = -1;
 
-            const filtrados = centrosGlobal.filter(c => {
-                const nombreNorm = normalizarTexto(c.nombre);
-                return nombreNorm.includes(query);
-            });
+            const filtrados = centrosGlobal.filter(c => normalizarTexto(c.nombre).includes(query));
 
             if (filtrados.length === 0) {
                 dropdown.innerHTML = `<div class="px-3 py-2 text-slate-400 text-[11px]">No se encontraron centros</div>`;
@@ -270,7 +370,6 @@
         function manejarTecladoCentro(e) {
             const dropdown = document.getElementById('dropdown-centros');
             const opciones = dropdown.querySelectorAll('.opcion-centro');
-
             if (dropdown.classList.contains('hidden') || opciones.length === 0) return;
 
             if (e.key === 'ArrowDown') {
@@ -330,49 +429,73 @@
             });
         }
 
+        function obtenerCodigoTarifa(tarifaId) {
+            if (!tarifaId) return null;
+            const t = tarifasGlobal.find(item => item.id == tarifaId);
+            return t ? t.codigo : null;
+        }
+
         function renderizarTabla(lista) {
             const tbody = document.getElementById('tabla-alumnos');
             tbody.innerHTML = '';
 
             if (lista.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-400">No se encontraron alumnos con los criterios seleccionados.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-400">No se encontraron alumnos con los criterios seleccionados.</td></tr>`;
                 return;
             }
 
             lista.forEach(a => {
                 let infoPadres = [];
                 if (a.contacto_padre || a.telefono_padre || a.email_padre) {
-                    infoPadres.push(`<b>P:</b> ${a.contacto_padre || '-'} (${a.telefono_padre || 'Sin telf'})<br><span class="text-slate-400 text-[11px]">${a.email_padre || 'Sin email'}</span>`);
+                    infoPadres.push(`<b>P:</b> ${a.contacto_padre || '-'} (${a.telefono_padre || 'Sin telf'})<br><span class="text-slate-400">${a.email_padre || ''}</span>`);
                 }
                 if (a.contacto_madre || a.telefono_madre || a.email_madre) {
-                    infoPadres.push(`<b>M:</b> ${a.contacto_madre || '-'} (${a.telefono_madre || 'Sin telf'})<br><span class="text-slate-400 text-[11px]">${a.email_madre || 'Sin email'}</span>`);
+                    infoPadres.push(`<b>M:</b> ${a.contacto_madre || '-'} (${a.telefono_madre || 'Sin telf'})<br><span class="text-slate-400">${a.email_madre || ''}</span>`);
                 }
                 
                 const badgeEstado = a.activo === 0 
-                    ? '<span class="bg-red-100 text-red-700 text-[10px] font-semibold px-2 py-0.5 rounded">Baja</span>' 
-                    : '<span class="bg-green-100 text-green-700 text-[10px] font-semibold px-2 py-0.5 rounded">Activo</span>';
+                    ? '<span class="bg-red-100 text-red-700 text-[10px] font-semibold px-1.5 py-0.5 rounded">Baja</span>' 
+                    : '<span class="bg-green-100 text-green-700 text-[10px] font-semibold px-1.5 py-0.5 rounded">Activo</span>';
 
                 const badgeBeca = a.beca === 1 
-                    ? '<span class="bg-purple-100 text-purple-700 text-[10px] font-semibold px-2 py-0.5 rounded ml-1">Beca</span>' 
+                    ? '<span class="bg-purple-100 text-purple-700 text-[10px] font-semibold px-1.5 py-0.5 rounded ml-1">Beca</span>' 
                     : '';
+
+                let detalleTarifas = [];
+                detalleTarifas.push(`<div><b>Terapia:</b> ${a.precio_terapia ? Math.round(a.precio_terapia) + ' €' : '0 €'}</div>`);
+                
+                const codRef = obtenerCodigoTarifa(a.tarifa_refuerzo_id);
+                if (codRef) {
+                    detalleTarifas.push(`<div><b>Refuerzo:</b> ${codRef} (${a.horas_refuerzo || 0}h/s)</div>`);
+                }
+                const codDif = obtenerCodigoTarifa(a.tarifa_dificultad_id);
+                if (codDif) {
+                    detalleTarifas.push(`<div><b>Dificultad:</b> ${codDif} (${a.horas_dificultad || 0}h/s)</div>`);
+                }
+                const codLog = obtenerCodigoTarifa(a.tarifa_logopedia_id);
+                if (codLog) {
+                    detalleTarifas.push(`<div><b>Logopedia:</b> ${codLog} (${a.horas_logopedia || 0}h/s)</div>`);
+                }
 
                 tbody.innerHTML += `
                     <tr class="border-b border-slate-100 hover:bg-slate-50 align-top">
                         <td class="py-3 px-3">
-                            <div class="font-bold text-slate-900">${a.apellidos}, ${a.nombre}</div>
+                            <div class="font-bold text-slate-900"> ${a.nombre} ${a.apellidos}</div>
                             <div class="text-xs text-blue-600 font-medium">${a.curso || 'Sin curso'}</div>
                         </td>
                         <td class="py-3 px-3 text-xs">
-                            <div class="font-medium text-slate-800">${a.centro || 'Sin centro asignado'}</div>
+                            <div class="font-medium text-slate-800">${a.centro || 'Sin centro'}</div>
                             <div class="mt-1">${badgeBeca} ${badgeEstado}</div>
                         </td>
+                        <td class="py-3 px-3 text-xs text-slate-600 space-y-0.5">
+                            ${detalleTarifas.join('')}
+                        </td>
                         <td class="py-3 px-3 text-xs text-slate-600 space-y-1">
-                            ${infoPadres.length > 0 ? infoPadres.join('<div class="border-t border-slate-100 my-1"></div>') : '<span class="text-slate-400">Sin datos</span>'}
-                        </td>                        
-                        <td class="py-3 px-3 text-xs space-y-1">
+                            ${infoPadres.length > 0 ? infoPadres.join('<div class="border-t border-slate-100 my-0.5"></div>') : '<span class="text-slate-400">Sin datos</span>'}
+                        </td>
+                        <td class="py-3 px-3 text-xs text-slate-500 space-y-1">
                             <div><b>Inicio:</b> ${a.fecha_comienzo || '-'}</div>
-                            <div class="text-emerald-600 font-semibold"><b>Precio:</b> ${a.precio_terapia ? a.precio_terapia + ' €' : 'Estándar'}</div>
-                            <div class="text-slate-500 italic mt-1 max-w-xs truncate" title="${a.observaciones || ''}"><b>Obs:</b> ${a.observaciones || '-'}</div>
+                            <div class="italic truncate" title="${a.observaciones || ''}"><b>Obs:</b> ${a.observaciones || '-'}</div>
                         </td>                    
                         <td class="py-3 px-3 text-center align-middle">
                             <button onclick="cargarParaEditar(${a.id})" class="text-blue-600 hover:text-blue-800 text-xs font-semibold bg-blue-50 px-2.5 py-1 rounded transition">Editar</button>
@@ -384,19 +507,14 @@
 
         function filtrarListaAlumnos(datos) {
             const textoBuscado = normalizarTexto(document.getElementById('buscador').value);
-            const estadoValor = document.getElementById('filtro-estado').value; // 'activos', 'no_activos', 'todos'
+            const estadoValor = document.getElementById('filtro-estado').value;
             const soloBecados = document.getElementById('filtro-beca').checked;
-            const soloConTarifa = document.getElementById('filtro-tarifa-terapia').checked;
 
             const filtrados = datos.filter(a => {
                 const nombreNorm = normalizarTexto(a.nombre);
                 const apellidosNorm = normalizarTexto(a.apellidos);
                 const cursoNorm = normalizarTexto(a.curso);
                 const centroNorm = normalizarTexto(a.centro);
-                const contactoPadreNorm = normalizarTexto(a.contacto_padre);
-                const contactoMadreNorm = normalizarTexto(a.contacto_madre);
-                const emailPadreNorm = normalizarTexto(a.email_padre);
-                const emailMadreNorm = normalizarTexto(a.email_madre);
 
                 const cumpleTexto = (
                     nombreNorm.includes(textoBuscado) || 
@@ -413,56 +531,41 @@
                 }
 
                 const cumpleBeca = !soloBecados || (a.beca === 1);
-                const cumpleTarifa = !soloConTarifa || (a.precio_terapia && parseFloat(a.precio_terapia) > 0);
 
-                return cumpleTexto && cumpleEstado && cumpleBeca && cumpleTarifa;
+                return cumpleTexto && cumpleEstado && cumpleBeca;
             });
 
-            // Actualizar el contador en pantalla
             const contadorEl = document.getElementById('contador-alumnos');
-            if (contadorEl) {
-                contadorEl.textContent = filtrados.length;
-            }
+            if (contadorEl) contadorEl.textContent = filtrados.length;
 
             return filtrados;
         }
 
         function filtrarAlumnos() {
-            const filtrados = filtrarListaAlumnos(alumnosGlobal);
-            renderizarTabla(filtrados);
+            renderizarTabla(filtrarListaAlumnos(alumnosGlobal));
         }
 
         async function guardarAlumno(e) {
             e.preventDefault();
             
             const id = document.getElementById('alumno-id').value;
-            const nombreInput = document.getElementById('nombre').value.trim();
-            const apellidosInput = document.getElementById('apellidos').value.trim();
-
-            const nombreNormalizado = normalizarTexto(nombreInput);
-            const apellidosNormalizados = normalizarTexto(apellidosInput);
-
-            const duplicado = alumnosGlobal.find(a => 
-                normalizarTexto(a.nombre) === nombreNormalizado && 
-                normalizarTexto(a.apellidos) === apellidosNormalizados &&
-                a.id !== (id ? parseInt(id) : null)
-            );
-
-            if (duplicado) {
-                if (confirm(`⚠️ Ya existe un alumno registrado con un nombre similar ("${duplicado.nombre} ${duplicado.apellidos}").\n\n¿Deseas cargar sus datos para modificarlos?`)) {
-                    cargarParaEditar(duplicado.id);
-                }
-                return;
-            }
 
             const datos = {
-                nombre: nombreInput,
-                apellidos: apellidosInput,
+                nombre: document.getElementById('nombre').value.trim().toUpperCase(),
+                apellidos: document.getElementById('apellidos').value.trim().toUpperCase(),
                 curso: document.getElementById('curso').value.trim(),
                 centro: document.getElementById('centro').value.trim(),
                 fecha_comienzo: document.getElementById('fecha_comienzo').value,
-                precio_terapia: parseFloat(document.getElementById('precio_terapia').value) || 0,
+                precio_terapia: parseInt(document.getElementById('precio_terapia').value) || 0,
                 beca: document.getElementById('beca').checked ? 1 : 0,
+                
+                tarifa_refuerzo_id: document.getElementById('tarifa_refuerzo_id').value ? parseInt(document.getElementById('tarifa_refuerzo_id').value) : null,
+                horas_refuerzo: parseInt(document.getElementById('horas_refuerzo').value) || 0,
+                tarifa_dificultad_id: document.getElementById('tarifa_dificultad_id').value ? parseInt(document.getElementById('tarifa_dificultad_id').value) : null,
+                horas_dificultad: parseInt(document.getElementById('horas_dificultad').value) || 0,
+                tarifa_logopedia_id: document.getElementById('tarifa_logopedia_id').value ? parseInt(document.getElementById('tarifa_logopedia_id').value) : null,
+                horas_logopedia: parseInt(document.getElementById('horas_logopedia').value) || 0,
+
                 contacto_padre: document.getElementById('contacto_padre').value.trim(),
                 telefono_padre: document.getElementById('telefono_padre').value.trim(),
                 email_padre: document.getElementById('email_padre').value.trim(),
@@ -501,20 +604,14 @@
         
         async function borrarAlumnoActual() {
             const id = document.getElementById('alumno-id').value;
-            const nombre = document.getElementById('nombre').value;
-            const apellidos = document.getElementById('apellidos').value;
-
             if (!id) return;
 
-            if (!confirm(`⚠️ ¿Estás totalmente seguro de que deseas eliminar al alumno "${apellidos}, ${nombre}"?\n\nEsta acción no se puede deshacer.`)) {
+            if (!confirm(`⚠️ ¿Estás totalmente seguro de que deseas eliminar este alumno?\n\nEsta acción no se puede deshacer.`)) {
                 return;
             }
 
             try {
-                const respuesta = await fetch(`/api/alumnos/${id}`, {
-                    method: 'DELETE'
-                });
-
+                const respuesta = await fetch(`/api/alumnos/${id}`, { method: 'DELETE' });
                 const resultado = await respuesta.json();
 
                 if (respuesta.ok) {
@@ -522,7 +619,7 @@
                     limpiarFormulario();
                     cargarAlumnos();
                 } else {
-                    alert('❌ No se pudo eliminar: ' + (resultado.error || 'El alumno está vinculado a una asignación.'));
+                    alert('❌ No se pudo eliminar: ' + (resultado.error || 'El alumno está vinculado a asignaciones.'));
                 }
             } catch (error) {
                 alert('❌ Error de conexión con el servidor.');
@@ -539,8 +636,16 @@
             document.getElementById('curso').value = alumno.curso || '';
             document.getElementById('centro').value = alumno.centro || '';
             document.getElementById('fecha_comienzo').value = alumno.fecha_comienzo || '';
-            document.getElementById('precio_terapia').value = alumno.precio_terapia || '';
+            document.getElementById('precio_terapia').value = alumno.precio_terapia !== null && alumno.precio_terapia !== undefined ? Math.round(alumno.precio_terapia) : '';
             document.getElementById('beca').checked = alumno.beca === 1;
+
+            document.getElementById('tarifa_refuerzo_id').value = alumno.tarifa_refuerzo_id || '';
+            document.getElementById('horas_refuerzo').value = alumno.horas_refuerzo || 0;
+            document.getElementById('tarifa_dificultad_id').value = alumno.tarifa_dificultad_id || '';
+            document.getElementById('horas_dificultad').value = alumno.horas_dificultad || 0;
+            document.getElementById('tarifa_logopedia_id').value = alumno.tarifa_logopedia_id || '';
+            document.getElementById('horas_logopedia').value = alumno.horas_logopedia || 0;
+
             document.getElementById('contacto_padre').value = alumno.contacto_padre || '';
             document.getElementById('telefono_padre').value = alumno.telefono_padre || '';
             document.getElementById('email_padre').value = alumno.email_padre || '';
@@ -569,7 +674,7 @@
             document.getElementById('btn-borrar').classList.add('hidden');
         }
         
-        cargarCentrosListado();
+        cargarDatosGenerales();
         cargarAlumnos();
     </script>
 </body>

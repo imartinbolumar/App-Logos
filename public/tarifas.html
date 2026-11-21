@@ -5,6 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestión de Tipos de Servicio y Tarifas (Admin)</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Ocultar flechas de incremento/decremento en inputs numéricos */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; 
+            margin: 0; 
+        }
+        input[type=number] {
+            -moz-appearance: textfield;
+        }
+    </style>
 </head>
 <body class="bg-slate-100 min-h-screen overflow-hidden">
     
@@ -74,7 +85,8 @@
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-700 mb-1">Tarifa / Sesión (€)</label>
-                            <input type="number" step="0.01" id="tarifa_por_sesion" placeholder="0.00" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                            <!-- Sin decimales y sin flechas de incremento/decremento -->
+                            <input type="number" step="1" id="tarifa_por_sesion" placeholder="0" class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500">
                         </div>
                     </div>
 
@@ -83,15 +95,15 @@
                         <textarea id="descripcion" rows="2" placeholder="Detalle del código..." class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500"></textarea>
                     </div>
 
-                    <!-- Precios por horas semanales -->
+                    <!-- Precios por horas semanales (Sin decimales y sin flechas) -->
                     <div class="border-t pt-2">
                         <label class="block text-xs font-bold text-slate-700 mb-2">Precios según Horas / Semana (€)</label>
                         <div class="grid grid-cols-5 gap-1 text-center">
-                            <div><span class="text-[10px] text-slate-500">1h</span><input type="number" step="0.01" id="precio_1h" class="w-full px-1 py-1 text-xs border rounded text-center"></div>
-                            <div><span class="text-[10px] text-slate-500">2h</span><input type="number" step="0.01" id="precio_2h" class="w-full px-1 py-1 text-xs border rounded text-center"></div>
-                            <div><span class="text-[10px] text-slate-500">3h</span><input type="number" step="0.01" id="precio_3h" class="w-full px-1 py-1 text-xs border rounded text-center"></div>
-                            <div><span class="text-[10px] text-slate-500">4h</span><input type="number" step="0.01" id="precio_4h" class="w-full px-1 py-1 text-xs border rounded text-center"></div>
-                            <div><span class="text-[10px] text-slate-500">5h</span><input type="number" step="0.01" id="precio_5h" class="w-full px-1 py-1 text-xs border rounded text-center"></div>
+                            <div><span class="text-[10px] text-slate-500">1h</span><input type="number" step="1" id="precio_1h" class="w-full px-1 py-1 text-xs border rounded text-center"></div>
+                            <div><span class="text-[10px] text-slate-500">2h</span><input type="number" step="1" id="precio_2h" class="w-full px-1 py-1 text-xs border rounded text-center"></div>
+                            <div><span class="text-[10px] text-slate-500">3h</span><input type="number" step="1" id="precio_3h" class="w-full px-1 py-1 text-xs border rounded text-center"></div>
+                            <div><span class="text-[10px] text-slate-500">4h</span><input type="number" step="1" id="precio_4h" class="w-full px-1 py-1 text-xs border rounded text-center"></div>
+                            <div><span class="text-[10px] text-slate-500">5h</span><input type="number" step="1" id="precio_5h" class="w-full px-1 py-1 text-xs border rounded text-center"></div>
                         </div>
                     </div>
 
@@ -188,6 +200,13 @@
             }
 
             lista.forEach(t => {
+                const p1 = t.precio_1h !== null && t.precio_1h !== undefined ? Math.round(t.precio_1h) : 0;
+                const p2 = t.precio_2h !== null && t.precio_2h !== undefined ? Math.round(t.precio_2h) : 0;
+                const p3 = t.precio_3h !== null && t.precio_3h !== undefined ? Math.round(t.precio_3h) : 0;
+                const p4 = t.precio_4h !== null && t.precio_4h !== undefined ? Math.round(t.precio_4h) : 0;
+                const p5 = t.precio_5h !== null && t.precio_5h !== undefined ? Math.round(t.precio_5h) : 0;
+                const pSesion = t.tarifa_por_sesion !== null && t.tarifa_por_sesion !== undefined ? Math.round(t.tarifa_por_sesion) : 0;
+
                 tbody.innerHTML += `
                     <tr class="border-b border-slate-100 hover:bg-slate-50 align-top">
                         <td class="py-3 px-3">
@@ -196,10 +215,10 @@
                             <div class="text-xs text-slate-500 mt-1">${t.tipo_servicio || ''}</div>
                         </td>
                         <td class="py-3 px-3 text-xs">
-                            1h: <b>${t.precio_1h}€</b> | 2h: <b>${t.precio_2h}€</b><br>
-                            3h: <b>${t.precio_3h}€</b> | 4h: <b>${t.precio_4h}€</b> | 5h: <b>${t.precio_5h}€</b>
+                            1h: <b>${p1}€</b> | 2h: <b>${p2}€</b><br>
+                            3h: <b>${p3}€</b> | 4h: <b>${p4}€</b> | 5h: <b>${p5}€</b>
                         </td>
-                        <td class="py-3 px-3 text-xs font-semibold text-emerald-600">${t.tarifa_por_sesion} €</td>
+                        <td class="py-3 px-3 text-xs font-semibold text-emerald-600">${pSesion} €</td>
                         <td class="py-3 px-3 text-[11px] text-slate-600">
                             Del ${t.fecha_inicio}<br>al ${t.fecha_fin}
                         </td>
@@ -240,12 +259,12 @@
                 codigo: document.getElementById('codigo').value.trim().toUpperCase(),
                 tipo_servicio: document.getElementById('tipo_servicio').value,
                 descripcion: document.getElementById('descripcion').value.trim(),
-                precio_1h: parseFloat(document.getElementById('precio_1h').value) || 0,
-                precio_2h: parseFloat(document.getElementById('precio_2h').value) || 0,
-                precio_3h: parseFloat(document.getElementById('precio_3h').value) || 0,
-                precio_4h: parseFloat(document.getElementById('precio_4h').value) || 0,
-                precio_5h: parseFloat(document.getElementById('precio_5h').value) || 0,
-                tarifa_por_sesion: parseFloat(document.getElementById('tarifa_por_sesion').value) || 0,
+                precio_1h: parseInt(document.getElementById('precio_1h').value) || 0,
+                precio_2h: parseInt(document.getElementById('precio_2h').value) || 0,
+                precio_3h: parseInt(document.getElementById('precio_3h').value) || 0,
+                precio_4h: parseInt(document.getElementById('precio_4h').value) || 0,
+                precio_5h: parseInt(document.getElementById('precio_5h').value) || 0,
+                tarifa_por_sesion: parseInt(document.getElementById('tarifa_por_sesion').value) || 0,
                 fecha_inicio: document.getElementById('fecha_inicio').value,
                 fecha_fin: document.getElementById('fecha_fin').value,
                 usuario_creacion: usuarioGuardado.nombre,
@@ -312,12 +331,12 @@
             document.getElementById('codigo').value = t.codigo;
             document.getElementById('tipo_servicio').value = t.tipo_servicio;
             document.getElementById('descripcion').value = t.descripcion || '';
-            document.getElementById('precio_1h').value = t.precio_1h;
-            document.getElementById('precio_2h').value = t.precio_2h;
-            document.getElementById('precio_3h').value = t.precio_3h;
-            document.getElementById('precio_4h').value = t.precio_4h;
-            document.getElementById('precio_5h').value = t.precio_5h;
-            document.getElementById('tarifa_por_sesion').value = t.tarifa_por_sesion;
+            document.getElementById('precio_1h').value = t.precio_1h !== null && t.precio_1h !== undefined ? Math.round(t.precio_1h) : '';
+            document.getElementById('precio_2h').value = t.precio_2h !== null && t.precio_2h !== undefined ? Math.round(t.precio_2h) : '';
+            document.getElementById('precio_3h').value = t.precio_3h !== null && t.precio_3h !== undefined ? Math.round(t.precio_3h) : '';
+            document.getElementById('precio_4h').value = t.precio_4h !== null && t.precio_4h !== undefined ? Math.round(t.precio_4h) : '';
+            document.getElementById('precio_5h').value = t.precio_5h !== null && t.precio_5h !== undefined ? Math.round(t.precio_5h) : '';
+            document.getElementById('tarifa_por_sesion').value = t.tarifa_por_sesion !== null && t.tarifa_por_sesion !== undefined ? Math.round(t.tarifa_por_sesion) : '';
             document.getElementById('fecha_inicio').value = t.fecha_inicio;
             document.getElementById('fecha_fin').value = t.fecha_fin;
 
@@ -326,7 +345,6 @@
             document.getElementById('btn-cancelar').classList.remove('hidden');
             document.getElementById('btn-borrar').classList.remove('hidden'); // Muestra el botón de borrar
             
-            // Hacer scroll hacia arriba dentro del propio formulario izquierdo
             const formulario = document.querySelector('.lg\\:col-span-3');
             if (formulario) formulario.scrollTop = 0;
         }
