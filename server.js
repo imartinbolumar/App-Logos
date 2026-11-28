@@ -189,20 +189,22 @@ app.delete('/api/usuarios/:id', (req, res) => {
 // 1. Crear un alumno
 app.post('/api/alumnos', (req, res) => {
     const { 
-        nombre, apellidos, curso, beca, centro, fecha_comienzo, precio_terapia,
+        nombre, apellidos, curso, beca, pago_banco, centro, fecha_comienzo, precio_terapia,
         tarifa_refuerzo_id, horas_refuerzo,
         tarifa_dificultad_id, horas_dificultad,
         tarifa_logopedia_id, horas_logopedia,
-        contacto_padre, telefono_padre, email_padre, 
-        contacto_madre, telefono_madre, email_madre, 
+        contacto_1, telefono_1, email_1, 
+        contacto_2, telefono_2, email_2, 
         observaciones, creado_por, activo 
     } = req.body;
     
     const estActivo = activo !== undefined ? activo : 1;
     const estBeca = beca !== undefined ? beca : 0;
-    const estPrecio = precio_terapia !== undefined && precio_terapia !== '' ? parseFloat(precio_terapia) : 0;
+    const estPagoBanco = pago_banco !== undefined ? pago_banco : 0;
+    const estPrecio = (precio_terapia !== undefined && precio_terapia !== null && precio_terapia !== '') 
+        ? parseFloat(precio_terapia) 
+        : null;
 
-    // Procesamiento seguro de los 6 nuevos campos
     const estTarifaRef = tarifa_refuerzo_id ? parseInt(tarifa_refuerzo_id) : null;
     const estHorasRef = horas_refuerzo ? parseInt(horas_refuerzo) : 0;
     const estTarifaDif = tarifa_dificultad_id ? parseInt(tarifa_dificultad_id) : null;
@@ -215,33 +217,87 @@ app.post('/api/alumnos', (req, res) => {
     }
 
     const query = `INSERT INTO alumnos (
-        nombre, apellidos, curso, beca, centro, fecha_comienzo, precio_terapia,
+        nombre, apellidos, curso, beca, pago_banco, centro, fecha_comienzo, precio_terapia,
         tarifa_refuerzo_id, horas_refuerzo,
         tarifa_dificultad_id, horas_dificultad,
         tarifa_logopedia_id, horas_logopedia,
-        contacto_padre, telefono_padre, email_padre, 
-        contacto_madre, telefono_madre, email_madre, 
+        contacto_1, telefono_1, email_1, 
+        contacto_2, telefono_2, email_2, 
         observaciones, creado_por, activo
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     
     db.run(query, [
         nombre, apellidos, 
-        curso || '', estBeca, centro || '', fecha_comienzo || '', estPrecio,
+        curso || '', estBeca, estPagoBanco, centro || '', fecha_comienzo || '', estPrecio,
         estTarifaRef, estHorasRef, estTarifaDif, estHorasDif, estTarifaLog, estHorasLog,
-        contacto_padre || '', telefono_padre || '', email_padre || '', 
-        contacto_madre || '', telefono_madre || '', email_madre || '', 
+        contacto_1 || '', telefono_1 || '', email_1 || '', 
+        contacto_2 || '', telefono_2 || '', email_2 || '', 
         observaciones || '', creado_por || 'Sistema', estActivo
     ], function(err) {
-        if (err) {            
+        if (err) {
+            console.error("❌ Error SQLite al crear alumno:", err.message);
             if (err.message.includes('UNIQUE constraint failed')) {
                 return res.status(400).json({ error: 'YA_EXISTE' });
             }
-            return res.status(400).json({ error: 'Error al registrar el alumno en la base de datos.' });
+            return res.status(400).json({ error: 'Error al registrar el alumno: ' + err.message });
         }
         res.json({ 
             mensaje: 'Alumno registrado con éxito', 
             id: this.lastID 
         });
+    });
+});
+
+// Ruta para actualizar un alumno existente
+app.put('/api/alumnos/:id', (req, res) => {
+    const { id } = req.params;
+    const { 
+        nombre, apellidos, curso, beca, pago_banco, centro, fecha_comienzo, precio_terapia,
+        tarifa_refuerzo_id, horas_refuerzo,
+        tarifa_dificultad_id, horas_dificultad,
+        tarifa_logopedia_id, horas_logopedia,
+        contacto_1, telefono_1, email_1, 
+        contacto_2, telefono_2, email_2, 
+        observaciones, modificado_por, activo
+    } = req.body;
+
+    const estBeca = beca !== undefined ? beca : 0;
+    const estPagoBanco = pago_banco !== undefined ? pago_banco : 0;
+    const estPrecio = (precio_terapia !== undefined && precio_terapia !== null && precio_terapia !== '') 
+        ? parseFloat(precio_terapia) 
+        : null;
+
+    const estTarifaRef = tarifa_refuerzo_id ? parseInt(tarifa_refuerzo_id) : null;
+    const estHorasRef = horas_refuerzo ? parseInt(horas_refuerzo) : 0;
+    const estTarifaDif = tarifa_dificultad_id ? parseInt(tarifa_dificultad_id) : null;
+    const estHorasDif = horas_dificultad ? parseInt(horas_dificultad) : 0;
+    const estTarifaLog = tarifa_logopedia_id ? parseInt(tarifa_logopedia_id) : null;
+    const estHorasLog = horas_logopedia ? parseInt(horas_logopedia) : 0;
+
+    const query = `UPDATE alumnos SET 
+        nombre = ?, apellidos = ?, curso = ?, beca = ?, pago_banco = ?, centro = ?, fecha_comienzo = ?, precio_terapia = ?,
+        tarifa_refuerzo_id = ?, horas_refuerzo = ?,
+        tarifa_dificultad_id = ?, horas_dificultad = ?,
+        tarifa_logopedia_id = ?, horas_logopedia = ?,
+        contacto_1 = ?, telefono_1 = ?, email_1 = ?, 
+        contacto_2 = ?, telefono_2 = ?, email_2 = ?, 
+        observaciones = ?, modificado_por = ?, modificado_en = CURRENT_TIMESTAMP, activo = ?
+        WHERE id = ?`;
+
+    db.run(query, [
+        nombre, apellidos, 
+        curso || '', estBeca, estPagoBanco, centro || '', fecha_comienzo || '', estPrecio,
+        estTarifaRef, estHorasRef, estTarifaDif, estHorasDif, estTarifaLog, estHorasLog,
+        contacto_1 || '', telefono_1 || '', email_1 || '', 
+        contacto_2 || '', telefono_2 || '', email_2 || '', 
+        observaciones || '', modificado_por || 'Sistema', 
+        activo !== undefined ? activo : 1, id
+    ], function(err) {
+        if (err) {
+            console.error("❌ Error SQLite al actualizar alumno:", err.message);
+            return res.status(400).json({ error: 'Error al actualizar el alumno: ' + err.message });
+        }
+        res.json({ mensaje: 'Alumno actualizado con éxito' });
     });
 });
 
@@ -304,55 +360,6 @@ app.post('/api/alumnos/masivo', (req, res) => {
                 }
             }
         );
-    });
-});
-
-// Ruta para actualizar un alumno existente
-app.put('/api/alumnos/:id', (req, res) => {
-    const { id } = req.params;
-    const { 
-        nombre, apellidos, curso, beca, centro, fecha_comienzo, precio_terapia,
-        tarifa_refuerzo_id, horas_refuerzo,
-        tarifa_dificultad_id, horas_dificultad,
-        tarifa_logopedia_id, horas_logopedia,
-        contacto_padre, telefono_padre, email_padre, 
-        contacto_madre, telefono_madre, email_madre, 
-        observaciones, modificado_por, activo
-    } = req.body;
-
-    const estBeca = beca !== undefined ? beca : 0;
-    const estPrecio = precio_terapia !== undefined && precio_terapia !== '' ? parseFloat(precio_terapia) : 0;
-
-    const estTarifaRef = tarifa_refuerzo_id ? parseInt(tarifa_refuerzo_id) : null;
-    const estHorasRef = horas_refuerzo ? parseInt(horas_refuerzo) : 0;
-    const estTarifaDif = tarifa_dificultad_id ? parseInt(tarifa_dificultad_id) : null;
-    const estHorasDif = horas_dificultad ? parseInt(horas_dificultad) : 0;
-    const estTarifaLog = tarifa_logopedia_id ? parseInt(tarifa_logopedia_id) : null;
-    const estHorasLog = horas_logopedia ? parseInt(horas_logopedia) : 0;
-
-    const query = `UPDATE alumnos SET 
-        nombre = ?, apellidos = ?, curso = ?, beca = ?, centro = ?, fecha_comienzo = ?, precio_terapia = ?,
-        tarifa_refuerzo_id = ?, horas_refuerzo = ?,
-        tarifa_dificultad_id = ?, horas_dificultad = ?,
-        tarifa_logopedia_id = ?, horas_logopedia = ?,
-        contacto_padre = ?, telefono_padre = ?, email_padre = ?, 
-        contacto_madre = ?, telefono_madre = ?, email_madre = ?, 
-        observaciones = ?, modificado_por = ?, modificado_en = CURRENT_TIMESTAMP, activo = ?
-        WHERE id = ?`;
-
-    db.run(query, [
-        nombre, apellidos, 
-        curso || '', estBeca, centro || '', fecha_comienzo || '', estPrecio,
-        estTarifaRef, estHorasRef, estTarifaDif, estHorasDif, estTarifaLog, estHorasLog,
-        contacto_padre || '', telefono_padre || '', email_padre || '', 
-        contacto_madre || '', telefono_madre || '', email_madre || '', 
-        observaciones || '', modificado_por || 'Sistema', 
-        activo !== undefined ? activo : 1, id
-    ], function(err) {
-        if (err) {
-            return res.status(400).json({ error: 'Error al actualizar el alumno' });
-        }
-        res.json({ mensaje: 'Alumno actualizado con éxito' });
     });
 });
 
@@ -742,17 +749,23 @@ app.post('/api/hoja-pago/guardar', (req, res) => {
 
     const sqlQuery = `
         INSERT INTO hoja_pago_mensual (
-            mes, alumno_id, pendiente_mes_anterior, cobro_extra, otros_pagos,
+            mes, alumno_id, pendiente_mes_anterior, clases_extra,
+            cobro_extra, importe_extra, otros_pagos, pagado_extra,
             ref_p, ref_s, ref_b, da, da_c, log, log_m,
             num_clases, total_clases, pct_dto, importe_clases, importe_pagado_clases,
             terapia_1, terapia_1_pagado, terapia_2, terapia_2_pagado, terapia_3, terapia_3_pagado,
             terapia_4, terapia_4_pagado, terapia_5, terapia_5_pagado, terapia_6, terapia_6_pagado,
-            importe_terapias, importe_pagado_terapias, observaciones, evaluacion, total_final, total_pagado
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            importe_terapias, importe_pagado_terapias, observaciones,
+            evaluacion, importe_evaluacion, pagado_evaluacion,
+            total_final, total_pagado
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(mes, alumno_id) DO UPDATE SET
             pendiente_mes_anterior=excluded.pendiente_mes_anterior,
+            clases_extra=excluded.clases_extra,
             cobro_extra=excluded.cobro_extra,
+            importe_extra=excluded.importe_extra,
             otros_pagos=excluded.otros_pagos,
+            pagado_extra=excluded.pagado_extra,
             ref_p=excluded.ref_p,
             ref_s=excluded.ref_s,
             ref_b=excluded.ref_b,
@@ -781,6 +794,8 @@ app.post('/api/hoja-pago/guardar', (req, res) => {
             importe_pagado_terapias=excluded.importe_pagado_terapias,
             observaciones=excluded.observaciones,
             evaluacion=excluded.evaluacion,
+            importe_evaluacion=excluded.importe_evaluacion,
+            pagado_evaluacion=excluded.pagado_evaluacion,
             total_final=excluded.total_final,
             total_pagado=excluded.total_pagado
     `;
@@ -798,13 +813,20 @@ app.post('/api/hoja-pago/guardar', (req, res) => {
         hoja.forEach(f => {
             if (errorOcurrido) return;
 
-            // Aseguramos que ningún campo numérico o de texto sea undefined
+            const importeExtraVal = parseFloat(f.importe_extra ?? f.cobro_extra) || 0;
+            const pagadoExtraVal = parseFloat(f.pagado_extra ?? f.otros_pagos) || 0;
+            const importeEvaluacionVal = parseFloat(f.importe_evaluacion) || 0;
+            const pagadoEvaluacionVal = parseFloat(f.pagado_evaluacion) || 0;
+
             const params = [
                 mes,
                 f.alumno_id,
                 parseFloat(f.pendiente_mes_anterior) || 0,
-                parseFloat(f.cobro_extra) || 0,
-                parseFloat(f.otros_pagos) || 0,
+                parseInt(f.clases_extra) || 0,
+                importeExtraVal,
+                importeExtraVal,
+                pagadoExtraVal,
+                pagadoExtraVal,
                 f.tarifas ? (f.tarifas["REF P"] || 0) : 0,
                 f.tarifas ? (f.tarifas["REF S"] || 0) : 0,
                 f.tarifas ? (f.tarifas["REF B"] || 0) : 0,
@@ -832,7 +854,9 @@ app.post('/api/hoja-pago/guardar', (req, res) => {
                 parseFloat(f.importe_terapias) || 0,
                 parseFloat(f.importe_pagado_terapias) || 0,
                 f.observaciones || '',
-                f.evaluacion ? 1 : 0,
+                importeEvaluacionVal > 0 ? 1 : 0,
+                importeEvaluacionVal,
+                pagadoEvaluacionVal,
                 parseFloat(f.total_final) || 0,
                 parseFloat(f.total_pagado) || 0
             ];

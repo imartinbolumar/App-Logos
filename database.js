@@ -46,7 +46,7 @@ function inicializarTablas() {
             beca INTEGER DEFAULT 0,
             centro TEXT,
             fecha_comienzo TEXT,
-            precio_terapia REAL DEFAULT 0,            
+            precio_terapia REAL DEFAULT NULL,            
             contacto_padre TEXT,
             telefono_padre TEXT,
             email_padre TEXT,
@@ -60,20 +60,25 @@ function inicializarTablas() {
             creado_en DATETIME DEFAULT CURRENT_TIMESTAMP,
             modificado_en DATETIME
         )`, () => {
-            // Una vez asegurada la tabla, comprobamos y añadimos los campos nuevos mediante ALTER si no existen
+            db.run("ALTER TABLE alumnos RENAME COLUMN contacto_padre TO contacto_1;", (err) => {});
+            db.run("ALTER TABLE alumnos RENAME COLUMN telefono_padre TO telefono_1;", (err) => {});
+            db.run("ALTER TABLE alumnos RENAME COLUMN email_padre TO email_1;", (err) => {});
+            db.run("ALTER TABLE alumnos RENAME COLUMN contacto_madre TO contacto_2;", (err) => {});
+            db.run("ALTER TABLE alumnos RENAME COLUMN telefono_madre TO telefono_2;", (err) => {});
+            db.run("ALTER TABLE alumnos RENAME COLUMN email_madre TO email_2;", (err) => {});
+
             const nuevasColumnas = [
                 "ALTER TABLE alumnos ADD COLUMN tarifa_refuerzo_id INTEGER;",
                 "ALTER TABLE alumnos ADD COLUMN horas_refuerzo INTEGER DEFAULT 0;",
                 "ALTER TABLE alumnos ADD COLUMN tarifa_dificultad_id INTEGER;",
                 "ALTER TABLE alumnos ADD COLUMN horas_dificultad INTEGER DEFAULT 0;",
                 "ALTER TABLE alumnos ADD COLUMN tarifa_logopedia_id INTEGER;",
-                "ALTER TABLE alumnos ADD COLUMN horas_logopedia INTEGER DEFAULT 0;"
+                "ALTER TABLE alumnos ADD COLUMN horas_logopedia INTEGER DEFAULT 0;",
+                "ALTER TABLE alumnos ADD COLUMN pago_banco INTEGER DEFAULT 0;"
             ];
 
             nuevasColumnas.forEach(sql => {
-                db.run(sql, (err) => {
-                    // Si da error es normalmente porque la columna ya existe, por lo que podemos ignorarlo de forma segura
-                });
+                db.run(sql, (err) => {});
             });
         });
 
@@ -98,7 +103,7 @@ function inicializarTablas() {
             fecha_modificacion DATETIME
         )`);
          
-       // Tabla de Asignaciones (Cuadrante Semanal con tarifa y asistencia)
+        // Tabla de Asignaciones (Cuadrante Semanal con tarifa y asistencia)
         db.run(`CREATE TABLE IF NOT EXISTS asignaciones_semanales (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 usuario_id INTEGER NOT NULL,
@@ -106,24 +111,24 @@ function inicializarTablas() {
                 fecha TEXT NOT NULL,         -- Formato YYYY-MM-DD
                 franja TEXT NOT NULL,        -- Ejemplo: "15:30 - 16:30"
                 tarifa_id INTEGER,           -- ID de la tarifa aplicada
-                asistencia TEXT DEFAULT '',  -- '', 'na', 'nv', 'rec'
+                asistencia TEXT DEFAULT '',  -- '', 'na', 'nv', 'rec', 'extr'
                 semana TEXT NOT NULL,        -- Fecha del Lunes de referencia (YYYY-MM-DD)
                 FOREIGN KEY (usuario_id) REFERENCES usuarios(id),
                 FOREIGN KEY (alumno_id) REFERENCES alumnos(id),
                 FOREIGN KEY (tarifa_id) REFERENCES tarifas_servicios(id)
         )`);        
 
-           // Creación de la tabla para almacenar la hoja de pago guardada por mes y alumno
-        // Creación de la tabla para almacenar la hoja de pago guardada por mes y alumno              
-        // Creación de la tabla para almacenar la hoja de pago guardada por mes y alumno     
-        // db.run(`DROP TABLE hoja_pago_mensual`);           
+        // Creación de la tabla para almacenar la hoja de pago guardada por mes y alumno
         db.run(`CREATE TABLE IF NOT EXISTS hoja_pago_mensual (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     mes TEXT NOT NULL,                     -- Formato YYYY-MM
                     alumno_id INTEGER NOT NULL,            -- Clave foránea del alumno
                     pendiente_mes_anterior REAL DEFAULT 0, -- Pendiente de pago del mes anterior
-                    cobro_extra REAL DEFAULT 0,            -- Para añadir cobros (por ejemplo recargos por recibos devueltos)
-                    otros_pagos REAL DEFAULT 0,            -- Otros pagos adicionales
+                    clases_extra INTEGER DEFAULT 0,        -- Conteo de clases marcadas como EXTR en asignaciones_semanales
+                    cobro_extra REAL DEFAULT 0,            -- Compatibilidad anterior (Importe Extra)
+                    importe_extra REAL DEFAULT 0,          -- Importe Extra (editable)
+                    otros_pagos REAL DEFAULT 0,            -- Compatibilidad anterior (Pagado Extra)
+                    pagado_extra REAL DEFAULT 0,           -- Pagado Extra (editable)
                     ref_p INTEGER DEFAULT 0,               -- Cantidad tarifa REF P
                     ref_s INTEGER DEFAULT 0,               -- Cantidad tarifa REF S
                     ref_b INTEGER DEFAULT 0,               -- Cantidad tarifa REF B
@@ -151,13 +156,26 @@ function inicializarTablas() {
                     importe_terapias REAL DEFAULT 0,       -- Importe total terapias
                     importe_pagado_terapias REAL DEFAULT 0,-- Importe pagado terapias (no modificable)
                     observaciones TEXT,                    -- Notas complementarias
-                    evaluacion INTEGER DEFAULT 0,          -- Booleano: si incluye tasa de evaluación
+                    evaluacion INTEGER DEFAULT 0,          -- Compatibilidad anterior
+                    importe_evaluacion REAL DEFAULT 0,     -- Importe Evaluación (editable)
+                    pagado_evaluacion REAL DEFAULT 0,      -- Pagado Evaluación (editable)
                     total_final REAL DEFAULT 0,            -- Suma final calculada
                     total_pagado REAL DEFAULT 0,           -- Total pagado (no modificable)
                     FOREIGN KEY(alumno_id) REFERENCES alumnos(id),
                     UNIQUE(mes, alumno_id)                  -- Garantiza un registro único por alumno y mes
-            )`);
-
+            )`, () => {
+                // Migración segura para bases de datos existentes
+                const columnasHojaPago = [
+                    "ALTER TABLE hoja_pago_mensual ADD COLUMN clases_extra INTEGER DEFAULT 0;",
+                    "ALTER TABLE hoja_pago_mensual ADD COLUMN importe_extra REAL DEFAULT 0;",
+                    "ALTER TABLE hoja_pago_mensual ADD COLUMN pagado_extra REAL DEFAULT 0;",
+                    "ALTER TABLE hoja_pago_mensual ADD COLUMN importe_evaluacion REAL DEFAULT 0;",
+                    "ALTER TABLE hoja_pago_mensual ADD COLUMN pagado_evaluacion REAL DEFAULT 0;"
+                ];
+                columnasHojaPago.forEach(sql => {
+                    db.run(sql, (err) => {});
+                });
+            });
     });
 }
 

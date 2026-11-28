@@ -96,9 +96,15 @@
                                 <label class="block text-[11px] font-medium text-slate-700 mb-0.5">Fecha Comienzo</label>
                                 <input type="date" id="fecha_comienzo" class="w-full px-2.5 py-1 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
                             </div>
-                            <div class="flex items-center pt-4">
-                                <input type="checkbox" id="beca" class="w-3.5 h-3.5 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
-                                <label for="beca" class="text-[11px] font-medium text-slate-700 ml-1.5">¿Tiene Beca?</label>
+                            <div class="flex flex-col justify-center gap-1 pt-3">
+                                <label class="flex items-center cursor-pointer">
+                                    <input type="checkbox" id="beca" class="w-3.5 h-3.5 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
+                                    <span class="text-[11px] font-medium text-slate-700 ml-1.5">¿Tiene Beca?</span>
+                                </label>
+                                <label class="flex items-center cursor-pointer">
+                                    <input type="checkbox" id="pago_banco" class="w-3.5 h-3.5 text-blue-600 rounded border-slate-300 focus:ring-blue-500">
+                                    <span class="text-[11px] font-medium text-slate-700 ml-1.5">Paga por banco</span>
+                                </label>
                             </div>
                         </div>
                     </div>
@@ -110,8 +116,8 @@
                     
                     <div>
                         <label class="block text-[10px] font-medium text-slate-700 mb-0.5">Precio Terapia (€)</label>
-                        <!-- Sin decimales y sin flechas de incremento/decremento -->
-                        <input type="number" step="1" id="precio_terapia" placeholder="0" class="w-full px-2.5 py-1 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        <!-- Sin decimales, sin flechas y vacío si no está definido -->
+                        <input type="number" step="1" id="precio_terapia" class="w-full px-2.5 py-1 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
                     </div>
 
                     <!-- 1. Refuerzo -->
@@ -178,43 +184,43 @@
                     </div>
                 </div>
 
-                <!-- Datos del Padre -->
+                <!-- Contacto 1 -->
                 <div class="border-b pb-2">
-                    <h3 class="text-[11px] font-semibold text-blue-600 uppercase tracking-wider mb-1.5">Datos del Padre</h3>
+                    <h3 class="text-[11px] font-semibold text-blue-600 uppercase tracking-wider mb-1.5">Contacto 1</h3>
                     <div class="space-y-2">
                         <div>
-                            <label class="block text-[11px] font-medium text-slate-700 mb-0.5">Nombre del Padre</label>
-                            <input type="text" id="contacto_padre" class="w-full px-2.5 py-1 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            <label class="block text-[11px] font-medium text-slate-700 mb-0.5">Nombre</label>
+                            <input type="text" id="contacto_1" class="w-full px-2.5 py-1 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
                         </div>
                         <div class="grid grid-cols-3 gap-2">
                             <div>
                                 <label class="block text-[11px] font-medium text-slate-700 mb-0.5">Teléfono</label>
-                                <input type="text" id="telefono_padre" class="w-full px-2.5 py-1 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                <input type="text" id="telefono_1" class="w-full px-2.5 py-1 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
                             </div>
                             <div class="col-span-2">
                                 <label class="block text-[11px] font-medium text-slate-700 mb-0.5">Email</label>
-                                <input type="email" id="email_padre" class="w-full px-2.5 py-1 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                <input type="email" id="email_1" class="w-full px-2.5 py-1 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Datos de la Madre -->
+                <!-- Contacto 2 -->
                 <div class="border-b pb-2">
-                    <h3 class="text-[11px] font-semibold text-blue-600 uppercase tracking-wider mb-1.5">Datos de la Madre</h3>
+                    <h3 class="text-[11px] font-semibold text-blue-600 uppercase tracking-wider mb-1.5">Contacto 2</h3>
                     <div class="space-y-2">
                         <div>
-                            <label class="block text-[11px] font-medium text-slate-700 mb-0.5">Nombre de la Madre</label>
-                            <input type="text" id="contacto_madre" class="w-full px-2.5 py-1 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+                            <label class="block text-[11px] font-medium text-slate-700 mb-0.5">Nombre</label>
+                            <input type="text" id="contacto_2" class="w-full px-2.5 py-1 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
                         </div>
                         <div class="grid grid-cols-3 gap-2">
                             <div>
                                 <label class="block text-[11px] font-medium text-slate-700 mb-0.5">Teléfono</label>
-                                <input type="text" id="telefono_madre" class="w-full px-2.5 py-1 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                <input type="text" id="telefono_2" class="w-full px-2.5 py-1 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
                             </div>
                             <div class="col-span-2">
                                 <label class="block text-[11px] font-medium text-slate-700 mb-0.5">Email</label>
-                                <input type="email" id="email_madre" class="w-full px-2.5 py-1 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
+                                <input type="email" id="email_2" class="w-full px-2.5 py-1 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500">
                             </div>
                         </div>
                     </div>
@@ -256,7 +262,7 @@
                         Solo becados
                     </label>
 
-                    <input type="text" id="buscador" oninput="filtrarAlumnos()" placeholder="🔍 Buscar por nombre, apellidos, centro..." class="w-full sm:w-56 px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <input type="text" id="buscador" oninput="filtrarAlumnosConRetraso()" placeholder="🔍 Buscar por nombre, apellidos, centro..." class="w-full sm:w-56 px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
                 </div>
             </div>
 
@@ -286,12 +292,20 @@
         let centrosGlobal = []; 
         let tarifasGlobal = [];
         let indiceCentroSeleccionado = -1;
+        let timeoutBuscador = null;
 
-        document.getElementById('info-usuario').textContent = `👤 ${usuarioGuardado.nombre} (${usuarioGuardado.rol.toUpperCase()})`;
+        document.getElementById('info-usuario').textContent = `👤 ${usuarioGuardado.nombre || ''} (${(usuarioGuardado.rol || '').toUpperCase()})`;
 
         function normalizarTexto(texto) {
             if (!texto) return '';
             return texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^\w\s]/gi, '').trim();
+        }
+
+        function filtrarAlumnosConRetraso() {
+            clearTimeout(timeoutBuscador);
+            timeoutBuscador = setTimeout(() => {
+                filtrarAlumnos();
+            }, 150);
         }
 
         async function cargarDatosGenerales() {
@@ -429,28 +443,29 @@
             });
         }
 
-        function obtenerCodigoTarifa(tarifaId) {
-            if (!tarifaId) return null;
-            const t = tarifasGlobal.find(item => item.id == tarifaId);
-            return t ? t.codigo : null;
-        }
-
         function renderizarTabla(lista) {
             const tbody = document.getElementById('tabla-alumnos');
-            tbody.innerHTML = '';
+            
+            const listaOrdenada = [...lista].sort((a, b) => {
+                const nombreA = `${a.nombre || ''} ${a.apellidos || ''}`.toUpperCase();
+                const nombreB = `${b.nombre || ''} ${b.apellidos || ''}`.toUpperCase();
+                return nombreA.localeCompare(nombreB, 'es');
+            });
 
-            if (lista.length === 0) {
+            if (listaOrdenada.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-slate-400">No se encontraron alumnos con los criterios seleccionados.</td></tr>`;
                 return;
             }
 
-            lista.forEach(a => {
+            const mapaTarifas = new Map(tarifasGlobal.map(t => [String(t.id), t.codigo]));
+
+            const filasHtml = listaOrdenada.map(a => {
                 let infoPadres = [];
-                if (a.contacto_padre || a.telefono_padre || a.email_padre) {
-                    infoPadres.push(`<b>P:</b> ${a.contacto_padre || '-'} (${a.telefono_padre || 'Sin telf'})<br><span class="text-slate-400">${a.email_padre || ''}</span>`);
+                if (a.contacto_1 || a.telefono_1 || a.email_1) {
+                    infoPadres.push(`${a.contacto_1 || '-'} (${a.telefono_1 || 'Sin telf'})<br><span class="text-slate-400">${a.email_1 || ''}</span>`);
                 }
-                if (a.contacto_madre || a.telefono_madre || a.email_madre) {
-                    infoPadres.push(`<b>M:</b> ${a.contacto_madre || '-'} (${a.telefono_madre || 'Sin telf'})<br><span class="text-slate-400">${a.email_madre || ''}</span>`);
+                if (a.contacto_2 || a.telefono_2 || a.email_2) {
+                    infoPadres.push(`${a.contacto_2 || '-'} (${a.telefono_2 || 'Sin telf'})<br><span class="text-slate-400">${a.email_2 || ''}</span>`);
                 }
                 
                 const badgeEstado = a.activo === 0 
@@ -461,34 +476,40 @@
                     ? '<span class="bg-purple-100 text-purple-700 text-[10px] font-semibold px-1.5 py-0.5 rounded ml-1">Beca</span>' 
                     : '';
 
+                const badgeBanco = a.pago_banco === 1 
+                    ? '<span class="bg-amber-100 text-amber-700 text-[10px] font-semibold px-1.5 py-0.5 rounded ml-1">Banco</span>' 
+                    : '';
+
                 let detalleTarifas = [];
-                detalleTarifas.push(`<div><b>Terapia:</b> ${a.precio_terapia ? Math.round(a.precio_terapia) + ' €' : '0 €'}</div>`);
+                if (a.precio_terapia !== null && a.precio_terapia !== undefined && a.precio_terapia !== '' && Number(a.precio_terapia) > 0) {
+                    detalleTarifas.push(`<div><b>Terapia:</b> ${Math.round(a.precio_terapia)} €</div>`);
+                }
                 
-                const codRef = obtenerCodigoTarifa(a.tarifa_refuerzo_id);
+                const codRef = a.tarifa_refuerzo_id ? mapaTarifas.get(String(a.tarifa_refuerzo_id)) : null;
                 if (codRef) {
                     detalleTarifas.push(`<div><b>Refuerzo:</b> ${codRef} (${a.horas_refuerzo || 0}h/s)</div>`);
                 }
-                const codDif = obtenerCodigoTarifa(a.tarifa_dificultad_id);
+                const codDif = a.tarifa_dificultad_id ? mapaTarifas.get(String(a.tarifa_dificultad_id)) : null;
                 if (codDif) {
                     detalleTarifas.push(`<div><b>Dificultad:</b> ${codDif} (${a.horas_dificultad || 0}h/s)</div>`);
                 }
-                const codLog = obtenerCodigoTarifa(a.tarifa_logopedia_id);
+                const codLog = a.tarifa_logopedia_id ? mapaTarifas.get(String(a.tarifa_logopedia_id)) : null;
                 if (codLog) {
                     detalleTarifas.push(`<div><b>Logopedia:</b> ${codLog} (${a.horas_logopedia || 0}h/s)</div>`);
                 }
 
-                tbody.innerHTML += `
+                return `
                     <tr class="border-b border-slate-100 hover:bg-slate-50 align-top">
                         <td class="py-3 px-3">
-                            <div class="font-bold text-slate-900"> ${a.nombre} ${a.apellidos}</div>
+                            <div class="font-bold text-slate-900">${a.nombre} ${a.apellidos}</div>
                             <div class="text-xs text-blue-600 font-medium">${a.curso || 'Sin curso'}</div>
                         </td>
                         <td class="py-3 px-3 text-xs">
                             <div class="font-medium text-slate-800">${a.centro || 'Sin centro'}</div>
-                            <div class="mt-1">${badgeBeca} ${badgeEstado}</div>
+                            <div class="mt-1 flex flex-wrap gap-1">${badgeEstado}${badgeBeca}${badgeBanco}</div>
                         </td>
                         <td class="py-3 px-3 text-xs text-slate-600 space-y-0.5">
-                            ${detalleTarifas.join('')}
+                            ${detalleTarifas.length > 0 ? detalleTarifas.join('') : '<span class="text-slate-400">Sin tarifas</span>'}
                         </td>
                         <td class="py-3 px-3 text-xs text-slate-600 space-y-1">
                             ${infoPadres.length > 0 ? infoPadres.join('<div class="border-t border-slate-100 my-0.5"></div>') : '<span class="text-slate-400">Sin datos</span>'}
@@ -503,6 +524,8 @@
                     </tr>
                 `;
             });
+
+            tbody.innerHTML = filasHtml.join('');
         }
 
         function filtrarListaAlumnos(datos) {
@@ -511,14 +534,14 @@
             const soloBecados = document.getElementById('filtro-beca').checked;
 
             const filtrados = datos.filter(a => {
-                const nombreNorm = normalizarTexto(a.nombre);
-                const apellidosNorm = normalizarTexto(a.apellidos);
+                const nombreCompletoNorm = normalizarTexto(`${a.nombre || ''} ${a.apellidos || ''}`);
+                const apellidosNombreNorm = normalizarTexto(`${a.apellidos || ''} ${a.nombre || ''}`);
                 const cursoNorm = normalizarTexto(a.curso);
                 const centroNorm = normalizarTexto(a.centro);
 
-                const cumpleTexto = (
-                    nombreNorm.includes(textoBuscado) || 
-                    apellidosNorm.includes(textoBuscado) ||
+                const cumpleTexto = !textoBuscado || (
+                    nombreCompletoNorm.includes(textoBuscado) || 
+                    apellidosNombreNorm.includes(textoBuscado) ||
                     cursoNorm.includes(textoBuscado) ||
                     centroNorm.includes(textoBuscado)
                 );
@@ -549,6 +572,7 @@
             e.preventDefault();
             
             const id = document.getElementById('alumno-id').value;
+            const precioTerapiaRaw = document.getElementById('precio_terapia').value.trim();
 
             const datos = {
                 nombre: document.getElementById('nombre').value.trim().toUpperCase(),
@@ -556,8 +580,9 @@
                 curso: document.getElementById('curso').value.trim(),
                 centro: document.getElementById('centro').value.trim(),
                 fecha_comienzo: document.getElementById('fecha_comienzo').value,
-                precio_terapia: parseInt(document.getElementById('precio_terapia').value) || 0,
+                precio_terapia: precioTerapiaRaw !== '' ? parseInt(precioTerapiaRaw, 10) : null,
                 beca: document.getElementById('beca').checked ? 1 : 0,
+                pago_banco: document.getElementById('pago_banco').checked ? 1 : 0,
                 
                 tarifa_refuerzo_id: document.getElementById('tarifa_refuerzo_id').value ? parseInt(document.getElementById('tarifa_refuerzo_id').value) : null,
                 horas_refuerzo: parseInt(document.getElementById('horas_refuerzo').value) || 0,
@@ -566,12 +591,12 @@
                 tarifa_logopedia_id: document.getElementById('tarifa_logopedia_id').value ? parseInt(document.getElementById('tarifa_logopedia_id').value) : null,
                 horas_logopedia: parseInt(document.getElementById('horas_logopedia').value) || 0,
 
-                contacto_padre: document.getElementById('contacto_padre').value.trim(),
-                telefono_padre: document.getElementById('telefono_padre').value.trim(),
-                email_padre: document.getElementById('email_padre').value.trim(),
-                contacto_madre: document.getElementById('contacto_madre').value.trim(),
-                telefono_madre: document.getElementById('telefono_madre').value.trim(),
-                email_madre: document.getElementById('email_madre').value.trim(),
+                contacto_1: document.getElementById('contacto_1').value.trim(),
+                telefono_1: document.getElementById('telefono_1').value.trim(),
+                email_1: document.getElementById('email_1').value.trim(),
+                contacto_2: document.getElementById('contacto_2').value.trim(),
+                telefono_2: document.getElementById('telefono_2').value.trim(),
+                email_2: document.getElementById('email_2').value.trim(),
                 activo: document.getElementById('activo').checked ? 1 : 0,
                 observaciones: document.getElementById('observaciones').value.trim(),
                 creado_por: usuarioGuardado.nombre || 'Desconocido',
@@ -636,8 +661,12 @@
             document.getElementById('curso').value = alumno.curso || '';
             document.getElementById('centro').value = alumno.centro || '';
             document.getElementById('fecha_comienzo').value = alumno.fecha_comienzo || '';
-            document.getElementById('precio_terapia').value = alumno.precio_terapia !== null && alumno.precio_terapia !== undefined ? Math.round(alumno.precio_terapia) : '';
+            
+            const tienePrecioTerapia = alumno.precio_terapia !== null && alumno.precio_terapia !== undefined && alumno.precio_terapia !== '' && Number(alumno.precio_terapia) !== 0;
+            document.getElementById('precio_terapia').value = tienePrecioTerapia ? Math.round(alumno.precio_terapia) : '';
+            
             document.getElementById('beca').checked = alumno.beca === 1;
+            document.getElementById('pago_banco').checked = alumno.pago_banco === 1;
 
             document.getElementById('tarifa_refuerzo_id').value = alumno.tarifa_refuerzo_id || '';
             document.getElementById('horas_refuerzo').value = alumno.horas_refuerzo || 0;
@@ -646,12 +675,12 @@
             document.getElementById('tarifa_logopedia_id').value = alumno.tarifa_logopedia_id || '';
             document.getElementById('horas_logopedia').value = alumno.horas_logopedia || 0;
 
-            document.getElementById('contacto_padre').value = alumno.contacto_padre || '';
-            document.getElementById('telefono_padre').value = alumno.telefono_padre || '';
-            document.getElementById('email_padre').value = alumno.email_padre || '';
-            document.getElementById('contacto_madre').value = alumno.contacto_madre || '';
-            document.getElementById('telefono_madre').value = alumno.telefono_madre || '';
-            document.getElementById('email_madre').value = alumno.email_madre || '';
+            document.getElementById('contacto_1').value = alumno.contacto_1 || '';
+            document.getElementById('telefono_1').value = alumno.telefono_1 || '';
+            document.getElementById('email_1').value = alumno.email_1 || '';
+            document.getElementById('contacto_2').value = alumno.contacto_2 || '';
+            document.getElementById('telefono_2').value = alumno.telefono_2 || '';
+            document.getElementById('email_2').value = alumno.email_2 || '';
             document.getElementById('activo').checked = alumno.activo === 1;
             document.getElementById('observaciones').value = alumno.observaciones || '';
 
@@ -674,8 +703,13 @@
             document.getElementById('btn-borrar').classList.add('hidden');
         }
         
-        cargarDatosGenerales();
-        cargarAlumnos();
+        async function inicializar() {
+            await cargarDatosGenerales();
+            await cargarAlumnos();
+        }
+
+        inicializar();
+
     </script>
 </body>
 </html>

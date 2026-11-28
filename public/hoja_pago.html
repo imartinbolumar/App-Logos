@@ -38,10 +38,10 @@
     </header>
 
     <!-- Contenido principal -->
-    <main class="w-full px-4 sm:px-8 py-6 space-y-6">
+    <main class="w-full px-4 py-3.5 space-y-3.5">
         
         <!-- Filtros y botones superiores fijos -->
-        <div class="bg-white px-4 py-3 rounded-xl shadow-md flex items-center justify-between gap-3 overflow-x-auto whitespace-nowrap sticky top-[73px] z-20 border border-slate-200">
+        <div class="bg-white px-4 py-2.5 rounded-xl shadow-md flex items-center justify-between gap-3 overflow-x-auto whitespace-nowrap sticky top-[73px] z-20 border border-slate-200">
             <div class="flex items-center gap-3 shrink-0">
                 <div class="flex items-center gap-2">
                     <label for="filtro-mes" class="text-xs font-semibold text-slate-700">Mes/Año:</label>
@@ -61,14 +61,21 @@
                     <span>Alumnos:</span>
                     <span id="contador-alumnos" class="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-md font-bold">0</span>
                 </div>
+
+                <label class="flex items-center gap-1.5 text-xs font-semibold text-red-700 cursor-pointer bg-red-50/70 px-2.5 py-1.5 rounded-lg border border-red-200 hover:bg-red-100/70 transition select-none">
+                    <input type="checkbox" id="filtro-errores" onchange="alCambiarFiltroErrores()" class="w-3.5 h-3.5 text-red-600 rounded border-red-300 focus:ring-red-500">
+                    <span>Con errores</span>
+                </label>
+
+                <label class="flex items-center gap-1.5 text-xs font-semibold text-orange-800 cursor-pointer bg-orange-50/70 px-2.5 py-1.5 rounded-lg border border-orange-200 hover:bg-orange-100/70 transition select-none">
+                    <input type="checkbox" id="filtro-clases-extra" onchange="renderizarGrid()" class="w-3.5 h-3.5 text-orange-600 rounded border-orange-300 focus:ring-orange-500">
+                    <span>Con clases extra</span>
+                </label>
             </div>
             
             <div class="flex items-center gap-2 shrink-0">
                 <span id="aviso-mes-bloqueado" title="Mes bloqueado: solo consulta" aria-label="Mes bloqueado" class="hidden text-sm leading-none text-amber-800 bg-amber-50 border border-amber-300 p-2 rounded-lg select-none">🔒</span>
-                <button id="btn-anadir-alumno" onclick="abrirModalAnadirAlumno()" title="Añadir un alumno manualmente aunque no esté en las asignaciones del mes" class="bg-emerald-600 text-white text-xs font-semibold px-3.5 py-2 rounded-lg hover:bg-emerald-700 transition shadow-sm flex items-center gap-1">
-                    ➕ Añadir Alumno
-                </button>
-                <button id="btn-calcular-mes" onclick="calcularOActualizarDesdeAsignaciones()" title="Calcula o actualiza el mes incorporando alumnos de las asignaciones del mes" class="bg-amber-600 text-white text-xs font-semibold px-3.5 py-2 rounded-lg hover:bg-amber-700 transition shadow-sm flex items-center gap-1">
+                <button id="btn-calcular-mes" onclick="calcularOActualizarDesdeAsignaciones()" title="Calcula o actualiza el mes incorporando alumnos de las asignaciones del mes y con importe pendiente del mes anterior" class="bg-amber-600 text-white text-xs font-semibold px-3.5 py-2 rounded-lg hover:bg-amber-700 transition shadow-sm flex items-center gap-1">
                     ⚡ Calcular / Recalcular Mes
                 </button>
                 <button id="btn-guardar-cambios" onclick="guardarHojaPago()" class="bg-blue-600 text-white text-xs font-semibold px-4 py-2 rounded-lg hover:bg-blue-700 transition shadow-sm">
@@ -79,28 +86,40 @@
 
         <!-- Tabla Grid Edición Directa -->
         <div class="bg-white rounded-xl shadow-md overflow-hidden border border-slate-200">
-            <div class="overflow-x-auto max-h-[70vh]">
-                <table class="w-full text-left border-collapse text-xs min-w-[1620px]">
+            <div class="overflow-x-auto max-h-[calc(100vh-165px)]">
+                <table class="w-full text-left border-collapse text-xs min-w-[1710px]">
                     <thead class="sticky top-0 z-20">
                         <tr class="bg-slate-800 text-white font-semibold text-[11px] uppercase tracking-wider text-center">
-                            <th colspan="1" class="py-2 px-2 border-r border-slate-700 bg-slate-800 sticky left-0 z-30">Información General</th>
-                            <th colspan="3" class="py-2 px-2 border-r border-slate-700 bg-amber-900">Otros</th>
-                            <th colspan="1" class="py-2 px-2 border-r border-slate-700 bg-sky-900">Clases</th>
-                            <th colspan="2" class="py-2 px-2 border-r border-slate-700 bg-sky-900">Importe Clases (€)</th>
-                            <th colspan="1" class="py-2 px-1 border-r border-slate-700 bg-teal-900">Terapias</th>
-                            <th colspan="2" class="py-2 px-2 border-r border-slate-700 bg-teal-900">Importe Terapias (€)</th>
-                            <th colspan="1" class="py-2 px-2 border-r border-slate-700 bg-purple-900">Evaluac.</th>
-                            <th colspan="2" class="py-2 px-2 border-r border-slate-700 bg-slate-900">Total Final (€)</th>
+                            <th colspan="1" class="py-2 px-2 border-r-2 border-slate-400 bg-slate-800 sticky left-0 z-30">Información General</th>
+                            <th colspan="3" class="py-2 px-2 border-r-2 border-slate-400 bg-amber-900">Extras</th>
+                            <th colspan="3" class="py-2 px-2 border-r-2 border-slate-400 bg-sky-900">Clases</th>                            
+                            <th colspan="3" class="py-2 px-1 border-r-2 border-slate-400 bg-teal-900">Terapias</th>                            
+                            <th colspan="2" class="py-2 px-2 border-r-2 border-slate-400 bg-purple-900">Evaluación</th>
+                            <th colspan="2" class="py-2 px-2 border-r-2 border-slate-400 bg-slate-900">Total Final (€)</th>
                             <th colspan="2" class="py-2 px-2 bg-slate-700">Acciones / Observaciones</th>
                         </tr>
-                        <tr class="bg-slate-100 text-slate-700 border-b border-t  border-slate-300 font-bold uppercase text-[10px] text-center">
-                            <th class="py-2 px-2 w-48 border-r sticky left-0 bg-slate-200 z-30">Alumno</th>
-                            <th class="py-2 px-0.5 w-16 border-r bg-amber-50">Pdte. Mes Ant.</th>
-                            <th class="py-2 px-0.5 w-16 border-r bg-orange-50">Cobro Extra</th>
-                            <th class="py-2 px-0.5 w-16 border-r bg-emerald-50">Otros Pagos</th>
+                        <tr class="bg-slate-100 text-slate-700 border-b-2 border-t border-slate-300 font-bold uppercase text-[10px] text-center">
+                            <!-- Fin bloque Nombre / Alumno -->
+                            <th class="py-2 px-2 w-48 border-r-2 border-slate-400 sticky left-0 bg-slate-200 z-30">
+                                <div class="flex items-center justify-between gap-1.5">
+                                    <button id="btn-anadir-alumno" type="button" onclick="abrirModalAnadirAlumno()" title="Añadir un alumno manualmente aunque no esté en las asignaciones del mes" aria-label="Añadir alumno" class="bg-emerald-100 text-emerald-700 hover:bg-emerald-200 border border-emerald-200 text-xs font-bold w-6 h-6 rounded-md transition flex items-center justify-center shrink-0">
+                                        ➕
+                                    </button>
+                                    <span class="flex-1 text-center">Alumno</span>
+                                    <span class="w-6 shrink-0" aria-hidden="true"></span>
+                                </div>
+                            </th>
 
-                            <!-- Bloque unificado de Tarifas + Sub-fila de Clases integradas -->
-                            <th class="py-1 px-1 border-r border-t  bg-blue-50/50 w-[212px]">
+                            <!-- Bloque Extras (3 columnas: Pdte. Mes Ant. | Importe [Clases Extra + Importe] | Pagado/Pendiente) -->
+                            <th class="py-2 px-0.5 w-16 border-r border-slate-300 bg-amber-50">Pdte. Mes Ant.</th>
+                            <th class="py-2 px-0.5 w-[82px] border-r border-slate-300 text-sky-700 bg-sky-50/30" title="Clases Extra (EXTR) e Importe Extra">Importe</th>
+                            <th class="py-1 px-1 w-16 border-r-2 border-slate-400 text-teal-700 bg-sky-50/30 leading-tight">
+                                <div>Pagado</div>
+                                <div class="text-[9px] text-amber-700 border-t border-sky-200 mt-0.5 pt-0.5">Pendiente</div>
+                            </th>
+
+                            <!-- Bloque Clases -->
+                            <th class="py-1 px-1 border-r border-slate-300 border-t bg-blue-50/50 w-[212px]">
                                 <div class="grid grid-cols-7 gap-0.5 text-center w-full mx-auto">
                                     <span class="text-[9px] leading-tight">REF P</span>
                                     <span class="text-[9px] leading-tight">REF S</span>
@@ -111,16 +130,15 @@
                                     <span class="text-[9px] leading-tight">LOG M</span>
                                 </div>
                             </th>
-
-                            <th class="py-2 px-1 w-16 border text-sky-700 bg-sky-50/30">Importe</th>
-                            <th class="py-1 px-1 w-16 border border-r text-teal-700 bg-sky-50/30 leading-tight">
+                            <th class="py-2 px-1 w-16 border-r border-slate-300 text-sky-700 bg-sky-50/30">Importe</th>
+                            <th class="py-1 px-1 w-16 border-r-2 border-slate-400 text-teal-700 bg-sky-50/30 leading-tight">
                                 <div>Pagado</div>
                                 <div class="text-[9px] text-amber-700 border-t border-sky-200 mt-0.5 pt-0.5">Pendiente</div>
                             </th>
 
-                            <!-- Cabecera Terapias (T1 a T6 compacta) -->
-                            <th class="py-1.5 px-1 border-t border-r bg-teal-50/50 w-[304px]">
-                                <div class="grid grid-cols-6 gap-0.5 text-center w-full mx-auto">
+                            <!-- Bloque Terapias -->
+                            <th class="py-1.5 px-1 border-t border-r border-slate-300 bg-teal-50/50 w-[304px]">
+                                <div class="grid grid-cols-6 gap-1 text-center w-full mx-auto">
                                     <span class="text-[10px] font-bold text-teal-800">T1</span>
                                     <span class="text-[10px] font-bold text-teal-800">T2</span>
                                     <span class="text-[10px] font-bold text-teal-800">T3</span>
@@ -129,50 +147,81 @@
                                     <span class="text-[10px] font-bold text-teal-800">T6</span>
                                 </div>
                             </th>
-
-                            <th class="py-2 px-1 w-16 border text-sky-700 bg-teal-50/30">Importe</th>
-                            <th class="py-1 px-1 w-16 border text-teal-700 border-r bg-teal-50/30 leading-tight">
+                            <th class="py-2 px-1 w-16 border-r border-slate-300 text-sky-700 bg-teal-50/30">Importe</th>
+                            <th class="py-1 px-1 w-16 border-r-2 border-slate-400 text-teal-700 bg-teal-50/30 leading-tight">
                                 <div>Pagado</div>
                                 <div class="text-[9px] text-amber-700 border-t border-teal-200 mt-0.5 pt-0.5">Pendiente</div>
                             </th>
 
-                            <th class="py-2 px-1 w-10 text-center border border-r bg-purple-50/30">Evaluac.</th>
+                            <!-- Bloque Evaluación -->
+                            <th class="py-2 px-1 w-16 border-r border-slate-300 text-sky-700 bg-purple-50/30">Importe</th>
+                            <th class="py-1 px-1 w-16 border-r-2 border-slate-400 text-teal-700 bg-purple-50/30 leading-tight">
+                                <div>Pagado</div>
+                                <div class="text-[9px] text-amber-700 border-t border-purple-200 mt-0.5 pt-0.5">Pendiente</div>
+                            </th>
 
-                            <th class="py-2 px-1 w-16 border text-sky-700 bg-slate-200">IMPORTE TOTAL</th>
-                            <th class="py-1 px-1 w-16 border border-r text-teal-700 bg-slate-200 leading-tight">
+                            <!-- Bloque Total Final -->
+                            <th class="py-2 px-1 w-16 border-r border-slate-300 text-sky-700 bg-slate-200">IMPORTE TOTAL</th>
+                            <th class="py-1 px-1 w-16 border-r-2 border-slate-400 text-teal-700 bg-slate-200 leading-tight">
                                 <div>PAGADO</div>
                                 <div class="text-[9px] text-amber-800 border-t border-slate-300 mt-0.5 pt-0.5">PENDIENTE</div>
                             </th>
 
-                            <th class="py-2 px-2 w-48 border">Observaciones</th>
-                            <th class="py-2 px-1 w-14 border text-center">Borrar</th>
+                            <!-- Bloque Observaciones / Acciones -->
+                            <th class="py-2 px-2 w-48 border-r border-slate-300">Observaciones</th>
+                            <th class="py-2 px-1 w-14 text-center">Borrar</th>
                         </tr>
                     </thead>
                     <tbody id="tabla-hoja-pago" class="divide-y divide-slate-200"></tbody>
-                    <tfoot class="bg-slate-100 font-bold text-slate-800 border-t-2 border-slate-300 text-xs sticky bottom-0 z-20">
+                    <tfoot class="bg-slate-100 font-bold text-slate-800 border-t-2 border-slate-400 text-xs sticky bottom-0 z-20">
                         <tr>
-                            <td class="py-3 px-4 text-right bg-slate-200 sticky left-0 z-30 border-r">TOTALES MES:</td>
-                            <td class="py-3 px-1 text-right text-sky-700 text-xs bg-slate-200 border-r" id="total-pendiente-ant-general">0,00</td>
-                            <td class="py-3 px-1 text-right text-sky-700 text-xs bg-slate-200 border-r" id="total-cobro-extra-general">0,00</td>
-                            <td class="py-3 px-1 text-right text-teal-700 text-xs bg-slate-200 border-r" id="total-otros-pagos-general">0,00</td>
-                            <td colspan="1"></td>
-                            <td class="py-2 px-1 text-right text-sky-700 text-xs bg-slate-200 border-l border-slate-300" id="total-clases-general">0,00</td>
-                            <td class="py-1.5 px-1 text-right text-xs bg-slate-200 border-r border-slate-300">
+                            <!-- Fin bloque Nombre -->
+                            <td class="py-3 px-4 text-right bg-slate-200 sticky left-0 z-30 border-r-2 border-slate-400">TOTALES MES:</td>
+
+                            <!-- Bloque Extras -->
+                            <td class="py-3 px-1 text-right text-sky-700 text-xs bg-slate-200 border-r border-slate-300" id="total-pendiente-ant-general">0,00</td>
+                            <td class="py-3 px-0.5 text-xs bg-slate-200 border-r border-slate-300 w-[82px]">
+                                <div class="flex items-center justify-center gap-0.5">
+                                    <span class="w-5 shrink-0" aria-hidden="true"></span>
+                                    <span class="w-14 shrink-0 px-0.5 text-right text-sky-700" id="total-importe-extra-general" title="Total Importe Extra">0,00</span>
+                                </div>
+                            </td>
+                            <td class="py-1.5 px-1 text-right text-xs bg-slate-200 border-r-2 border-slate-400">
+                                <div class="text-teal-700" id="total-pagado-extra-general">0,00</div>
+                                <div class="text-amber-700 border-t border-slate-300 mt-0.5 pt-0.5" id="total-pendiente-extra-general">0,00</div>
+                            </td>
+
+                            <!-- Bloque Clases -->
+                            <td colspan="1" class="border-r border-slate-300"></td>
+                            <td class="py-2 px-1 text-right text-sky-700 text-xs bg-slate-200 border-r border-slate-300" id="total-clases-general">0,00</td>
+                            <td class="py-1.5 px-1 text-right text-xs bg-slate-200 border-r-2 border-slate-400">
                                 <div class="text-teal-700" id="total-pagado-clases-general">0,00</div>
                                 <div class="text-amber-700 border-t border-slate-300 mt-0.5 pt-0.5" id="total-pendiente-clases-general">0,00</div>
                             </td>
-                            <td colspan="1"></td>
-                            <td class="py-2 px-1 text-right text-sky-700 text-xs bg-slate-200 border-l border-slate-300" id="total-terapias-general">0,00</td>
-                            <td class="py-1.5 px-1 text-right text-xs bg-slate-200 border-r border-slate-300">
+
+                            <!-- Bloque Terapias -->
+                            <td colspan="1" class="border-r border-slate-300"></td>
+                            <td class="py-2 px-1 text-right text-sky-700 text-xs bg-slate-200 border-r border-slate-300" id="total-terapias-general">0,00</td>
+                            <td class="py-1.5 px-1 text-right text-xs bg-slate-200 border-r-2 border-slate-400">
                                 <div class="text-teal-700" id="total-pagado-terapias-general">0,00</div>
                                 <div class="text-amber-700 border-t border-slate-300 mt-0.5 pt-0.5" id="total-pendiente-terapias-general">0,00</div>
                             </td>
-                            <td colspan="1"></td>
-                            <td class="py-2 px-1 text-right  text-sky-700 text-xs bg-slate-200 border-l border-slate-300" id="total-general">0,00</td>
-                            <td class="py-1.5 px-1 text-right text-xs bg-slate-200 border-r border-slate-300">
+
+                            <!-- Bloque Evaluación -->
+                            <td class="py-2 px-1 text-right text-sky-700 text-xs bg-slate-200 border-r border-slate-300" id="total-importe-evaluacion-general">0,00</td>
+                            <td class="py-1.5 px-1 text-right text-xs bg-slate-200 border-r-2 border-slate-400">
+                                <div class="text-teal-700" id="total-pagado-evaluacion-general">0,00</div>
+                                <div class="text-amber-700 border-t border-slate-300 mt-0.5 pt-0.5" id="total-pendiente-evaluacion-general">0,00</div>
+                            </td>
+
+                            <!-- Bloque Total Final -->
+                            <td class="py-2 px-1 text-right text-sky-700 text-xs bg-slate-200 border-r border-slate-300" id="total-general">0,00</td>
+                            <td class="py-1.5 px-1 text-right text-xs bg-slate-200 border-r-2 border-slate-400">
                                 <div class="text-teal-700" id="total-pagado-general">0,00</div>
                                 <div class="text-amber-700 border-t border-slate-300 mt-0.5 pt-0.5" id="total-pendiente-general">0,00</div>
                             </td>
+
+                            <!-- Bloque Observaciones / Acciones -->
                             <td colspan="2"></td>
                         </tr>
                     </tfoot>
@@ -235,6 +284,7 @@
         let tarifasMap = {};
         let filasEstado = []; 
         let asignacionesMesCache = []; 
+        let idsSnapshotErrores = new Set();
         let hayCambiosPendientes = false;
         let mesPendienteDestino = '';
         let accionPendienteTipo = null; 
@@ -250,15 +300,42 @@
         }
 
         function parsearImporteTexto(texto) {
-            if (typeof texto === 'number') return texto;
-            if (!texto) return 0;
-            const limpio = String(texto).replace(/€/g, '').replace(/\./g, '').replace(/,/g, '.').trim();
-            return parseFloat(limpio) || 0;
+            if (typeof texto === 'number') return isNaN(texto) ? 0 : texto;
+            if (texto === null || texto === undefined) return 0;
+
+            const s = String(texto).replace(/€/g, '').trim();
+            if (!s) return 0;
+
+            if (s.includes(',')) {
+                return parseFloat(s.replace(/\./g, '').replace(/,/g, '.')) || 0;
+            }
+            return parseFloat(s) || 0;
         }
 
         function prepararInputEdicion(inputEl, valorNumerico) {
             inputEl.value = valorNumerico === 0 ? '' : String(valorNumerico).replace('.', ',');
             inputEl.select();
+        }
+
+        function filaTieneAlgunError(fila) {
+            const clasesExtraNum = parseInt(fila.clases_extra, 10) || 0;
+            const importeExtraNum = parseFloat(fila.importe_extra) || 0;
+            const tieneErrorTarifa = fila.erroresTarifas && Object.values(fila.erroresTarifas).some(Boolean);
+            const tieneErrorExtra = clasesExtraNum !== 0 && importeExtraNum === 0;
+            return Boolean(tieneErrorTarifa || tieneErrorExtra);
+        }
+
+        function actualizarSnapshotErrores() {
+            idsSnapshotErrores = new Set(
+                filasEstado
+                    .filter(f => filaTieneAlgunError(f))
+                    .map(f => String(f.alumno_id))
+            );
+        }
+
+        function alCambiarFiltroErrores() {
+            actualizarSnapshotErrores();
+            renderizarGrid();
         }
 
         function obtenerInputsEditablesTabla() {
@@ -304,7 +381,7 @@
             });
 
             document.addEventListener('input', (e) => {
-                if (e.target.id === 'filtro-mes' || e.target.id === 'buscador-alumnos') return;
+                if (e.target.id === 'filtro-mes' || e.target.id === 'buscador-alumnos' || e.target.id === 'filtro-errores' || e.target.id === 'filtro-clases-extra') return;
                 if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
                     const mesActual = document.getElementById('filtro-mes').value;
                     if (!esMesEditable(mesActual)) {
@@ -317,7 +394,7 @@
                 }
             });
             document.addEventListener('change', (e) => {
-                if (e.target.id === 'filtro-mes' || e.target.id === 'buscador-alumnos') return;
+                if (e.target.id === 'filtro-mes' || e.target.id === 'buscador-alumnos' || e.target.id === 'filtro-errores' || e.target.id === 'filtro-clases-extra') return;
                 if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') {
                     const mesActual = document.getElementById('filtro-mes').value;
                     if (!esMesEditable(mesActual)) {
@@ -356,15 +433,7 @@
             });
 
             const hoy = new Date();
-            const diaActual = hoy.getDate();
-            let fechaMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
-            if (diaActual <= 25) {
-                fechaMes.setMonth(fechaMes.getMonth() - 1);
-            }
-            
-            const yyyy = fechaMes.getFullYear();
-            const mm = String(fechaMes.getMonth() + 1).padStart(2, '0');
-            document.getElementById('filtro-mes').value = `${yyyy}-${mm}`;
+            document.getElementById('filtro-mes').value = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
             
             inicializarDatos();
         });
@@ -519,7 +588,6 @@
                 return !textoNorm || normalizarTexto(nombreComp).includes(textoNorm);
             });
 
-            // Si el usuario editó el texto y ya no coincide exactamente con el seleccionado, limpiar id seleccionado
             if (hiddenIdEl.value) {
                 const elegido = alumnosDisponiblesAnadirCache.find(a => String(a.id) === String(hiddenIdEl.value));
                 const nombreElegido = elegido ? `${elegido.nombre || ''} ${elegido.apellidos || ''}`.trim() : '';
@@ -674,17 +742,24 @@
             btnOk.textContent = 'Añadiendo...';
 
             try {
-                const pendAnt = await calcularPendienteMesAnterior(alumno.id, mesAño);
+                const [pendAnt, asigMes] = await Promise.all([
+                    calcularPendienteMesAnterior(alumno.id, mesAño),
+                    fetchAPI(`/api/asignaciones/mes?mes=${mesAño}`)
+                ]);
+                asignacionesMesCache = asigMes || [];
+                const clasesExtraAlumno = contarClasesExtraAlumno(alumno.id);
                 const precioAlumno = parsearImporteTexto(alumno.precio_tarifa ?? alumno.precio_terapia ?? 0);
 
                 const nuevaFila = {
                     alumno_id: alumno.id,
                     nombreAlumno: `${alumno.nombre || ''} ${alumno.apellidos || ''}`.trim(),
+                    pagoBanco: Number(alumno.pago_banco) === 1,
                     precioTerapiaAlumno: precioAlumno,
                     mes: mesAño,
                     pendiente_mes_anterior: parseFloat(pendAnt || 0),
-                    cobro_extra: 0,
-                    otros_pagos: 0,
+                    clases_extra: clasesExtraAlumno,
+                    importe_extra: 0,
+                    pagado_extra: 0,
                     tarifas: {
                         "REF P": 0,
                         "REF S": 0,
@@ -694,6 +769,7 @@
                         "LOG": 0,
                         "LOG M": 0
                     },
+                    erroresTarifas: {},
                     num_clases: '',
                     total_clases: '',
                     pct_dto: 0,
@@ -704,19 +780,168 @@
                     importe_terapias: 0,
                     importe_pagado_terapias: 0,
                     observaciones: '',
-                    evaluacion: false,
+                    importe_evaluacion: 0,
+                    pagado_evaluacion: 0,
                     total_final: 0,
                     total_pagado: 0
                 };
 
                 calcularImportesFilaObjeto(nuevaFila);
                 filasEstado.push(nuevaFila);
+                if (filaTieneAlgunError(nuevaFila)) {
+                    idsSnapshotErrores.add(String(nuevaFila.alumno_id));
+                }
                 hayCambiosPendientes = true;
                 cerrarModalAnadirAlumno();
                 renderizarGrid();
             } finally {
                 btnOk.disabled = false;
                 btnOk.textContent = textoOriginal;
+            }
+        }
+
+        function obtenerMesSiguiente(mesStr) {
+            const [anio, mes] = mesStr.split('-').map(Number);
+            const fechaSig = new Date(anio, mes, 1);
+            return `${fechaSig.getFullYear()}-${String(fechaSig.getMonth() + 1).padStart(2, '0')}`;
+        }
+
+        function resolverImportesEvaluacionGuardado(guardado, mesStr) {
+            const tieneNuevoImp = guardado.importe_evaluacion !== undefined && guardado.importe_evaluacion !== null;
+            const tieneNuevoPag = guardado.pagado_evaluacion !== undefined && guardado.pagado_evaluacion !== null;
+
+            let impEval = tieneNuevoImp ? parseFloat(guardado.importe_evaluacion || 0) : 0;
+            if (!tieneNuevoImp && (guardado.evaluacion === 1 || guardado.evaluacion === true)) {
+                impEval = obtenerTarifaGeneralEV(mesStr);
+            }
+            const pagEval = tieneNuevoPag ? parseFloat(guardado.pagado_evaluacion || 0) : 0;
+            return { impEval, pagEval };
+        }
+
+        function construirFilaDesdeGuardado(guardado, alumno, mesStr, pendAntOverride = null) {
+            const precioAlumno = parseFloat(alumno.precio_tarifa ?? alumno.precio_terapia ?? 0);
+            const pendAnt = pendAntOverride !== null && pendAntOverride !== undefined
+                ? parseFloat(pendAntOverride || 0)
+                : parseFloat(guardado.pendiente_mes_anterior || 0);
+
+            const impExtra = parseFloat(guardado.importe_extra ?? guardado.cobro_extra ?? 0);
+            const pagExtra = parseFloat(guardado.pagado_extra ?? guardado.otros_pagos ?? 0);
+            const { impEval, pagEval } = resolverImportesEvaluacionGuardado(guardado, mesStr);
+
+            const filaObj = {
+                alumno_id: alumno.id,
+                nombreAlumno: `${alumno.nombre} ${alumno.apellidos}`,
+                pagoBanco: Number(alumno.pago_banco) === 1,
+                precioTerapiaAlumno: precioAlumno,
+                mes: mesStr,
+                pendiente_mes_anterior: pendAnt,
+                clases_extra: parseInt(guardado.clases_extra ?? 0, 10) || 0,
+                importe_extra: impExtra,
+                pagado_extra: pagExtra,
+                tarifas: {
+                    "REF P": guardado.ref_p || 0,
+                    "REF S": guardado.ref_s || 0,
+                    "REF B": guardado.ref_b || 0,
+                    "DA": guardado.da || 0,
+                    "DA C": guardado.da_c || 0,
+                    "LOG": guardado.log || 0,
+                    "LOG M": guardado.log_m || 0
+                },
+                erroresTarifas: {},
+                num_clases: (guardado.num_clases !== null && guardado.num_clases !== undefined && guardado.num_clases !== 0) ? guardado.num_clases : '',
+                total_clases: (guardado.total_clases !== null && guardado.total_clases !== undefined && guardado.total_clases !== 0) ? guardado.total_clases : '',
+                pct_dto: parseFloat(guardado.pct_dto || 0),
+                importe_clases: parseFloat(guardado.importe_clases || 0),
+                importe_pagado_clases: parseFloat(guardado.importe_pagado_clases || 0),
+                terapias: [
+                    guardado.terapia_1 || '', guardado.terapia_2 || '', guardado.terapia_3 || '',
+                    guardado.terapia_4 || '', guardado.terapia_5 || '', guardado.terapia_6 || ''
+                ],
+                terapias_pagado: [
+                    guardado.terapia_1_pagado === 1 || guardado.terapia_1_pagado === true,
+                    guardado.terapia_2_pagado === 1 || guardado.terapia_2_pagado === true,
+                    guardado.terapia_3_pagado === 1 || guardado.terapia_3_pagado === true,
+                    guardado.terapia_4_pagado === 1 || guardado.terapia_4_pagado === true,
+                    guardado.terapia_5_pagado === 1 || guardado.terapia_5_pagado === true,
+                    guardado.terapia_6_pagado === 1 || guardado.terapia_6_pagado === true
+                ],
+                importe_terapias: parseFloat(guardado.importe_terapias || 0),
+                importe_pagado_terapias: parseFloat(guardado.importe_pagado_terapias || 0),
+                observaciones: guardado.observaciones || '',
+                importe_evaluacion: impEval,
+                pagado_evaluacion: pagEval,
+                total_final: parseFloat(guardado.total_final || 0),
+                total_pagado: parseFloat(guardado.total_pagado || 0)
+            };
+
+            if (esMesEditable(mesStr)) {
+                calcularImportesFilaObjeto(filaObj);
+            }
+            return filaObj;
+        }
+
+        async function propagarPendientesMesesPosteriores(mesBase, filasMesBase) {
+            const pendientesPorAlumno = new Map();
+            (filasMesBase || []).forEach(f => {
+                if (f && f.alumno_id !== undefined && f.alumno_id !== null) {
+                    const pend = (parseFloat(f.total_final) || 0) - (parseFloat(f.total_pagado) || 0);
+                    pendientesPorAlumno.set(String(f.alumno_id), pend);
+                }
+            });
+
+            let mesActualPropagacion = obtenerMesSiguiente(mesBase);
+            let pendientesPrevios = pendientesPorAlumno;
+            const mesFiltroActual = document.getElementById('filtro-mes').value;
+            let filasActualizadasFiltroActual = null;
+            const maxIteraciones = 36;
+
+            for (let paso = 0; paso < maxIteraciones; paso++) {
+                const hojaSig = await fetchAPI(`/api/hoja-pago?mes=${mesActualPropagacion}`);
+                if (!Array.isArray(hojaSig) || hojaSig.length === 0) {
+                    break;
+                }
+
+                const siguientesPendientes = new Map();
+                const filasSigCalculadas = [];
+
+                for (const regSig of hojaSig) {
+                    const idStr = String(regSig.alumno_id);
+                    const alumno = alumnos.find(a => String(a.id) === idStr);
+                    if (!alumno) continue;
+
+                    const pendParaEsteMes = pendientesPrevios.has(idStr)
+                        ? pendientesPrevios.get(idStr)
+                        : parseFloat(regSig.pendiente_mes_anterior || 0);
+
+                    const filaSig = construirFilaDesdeGuardado(regSig, alumno, mesActualPropagacion, pendParaEsteMes);
+                    filasSigCalculadas.push(filaSig);
+
+                    const pendResultante = (parseFloat(filaSig.total_final) || 0) - (parseFloat(filaSig.total_pagado) || 0);
+                    siguientesPendientes.set(idStr, pendResultante);
+                }
+
+                if (filasSigCalculadas.length > 0) {
+                    const resp = await fetch('/api/hoja-pago/guardar', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ mes: mesActualPropagacion, hoja: filasSigCalculadas })
+                    });
+                    if (!resp.ok) {
+                        throw new Error(`Error al actualizar el mes posterior ${mesActualPropagacion}`);
+                    }
+                    if (mesActualPropagacion === mesFiltroActual) {
+                        filasActualizadasFiltroActual = filasSigCalculadas;
+                    }
+                }
+
+                pendientesPrevios = siguientesPendientes;
+                mesActualPropagacion = obtenerMesSiguiente(mesActualPropagacion);
+            }
+
+            if (filasActualizadasFiltroActual) {
+                filasEstado = filasActualizadasFiltroActual;
+                actualizarSnapshotErrores();
+                renderizarGrid();
             }
         }
 
@@ -800,7 +1025,6 @@
                 if (precio > 0) return precio;
             }
 
-            // Respaldo si ninguna encaja exactamente por fechas pero existe una tarifa activa del tipo
             const fallbackTipo = lista.find(t => coincideTipo(t) && estaActiva(t) && extraerPrecioSesionTarifa(t) > 0);
             if (fallbackTipo) return extraerPrecioSesionTarifa(fallbackTipo);
 
@@ -815,12 +1039,26 @@
             return obtenerTarifaGeneralPorTipo('EV', mesStr, ['EVALUACION', 'EVALUACIONES'], 'EV');
         }
 
+        function contarClasesExtraAlumno(alumnoId) {
+            return (asignacionesMesCache || []).filter(a =>
+                String(a.alumno_id) === String(alumnoId) &&
+                String(a.asistencia || '').toUpperCase().trim() === 'EXTR'
+            ).length;
+        }
+
         async function cargarOHojaPago() {
             const mesAño = document.getElementById('filtro-mes').value;
             if (!mesAño) return;
 
+            const esEditableMes = esMesEditable(mesAño);
+
             try {
-                let hojaGuardada = await fetchAPI(`/api/hoja-pago?mes=${mesAño}`);
+                const [hojaGuardada, asignacionesData] = await Promise.all([
+                    fetchAPI(`/api/hoja-pago?mes=${mesAño}`),
+                    fetchAPI(`/api/asignaciones/mes?mes=${mesAño}`)
+                ]);
+
+                asignacionesMesCache = asignacionesData || [];
 
                 if (hojaGuardada && hojaGuardada.length > 0) {
                     const idsGuardados = new Set(hojaGuardada.map(g => String(g.alumno_id)));
@@ -834,15 +1072,23 @@
                         }
 
                         const precioAlumno = parseFloat(alumno.precio_tarifa ?? alumno.precio_terapia ?? 0);
+                        const clasesExtraGuardado = (guardado.clases_extra !== undefined && guardado.clases_extra !== null)
+                            ? (parseInt(guardado.clases_extra, 10) || 0)
+                            : contarClasesExtraAlumno(alumno.id);
+                        const impExtra = parseFloat(guardado.importe_extra ?? guardado.cobro_extra ?? 0);
+                        const pagExtra = parseFloat(guardado.pagado_extra ?? guardado.otros_pagos ?? 0);
+                        const { impEval, pagEval } = resolverImportesEvaluacionGuardado(guardado, mesAño);
 
                         const filaObj = {
                             alumno_id: alumno.id,
                             nombreAlumno: `${alumno.nombre} ${alumno.apellidos}`,
+                            pagoBanco: Number(alumno.pago_banco) === 1,
                             precioTerapiaAlumno: precioAlumno,
                             mes: mesAño,
                             pendiente_mes_anterior: parseFloat(pendAnt || 0),
-                            cobro_extra: parseFloat(guardado.cobro_extra || 0),
-                            otros_pagos: parseFloat(guardado.otros_pagos || 0),
+                            clases_extra: clasesExtraGuardado,
+                            importe_extra: impExtra,
+                            pagado_extra: pagExtra,
                             tarifas: {
                                 "REF P": guardado.ref_p || 0,
                                 "REF S": guardado.ref_s || 0,
@@ -852,11 +1098,12 @@
                                 "LOG": guardado.log || 0,
                                 "LOG M": guardado.log_m || 0
                             },
+                            erroresTarifas: {},
                             num_clases: (guardado.num_clases !== null && guardado.num_clases !== undefined && guardado.num_clases !== 0) ? guardado.num_clases : '',
                             total_clases: (guardado.total_clases !== null && guardado.total_clases !== undefined && guardado.total_clases !== 0) ? guardado.total_clases : '',
-                            pct_dto: guardado.pct_dto || 0,
-                            importe_clases: guardado.importe_clases || 0,
-                            importe_pagado_clases: guardado.importe_pagado_clases || 0,
+                            pct_dto: parseFloat(guardado.pct_dto || 0),
+                            importe_clases: parseFloat(guardado.importe_clases || 0),
+                            importe_pagado_clases: parseFloat(guardado.importe_pagado_clases || 0),
                             terapias: [
                                 guardado.terapia_1 || '', guardado.terapia_2 || '', guardado.terapia_3 || '',
                                 guardado.terapia_4 || '', guardado.terapia_5 || '', guardado.terapia_6 || ''
@@ -869,15 +1116,19 @@
                                 guardado.terapia_5_pagado === 1 || guardado.terapia_5_pagado === true,
                                 guardado.terapia_6_pagado === 1 || guardado.terapia_6_pagado === true
                             ],
-                            importe_terapias: guardado.importe_terapias || 0,
-                            importe_pagado_terapias: guardado.importe_pagado_terapias || 0,
+                            importe_terapias: parseFloat(guardado.importe_terapias || 0),
+                            importe_pagado_terapias: parseFloat(guardado.importe_pagado_terapias || 0),
                             observaciones: guardado.observaciones || '',
-                            evaluacion: guardado.evaluacion === 1 || guardado.evaluacion === true,
-                            total_final: guardado.total_final || 0,
-                            total_pagado: guardado.total_pagado || 0
+                            importe_evaluacion: impEval,
+                            pagado_evaluacion: pagEval,
+                            total_final: parseFloat(guardado.total_final || 0),
+                            total_pagado: parseFloat(guardado.total_pagado || 0)
                         };
 
-                        calcularImportesFilaObjeto(filaObj);
+                        // En meses bloqueados se respetan exactamente los importes guardados en BD sin recalcular tarifas
+                        if (esEditableMes) {
+                            calcularImportesFilaObjeto(filaObj);
+                        }
                         return filaObj;
                     }));
                 } else {
@@ -885,6 +1136,7 @@
                 }
 
                 hayCambiosPendientes = false;
+                actualizarSnapshotErrores();
                 renderizarGrid();
             } catch (error) {
                 console.error("Error al cargar hoja de pago:", error);
@@ -947,11 +1199,13 @@
             return resultado;
         }
 
-        async function construirFilaDesdeAsignaciones(alumno, mesAño) {
+        async function construirFilaDesdeAsignaciones(alumno, mesAño, pendAntOverride = null) {
             const asignacionesAlumno = (asignacionesMesCache || []).filter(a => 
                 String(a.alumno_id) === String(alumno.id) && 
                 (a.asistencia || '').toUpperCase() !== 'REC'
             );
+
+            const clasesExtra = contarClasesExtraAlumno(alumno.id);
 
             const clasesTarifa = {};
             codigosTarifasOrden.forEach(codigo => {
@@ -960,19 +1214,24 @@
                 ).length;
             });
 
-            const pendAnt = await calcularPendienteMesAnterior(alumno.id, mesAño);
+            const pendAnt = pendAntOverride !== null && pendAntOverride !== undefined
+                ? pendAntOverride
+                : await calcularPendienteMesAnterior(alumno.id, mesAño);
             const diasTE = obtenerDiasTerapiasTE(alumno.id);
             const precioAlumno = parseFloat(alumno.precio_tarifa ?? alumno.precio_terapia ?? 0);
 
             return {
                 alumno_id: alumno.id,
                 nombreAlumno: `${alumno.nombre} ${alumno.apellidos}`,
+                pagoBanco: Number(alumno.pago_banco) === 1,
                 precioTerapiaAlumno: precioAlumno,
                 mes: mesAño,
                 pendiente_mes_anterior: pendAnt,
-                cobro_extra: 0,
-                otros_pagos: 0,
+                clases_extra: clasesExtra,
+                importe_extra: 0,
+                pagado_extra: 0,
                 tarifas: clasesTarifa,
+                erroresTarifas: {},
                 num_clases: '',
                 total_clases: '',
                 pct_dto: 0,
@@ -983,7 +1242,8 @@
                 importe_terapias: 0,
                 importe_pagado_terapias: 0,
                 observaciones: '',
-                evaluacion: false,
+                importe_evaluacion: 0,
+                pagado_evaluacion: 0,
                 total_final: 0,
                 total_pagado: 0
             };
@@ -1000,7 +1260,7 @@
                 return;
             }
 
-            const confirmacion = confirm(`⚠️ ¿Deseas recalcular los datos del mes (${mesAño}) desde las asignaciones? Esto actualizará el pendiente del mes anterior, los registros existentes e incorporará los nuevos.`);
+            const confirmacion = confirm(`⚠️ ¿Deseas recalcular los datos del mes (${mesAño}) desde las asignaciones? Esto actualizará el pendiente del mes anterior, incorporará los alumnos con importe pendiente del mes anterior y actualizará los meses posteriores ya calculados.`);
             if (!confirmacion) return;
 
             await ejecutarCalculoAsignacionesReal();
@@ -1011,32 +1271,59 @@
             if (!verificarYNotificarMesEditable(mesAño, 'calcular o recalcular el mes')) return;
 
             try {
-                asignacionesMesCache = await fetchAPI(`/api/asignaciones/mes?mes=${mesAño}`);
+                const [anio, mes] = mesAño.split('-').map(Number);
+                const fechaAnt = new Date(anio, mes - 2, 1);
+                const mesAntStr = `${fechaAnt.getFullYear()}-${String(fechaAnt.getMonth() + 1).padStart(2, '0')}`;
 
-                const idsAlumnosAsignados = new Set();
-                (asignacionesMesCache || []).forEach(a => {
-                    if (a.alumno_id) idsAlumnosAsignados.add(String(a.alumno_id));
+                const [asignacionesData, hojaAntData] = await Promise.all([
+                    fetchAPI(`/api/asignaciones/mes?mes=${mesAño}`),
+                    fetchAPI(`/api/hoja-pago?mes=${mesAntStr}`)
+                ]);
+
+                asignacionesMesCache = asignacionesData || [];
+
+                const pendientesMesAntMap = new Map();
+                const idsConPendienteMesAnt = new Set();
+                (hojaAntData || []).forEach(regAnt => {
+                    if (!regAnt || regAnt.alumno_id === undefined || regAnt.alumno_id === null) return;
+                    const totalAnt = parseFloat(regAnt.total_final || 0);
+                    const pagadoAnt = parseFloat(regAnt.total_pagado || 0);
+                    const pendCalc = totalAnt - pagadoAnt;
+                    const idStr = String(regAnt.alumno_id);
+                    pendientesMesAntMap.set(idStr, pendCalc);
+                    if (pendCalc > 0) {
+                        idsConPendienteMesAnt.add(idStr);
+                    }
                 });
-                filasEstado.forEach(f => idsAlumnosAsignados.add(String(f.alumno_id)));
 
-                const listaAlumnosRelevantes = alumnos.filter(a => idsAlumnosAsignados.has(String(a.id)));
+                const idsAlumnosRelevantes = new Set();
+                (asignacionesMesCache || []).forEach(a => {
+                    if (a.alumno_id) idsAlumnosRelevantes.add(String(a.alumno_id));
+                });
+                idsConPendienteMesAnt.forEach(idStr => idsAlumnosRelevantes.add(idStr));
+                filasEstado.forEach(f => idsAlumnosRelevantes.add(String(f.alumno_id)));
+
+                const listaAlumnosRelevantes = alumnos.filter(a => idsAlumnosRelevantes.has(String(a.id)));
 
                 filasEstado = await Promise.all(listaAlumnosRelevantes.map(async alumno => {
-                    const existente = filasEstado.find(f => String(f.alumno_id) === String(alumno.id));
-                    const filaNueva = await construirFilaDesdeAsignaciones(alumno, mesAño);
-                    // Al calcular/recalcular siempre se toma el pendiente actualizado del mes anterior
-                    filaNueva.pendiente_mes_anterior = await calcularPendienteMesAnterior(alumno.id, mesAño);
+                    const idStr = String(alumno.id);
+                    const existente = filasEstado.find(f => String(f.alumno_id) === idStr);
+                    const pendAntValor = pendientesMesAntMap.has(idStr)
+                        ? pendientesMesAntMap.get(idStr)
+                        : await calcularPendienteMesAnterior(alumno.id, mesAño);
+
+                    const filaNueva = await construirFilaDesdeAsignaciones(alumno, mesAño, pendAntValor);
+                    filaNueva.pendiente_mes_anterior = pendAntValor;
                     
                     if (existente) {
-                        filaNueva.cobro_extra = existente.cobro_extra;
-                        filaNueva.otros_pagos = existente.otros_pagos;
+                        filaNueva.importe_extra = existente.importe_extra;
+                        filaNueva.pagado_extra = existente.pagado_extra;
                         filaNueva.importe_pagado_clases = existente.importe_pagado_clases;
-                        // filaNueva.terapias mantiene los días TE calculados del mes
                         filaNueva.terapias_pagado = [...existente.terapias_pagado];
                         filaNueva.importe_pagado_terapias = existente.importe_pagado_terapias;
-                        filaNueva.total_pagado = existente.total_pagado;
                         filaNueva.observaciones = existente.observaciones;
-                        filaNueva.evaluacion = existente.evaluacion;
+                        filaNueva.importe_evaluacion = existente.importe_evaluacion;
+                        filaNueva.pagado_evaluacion = existente.pagado_evaluacion;
                         filaNueva.num_clases = existente.num_clases;
                         filaNueva.total_clases = existente.total_clases;
                     }
@@ -1045,57 +1332,92 @@
                     return filaNueva;
                 }));
 
+                const respGuardado = await fetch('/api/hoja-pago/guardar', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ mes: mesAño, hoja: filasEstado })
+                });
+                if (!respGuardado.ok) {
+                    const resErr = await respGuardado.json().catch(() => ({}));
+                    throw new Error(resErr.error || "No se pudo guardar el recálculo del mes");
+                }
+
+                await propagarPendientesMesesPosteriores(mesAño, filasEstado);
+
                 document.getElementById('buscador-alumnos').value = '';
-                hayCambiosPendientes = true;
+                hayCambiosPendientes = false;
+                actualizarSnapshotErrores();
                 renderizarGrid();
-                alert(`✅ Recálculo completo finalizado con éxito para el mes ${mesAño}.`);
+                alert(`✅ Recálculo completo y actualización de meses posteriores finalizados con éxito para ${mesAño}.`);
             } catch (e) {
                 console.error("Error durante el recálculo:", e);
-                alert("❌ Error al obtener los datos de las asignaciones.");
+                alert("❌ Error al recalcular y actualizar los datos del mes.");
             }
         }
 
         function obtenerFilasFiltradas() {
             const textoBusqueda = normalizarTexto(document.getElementById('buscador-alumnos').value);
-            return filasEstado.filter(fila => {
-                const nombreNorm = normalizarTexto(fila.nombreAlumno);
-                return nombreNorm.includes(textoBusqueda);
-            });
+            const soloConErrores = document.getElementById('filtro-errores')?.checked || false;
+            const soloConClasesExtra = document.getElementById('filtro-clases-extra')?.checked || false;
+
+            return [...filasEstado]
+                .sort((a, b) => {
+                    const nombreA = (a.nombreAlumno || '').toUpperCase();
+                    const nombreB = (b.nombreAlumno || '').toUpperCase();
+                    return nombreA.localeCompare(nombreB, 'es');
+                })
+                .filter(fila => {
+                    const nombreNorm = normalizarTexto(fila.nombreAlumno);
+                    if (!nombreNorm.includes(textoBusqueda)) return false;
+
+                    const clasesExtraNum = parseInt(fila.clases_extra, 10) || 0;
+
+                    if (soloConErrores) {
+                        if (!idsSnapshotErrores.has(String(fila.alumno_id))) return false;
+                    }
+
+                    if (soloConClasesExtra) {
+                        if (clasesExtraNum <= 0) return false;
+                    }
+
+                    return true;
+                });
         }
 
         function renderizarGrid() {
             const tbody = document.getElementById('tabla-hoja-pago');
             tbody.innerHTML = '';
 
+            const esEditableActual = esMesEditable(document.getElementById('filtro-mes').value);
             const filasVisibles = obtenerFilasFiltradas();
             document.getElementById('contador-alumnos').textContent = filasEstado.length;
 
             if (filasVisibles.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="32" class="py-8 text-center text-slate-400">No hay alumnos asignados o que coincidan con la búsqueda en este mes.</td></tr>`;
                 aplicarEstadoEdicionMes();
-            const esEditableActual = esMesEditable(document.getElementById('filtro-mes').value);
-            if (!esEditableActual) {
-                tbody.querySelectorAll('input, select, button').forEach(ctrl => {
-                    ctrl.disabled = true;
-                    ctrl.classList.add('opacity-75', 'cursor-not-allowed');
-                });
-            }
-            actualizarTotalesGenerales();
+                if (!esEditableActual) {
+                    tbody.querySelectorAll('input, select, button').forEach(ctrl => {
+                        ctrl.disabled = true;
+                        ctrl.classList.add('opacity-75', 'cursor-not-allowed');
+                    });
+                }
+                actualizarTotalesGenerales();
                 return;
             }
 
             filasVisibles.forEach((fila) => {
                 const index = filasEstado.indexOf(fila);
+                const alumnoObj = alumnos.find(a => String(a.id) === String(fila.alumno_id));
+                const pagaPorBanco = alumnoObj ? Number(alumnoObj.pago_banco) === 1 : Boolean(fila.pagoBanco);
 
-                // Celda unificada para Tarifas y Clases integradas con etiqueta Dto:
                 let htmlTarifasYClases = `
-                    <td class="py-1 px-1 border-r bg-blue-50/20 w-[212px]">
+                    <td class="py-1 px-1 border-r border-slate-300 bg-blue-50/20 w-[212px]">
                         <div class="grid grid-cols-7 gap-0.5 w-full mx-auto">
                 `;
 
-                codigosTarifasOrden.forEach((cod, i) => {
+                codigosTarifasOrden.forEach((cod) => {
                     const valTarifa = fila.tarifas[cod] ? fila.tarifas[cod] : '';
-                    const tieneError = fila.erroresTarifas && fila.erroresTarifas[cod];
+                    const tieneError = esEditableActual && fila.erroresTarifas && fila.erroresTarifas[cod];
                     const claseColor = tieneError
                         ? 'border-red-500 bg-red-100 text-red-900 ring-1 ring-red-400'
                         : 'border bg-white';
@@ -1125,10 +1447,9 @@
                     </td>
                 `;
 
-                // Terapias (T1 a T6) con el input arriba y el checkbox abajo en la segunda línea
                 let htmlTerapiasInputs = `
-                    <td class="py-1.5 px-1 text-center bg-teal-50/30 border-r w-[304px]">
-                        <div class="grid grid-cols-6 gap-0.5 w-full mx-auto">
+                    <td class="py-1.5 px-1 text-center bg-teal-50/30 border-r border-slate-300 w-[304px]">
+                        <div class="grid grid-cols-6 gap-1 w-full mx-auto">
                 `;
                 for (let i = 0; i < 6; i++) {
                     htmlTerapiasInputs += `
@@ -1136,7 +1457,7 @@
                                 <input type="text" maxlength="5" value="${fila.terapias[i] || ''}" 
                                        oninput="this.value = this.value.toUpperCase().slice(0, 5)"
                                        onchange="actualizarTerapiaFila(${index}, ${i}, this.value, this)"
-                                       class="w-12 px-0.5 py-1 text-center border rounded font-semibold bg-white focus:ring-1 focus:ring-teal-500 uppercase text-xs">
+                                       class="w-full max-w-[44px] mx-auto px-0.5 py-1 text-center border rounded font-semibold bg-white focus:ring-1 focus:ring-teal-500 uppercase text-xs">
                                 <input type="checkbox" ${fila.terapias_pagado[i] ? 'checked' : ''}
                                        onchange="actualizarTerapiaPagadoFila(${index}, ${i}, this.checked, this)"
                                        class="w-3.5 h-3.5 text-teal-600 rounded border-slate-300 focus:ring-teal-500 cursor-pointer" title="Pagado T${i+1}">
@@ -1152,37 +1473,71 @@
                     <button onclick="intentarBorrarFila(${index})" title="Eliminar registro (Total es 0)" class="bg-red-50 text-red-600 hover:bg-red-100 p-1 rounded-lg transition font-bold text-xs flex items-center justify-center mx-auto">🗑️</button>
                 ` : `<span title="No se puede borrar (Total distinto de 0)" class="text-slate-300 text-center block cursor-not-allowed">🔒</span>`;
 
+                const clasesExtraNum = parseInt(fila.clases_extra, 10) || 0;
+                const importeExtraNum = parseFloat(fila.importe_extra) || 0;
+                const errorImporteExtra = esEditableActual && clasesExtraNum !== 0 && importeExtraNum === 0;
+                const claseImporteExtra = errorImporteExtra
+                    ? 'border-red-500 bg-red-100 text-red-900 ring-1 ring-red-400'
+                    : 'border text-sky-700 bg-white';
+
+                const pendienteExtra = (fila.importe_extra || 0) - (fila.pagado_extra || 0);
                 const importePendienteClases = (fila.importe_clases || 0) - (fila.importe_pagado_clases || 0);
                 const importePendienteTerapias = (fila.importe_terapias || 0) - (fila.importe_pagado_terapias || 0);
+                const pendienteEvaluacion = (fila.importe_evaluacion || 0) - (fila.pagado_evaluacion || 0);
                 const totalPendiente = (fila.total_final || 0) - (fila.total_pagado || 0);
 
                 const tr = document.createElement('tr');
                 const bgFila = index % 2 === 0 ? 'bg-white' : 'bg-green-100/80';
                 tr.className = `${bgFila} hover:bg-blue-100/50 border-b border-slate-200 transition-colors`;
                 tr.innerHTML = `
-                    <td class="py-2 px-2 font-semibold text-slate-800 border-r sticky left-0 bg-white z-10">${fila.nombreAlumno}</td>
-                    <td class="py-2 px-1 text-right font-semibold border-r bg-emerald-50/30 text-xs">
+                    <!-- Bloque Nombre / Alumno -->                    
+                    <td class="py-1.5 px-2 font-semibold text-slate-800 border-r-2 border-slate-400 sticky left-0 bg-white z-10">
+                        <div>${fila.nombreAlumno}</div>
+                        ${pagaPorBanco ? `
+                        <div class="mt-1 flex items-center gap-1.5 text-xs font-semibold text-blue-700">
+                            <input type="checkbox" checked disabled
+                                   title="Pago por banco (configurable en ficha del alumno)"
+                                   class="w-4 h-4 text-blue-600 rounded border-slate-300 cursor-not-allowed">
+                            <span>Banco</span>
+                        </div>` : ''}
+                    </td>
+
+                    <!-- Bloque Extras -->
+                    <td class="py-2 px-1 text-right font-semibold border-r border-slate-300 bg-emerald-50/30 text-xs">
                         ${formatearMoneda(fila.pendiente_mes_anterior)}
                     </td>
-                    <td class="py-1.5 px-1 text-right border-r bg-emerald-50/30">
-                        <input type="text" value="${formatearMoneda(fila.cobro_extra)}"
-                               onfocus="prepararInputEdicion(this, ${fila.cobro_extra})"
-                               onblur="actualizarCobroExtraFila(${index}, this.value, this)"
-                               class="w-full px-0.5 py-1 text-right border rounded font-semibold bg-white focus:ring-1 focus:ring-orange-500 text-xs">
+                    <td class="w-[82px] border-r border-slate-300 py-1.5 px-0.5 bg-slate-100">
+                        <div class="flex items-center justify-center gap-0.5">
+                            <input type="text" maxlength="1" value="${fila.clases_extra || 0}" readonly tabindex="-1"
+                                title="Clases Extra (EXTR en asignaciones semanales)"
+                                class="w-5 shrink-0 px-0 py-1 text-center border border-slate-300 rounded font-semibold text-sky-700 bg-white text-xs pointer-events-none select-none">
+                            <input type="text" value="${formatearMoneda(fila.importe_extra)}"
+                                onfocus="prepararInputEdicion(this, ${fila.importe_extra})"
+                                onblur="actualizarImporteExtraFila(${index}, this.value, this)"
+                                title="${errorImporteExtra ? 'Error: hay clases extra pendientes de valorar' : 'Importe Extra'}"
+                                class="w-14 shrink-0 px-0.5 py-1 text-right rounded font-semibold ${claseImporteExtra} focus:ring-1 focus:ring-orange-500 text-xs">
+                        </div>
                     </td>
-                    <td class="py-1.5 px-1 text-right border-r bg-emerald-50/30">
-                        <input type="text" value="${formatearMoneda(fila.otros_pagos)}"
-                               onfocus="prepararInputEdicion(this, ${fila.otros_pagos})"
-                               onblur="actualizarOtrosPagosFila(${index}, this.value, this)"
-                               class="w-full px-0.5 py-1 text-right border rounded font-semibold bg-white focus:ring-1 focus:ring-emerald-500 text-xs">
+                    <td class="w-16 py-1 px-1 text-right bg-slate-100 border-r-2 border-slate-400">
+                        <div class="flex flex-col items-end gap-1">
+                            <input type="text" value="${formatearMoneda(fila.pagado_extra)}"
+                                   onfocus="prepararInputEdicion(this, ${fila.pagado_extra})"
+                                   onblur="actualizarPagadoExtraFila(${index}, this.value, this)"
+                                   title="Pagado Extra"
+                                   class="w-full px-0.5 py-1 text-teal-700 text-right border rounded font-semibold bg-white focus:ring-1 focus:ring-emerald-500 text-xs">
+                            <div class="w-full text-right font-semibold text-amber-700 text-xs pt-0.5 border-t border-blue-200" title="Pendiente Extra">
+                                ${formatearMoneda(pendienteExtra)}
+                            </div>
+                        </div>
                     </td>
                     
+                    <!-- Bloque Clases -->
                     ${htmlTarifasYClases}
 
-                    <td class="w-16 border py-2 px-1 text-right font-semibold text-sky-700 text-xs bg-slate-100">
+                    <td class="w-16 border-r border-slate-300 py-2 px-1 text-right font-semibold text-sky-700 text-xs bg-slate-100">
                         ${formatearMoneda(fila.importe_clases)}
                     </td>
-                    <td class="w-16 border py-1 px-1 text-right bg-slate-100 border-r">
+                    <td class="w-16 py-1 px-1 text-right bg-slate-100 border-r-2 border-slate-400">
                         <div class="flex flex-col items-end gap-1">
                             <input type="text" value="${formatearMoneda(fila.importe_pagado_clases)}"
                                    onfocus="prepararInputEdicion(this, ${fila.importe_pagado_clases})"
@@ -1194,12 +1549,13 @@
                         </div>
                     </td>
 
+                    <!-- Bloque Terapias -->
                     ${htmlTerapiasInputs}
 
-                   <td class="w-16 border py-2 px-1 text-right font-semibold text-sky-700 text-xs bg-slate-100">
+                    <td class="w-16 border-r border-slate-300 py-2 px-1 text-right font-semibold text-sky-700 text-xs bg-slate-100">
                         ${formatearMoneda(fila.importe_terapias)}
                     </td>
-                    <td class="w-16 border py-1 px-1 text-right bg-slate-100 border-r">
+                    <td class="w-16 py-1 px-1 text-right bg-slate-100 border-r-2 border-slate-400">
                         <div class="flex flex-col items-end gap-1">
                             <input type="text" value="${formatearMoneda(fila.importe_pagado_terapias)}" readonly
                                    class="w-full px-1 py-1 text-right font-semibold text-teal-700 bg-transparent cursor-not-allowed text-xs" title="Pagado Terapias (No modificable)">
@@ -1209,16 +1565,32 @@
                         </div>
                     </td>
 
-                    <td class="py-2 px-1 text-center border-r bg-purple-50/30">
-                        <input type="checkbox" ${fila.evaluacion ? 'checked' : ''}
-                               onchange="actualizarEvaluacionFila(${index}, this.checked, this)"
-                               class="w-4 h-4 text-purple-600 rounded border-slate-300 focus:ring-purple-500 cursor-pointer">
+                    <!-- Bloque Evaluación -->
+                    <td class="w-16 border-r border-slate-300 py-1.5 px-1 text-right bg-slate-100">
+                        <input type="text" value="${formatearMoneda(fila.importe_evaluacion)}"
+                               onfocus="prepararInputEdicion(this, ${fila.importe_evaluacion})"
+                               onblur="actualizarImporteEvaluacionFila(${index}, this.value, this)"
+                               title="Importe Evaluación"
+                               class="w-14 px-0.5 py-1 text-right border rounded font-semibold text-sky-700 bg-white focus:ring-1 focus:ring-purple-500 text-xs">
+                    </td>
+                    <td class="w-16 py-1 px-1 text-right bg-slate-100 border-r-2 border-slate-400">
+                        <div class="flex flex-col items-end gap-1">
+                            <input type="text" value="${formatearMoneda(fila.pagado_evaluacion)}"
+                                   onfocus="prepararInputEdicion(this, ${fila.pagado_evaluacion})"
+                                   onblur="actualizarPagadoEvaluacionFila(${index}, this.value, this)"
+                                   title="Pagado Evaluación"
+                                   class="w-full px-0.5 py-1 text-teal-700 text-right border rounded font-semibold bg-white focus:ring-1 focus:ring-purple-500 text-xs">
+                            <div class="w-full text-right font-semibold text-amber-700 text-xs pt-0.5 border-t border-blue-200" title="Pendiente Evaluación">
+                                ${formatearMoneda(pendienteEvaluacion)}
+                            </div>
+                        </div>
                     </td>
 
-                    <td class="w-16 border py-2 px-1 text-right font-extrabold text-sky-700 text-xs bg-slate-100">
+                    <!-- Bloque Total Final -->
+                    <td class="w-16 border-r border-slate-300 py-2 px-1 text-right font-extrabold text-sky-700 text-xs bg-slate-100">
                         ${formatearMoneda(fila.total_final)}
                     </td>
-                    <td class="w-16 border py-1 px-1 text-right bg-slate-100 border-r">
+                    <td class="w-16 py-1 px-1 text-right bg-slate-100 border-r-2 border-slate-400">
                         <div class="flex flex-col items-end gap-1">
                             <input type="text" value="${formatearMoneda(fila.total_pagado)}" readonly
                                    class="w-full px-1 py-1 text-right font-extrabold text-teal-700 bg-transparent cursor-not-allowed text-xs" title="Total Pagado (No modificable)">
@@ -1228,7 +1600,8 @@
                         </div>
                     </td>
 
-                    <td class="py-1.5 px-1 border-r">
+                    <!-- Bloque Observaciones / Acciones -->
+                    <td class="py-1.5 px-1 border-r border-slate-300">
                         <input type="text" value="${fila.observaciones}" placeholder="Observaciones..."
                                onchange="filasEstado[${index}].observaciones = this.value"
                                class="w-full px-2 py-1 text-xs border rounded bg-white focus:ring-1 focus:ring-blue-500">
@@ -1243,7 +1616,6 @@
             });
 
             aplicarEstadoEdicionMes();
-            const esEditableActual = esMesEditable(document.getElementById('filtro-mes').value);
             if (!esEditableActual) {
                 tbody.querySelectorAll('input, select, button').forEach(ctrl => {
                     ctrl.disabled = true;
@@ -1301,84 +1673,102 @@
             alert("🗑️ Registro eliminado correctamente.");
         }
 
+        function normalizarCodigoTarifa(codigo) {
+            return String(codigo || '')
+                .toUpperCase()
+                .replace(/[\s_-]+/g, ' ')
+                .trim();
+        }
+
         function calcularImportesFilaObjeto(fila) {
-            const alumnoObj = alumnos.find(a => String(a.id) === String(fila.alumno_id)) || {};        
+            const mesFila = fila.mes || document.getElementById('filtro-mes').value;
+            if (!esMesEditable(mesFila)) {
+                fila.erroresTarifas = {};
+                return;
+            }
+
+            const alumnoObj = alumnos.find(a => String(a.id) === String(fila.alumno_id)) || {};
             let subtotalClases = 0;
 
             fila.erroresTarifas = {};
 
-            // Cálculo específico para REF P
-            const cantidadRefP = parseInt(fila.tarifas["REF P"]) || 0;
-            if (cantidadRefP > 0) {
-                const tarifaRefId = alumnoObj.tarifa_refuerzo_id;
-                const horasRef = parseInt(alumnoObj.horas_refuerzo, 10);
-                const tarifaObj = tarifaRefId
-                    ? (window.tarifasListaCompleta || []).find(t =>
-                        String(t.id) === String(tarifaRefId) &&
-                        String(t.codigo || '').toUpperCase().trim() === 'REF P'
-                    )
-                    : null;
-
-                let precioRefP = null;
-                if (tarifaObj && horasRef >= 1 && horasRef <= 5) {
-                    const rawPrecio = tarifaObj[`precio_${horasRef}h`];
-                    if (rawPrecio !== undefined && rawPrecio !== null && String(rawPrecio).trim() !== '') {
-                        const parsed = parsearImporteTexto(rawPrecio);
-                        if (!isNaN(parsed) && parsed > 0) {
-                            precioRefP = parsed;
-                        }
-                    }
+            // Indexar tarifas_servicios por su ID
+            const tarifasPorId = new Map();
+            (window.tarifasListaCompleta || []).forEach(t => {
+                if (t && t.id !== undefined && t.id !== null) {
+                    tarifasPorId.set(String(t.id), t);
                 }
+            });
 
-                if (precioRefP !== null) {
-                    subtotalClases += precioRefP;
-                } else {
-                    fila.erroresTarifas["REF P"] = true;
-                }
-            }
-
-            const mappingServicios = {
-                "REF S": { tarifaId: alumnoObj.tarifa_refuerzo_id, horas: alumnoObj.horas_refuerzo },
-                "REF B": { tarifaId: alumnoObj.tarifa_refuerzo_id, horas: alumnoObj.horas_refuerzo },
+            // Relación estricta de cada columna con su campo ID y horas en la tabla alumnos
+            const relacionColumnas = {
+                "REF P": { tarifaId: alumnoObj.tarifa_refuerzo_id,   horas: alumnoObj.horas_refuerzo },
+                "REF S": { tarifaId: alumnoObj.tarifa_refuerzo_id,   horas: alumnoObj.horas_refuerzo },
+                "REF B": { tarifaId: alumnoObj.tarifa_refuerzo_id,   horas: alumnoObj.horas_refuerzo },
                 "DA":    { tarifaId: alumnoObj.tarifa_dificultad_id, horas: alumnoObj.horas_dificultad },
                 "DA C":  { tarifaId: alumnoObj.tarifa_dificultad_id, horas: alumnoObj.horas_dificultad },
-                "LOG":   { tarifaId: alumnoObj.tarifa_logopedia_id, horas: alumnoObj.horas_logopedia },
-                "LOG M": { tarifaId: alumnoObj.tarifa_logopedia_id, horas: alumnoObj.horas_logopedia }
-            };            
+                "LOG":   { tarifaId: alumnoObj.tarifa_logopedia_id,  horas: alumnoObj.horas_logopedia },
+                "LOG M": { tarifaId: alumnoObj.tarifa_logopedia_id,  horas: alumnoObj.horas_logopedia }
+            };
 
-            Object.keys(mappingServicios).forEach(cod => {
-                const cantidadIndicada = parseInt(fila.tarifas[cod]) || 0;                
-                if (cantidadIndicada > 0) {
-                    const configServicio = mappingServicios[cod];                    
-                    let precioUnitario = 0;
-                    
-                    if (configServicio && configServicio.tarifaId && configServicio.horas > 0) {
-                        const tarifaObj = (window.tarifasListaCompleta || []).find(t => String(t.id) === String(configServicio.tarifaId));
-                        if (tarifaObj) {
-                            const h = configServicio.horas;
-                            if (h === 1) precioUnitario = parsearImporteTexto(tarifaObj.precio_1h);
-                            else if (h === 2) precioUnitario = parsearImporteTexto(tarifaObj.precio_2h);
-                            else if (h === 3) precioUnitario = parsearImporteTexto(tarifaObj.precio_3h);
-                            else if (h === 4) precioUnitario = parsearImporteTexto(tarifaObj.precio_4h);
-                            else if (h === 5) precioUnitario = parsearImporteTexto(tarifaObj.precio_5h);
-                        }
-                    }
-                    subtotalClases += precioUnitario;
+            Object.keys(relacionColumnas).forEach(codColumna => {
+                const valorCasilla = parseInt(fila.tarifas[codColumna], 10) || 0;
+                if (valorCasilla <= 0) return;
+
+                const { tarifaId, horas } = relacionColumnas[codColumna];
+
+                // 1. Verificar que el alumno tiene tarifa_xxx_id asignada
+                if (tarifaId === undefined || tarifaId === null || String(tarifaId).trim() === '' || Number(tarifaId) === 0) {
+                    fila.erroresTarifas[codColumna] = true;
+                    return;
                 }
-            });            
 
+                // 2. Buscar en tarifas_servicios por id === tarifa_xxx_id
+                const tarifaRegistro = tarifasPorId.get(String(tarifaId).trim());
+                if (!tarifaRegistro) {
+                    fila.erroresTarifas[codColumna] = true;
+                    return;
+                }
+
+                // 3. Verificar que el código de esa tarifa coincide exactamente con la columna (ej. REF P === REF P)
+                const codigoEnBD = normalizarCodigoTarifa(tarifaRegistro.codigo);
+                const codigoEsperado = normalizarCodigoTarifa(codColumna);
+
+                if (codigoEnBD !== codigoEsperado) {
+                    fila.erroresTarifas[codColumna] = true;
+                    return;
+                }
+
+                // 4. Obtener el importe según horas_xxx (1 a 5 -> precio_1h a precio_5h)
+                const numHoras = parseInt(horas, 10) || 0;
+                if (numHoras >= 1 && numHoras <= 5) {
+                    const campoPrecio = `precio_${numHoras}h`;
+                    const precio = parsearImporteTexto(tarifaRegistro[campoPrecio]);
+                    if (precio > 0) {
+                        subtotalClases += precio;
+                    } else {
+                        fila.erroresTarifas[codColumna] = true;
+                    }
+                } else {
+                    fila.erroresTarifas[codColumna] = true;
+                }
+            });
+
+            // Cálculo del descuento: (Tot - Nº) / Tot
             const totalC = parseFloat(fila.total_clases);
-            const numC = parseFloat(fila.num_clases);            
+            const numC = parseFloat(fila.num_clases);
 
             if (!isNaN(totalC) && totalC > 0 && !isNaN(numC)) {
-                fila.pct_dto = numC / totalC;
+                fila.pct_dto = (totalC - numC) / totalC;
                 if (fila.pct_dto < 0) fila.pct_dto = 0;
+                if (fila.pct_dto > 1) fila.pct_dto = 1;
             } else {
                 fila.pct_dto = 0;
             }
 
             fila.importe_clases = subtotalClases * (1 - fila.pct_dto);
 
+            // Cálculo de terapias
             let totalTerapiasValidas = 0;
             let totalTerapiasPagadas = 0;
             fila.terapias.forEach((t, idx) => {
@@ -1392,23 +1782,26 @@
 
             const rawAlumno = alumnoObj.precio_tarifa ?? alumnoObj.precio_terapia ?? fila.precioTerapiaAlumno ?? 0;
             const precioAlumno = parsearImporteTexto(rawAlumno);
-            const mesActual = fila.mes || document.getElementById('filtro-mes').value;
-            const precioTerapiaAplicar = precioAlumno > 0 ? precioAlumno : obtenerTarifaGeneralTE(mesActual);
+            const precioTerapiaAplicar = precioAlumno > 0 ? precioAlumno : obtenerTarifaGeneralTE(mesFila);
 
             fila.importe_terapias = totalTerapiasValidas * precioTerapiaAplicar;
             fila.importe_pagado_terapias = totalTerapiasPagadas * precioTerapiaAplicar;
 
-            const importeEvaluacion = fila.evaluacion ? obtenerTarifaGeneralEV(mesActual) : 0;
+            const importeExtra = parseFloat(fila.importe_extra) || 0;
+            const pagadoExtra = parseFloat(fila.pagado_extra) || 0;
+            const importeEvaluacion = parseFloat(fila.importe_evaluacion) || 0;
+            const pagadoEvaluacion = parseFloat(fila.pagado_evaluacion) || 0;
 
             fila.total_final = (parseFloat(fila.pendiente_mes_anterior) || 0) + 
-                               (parseFloat(fila.cobro_extra) || 0) + 
+                               importeExtra + 
                                (parseFloat(fila.importe_clases) || 0) + 
                                (parseFloat(fila.importe_terapias) || 0) + 
                                importeEvaluacion;
 
-            fila.total_pagado = (parseFloat(fila.otros_pagos) || 0) + 
+            fila.total_pagado = pagadoExtra + 
                                 (parseFloat(fila.importe_pagado_clases) || 0) + 
-                                (parseFloat(fila.importe_pagado_terapias) || 0);
+                                (parseFloat(fila.importe_pagado_terapias) || 0) +
+                                pagadoEvaluacion;
         }
 
         function recalcularFila(index, actualizarDOM = true) {
@@ -1459,34 +1852,46 @@
             recalcularFila(index, true);
         }
 
-        function actualizarCobroExtraFila(index, valor, inputEl) {
+        function actualizarImporteExtraFila(index, valor, inputEl) {
             if (indiceSiguienteFoco === null && inputEl) registrarAvanceFoco(inputEl, true);
-            filasEstado[index].cobro_extra = parsearImporteTexto(valor);
+            filasEstado[index].importe_extra = parsearImporteTexto(valor);
             recalcularFila(index, true);
         }
 
-        function actualizarOtrosPagosFila(index, valor, inputEl) {
+        function actualizarPagadoExtraFila(index, valor, inputEl) {
             if (indiceSiguienteFoco === null && inputEl) registrarAvanceFoco(inputEl, true);
-            filasEstado[index].otros_pagos = parsearImporteTexto(valor);
+            filasEstado[index].pagado_extra = parsearImporteTexto(valor);
             recalcularFila(index, true);
         }
 
-        function actualizarEvaluacionFila(index, valorChecked, inputEl) {
+        function actualizarImporteEvaluacionFila(index, valor, inputEl) {
             if (indiceSiguienteFoco === null && inputEl) registrarAvanceFoco(inputEl, true);
-            filasEstado[index].evaluacion = valorChecked;
+            filasEstado[index].importe_evaluacion = parsearImporteTexto(valor);
+            recalcularFila(index, true);
+        }
+
+        function actualizarPagadoEvaluacionFila(index, valor, inputEl) {
+            if (indiceSiguienteFoco === null && inputEl) registrarAvanceFoco(inputEl, true);
+            filasEstado[index].pagado_evaluacion = parsearImporteTexto(valor);
             recalcularFila(index, true);
         }
 
         function actualizarTotalesGenerales() {
-            let totalPendienteAnt = 0, totalCobroExtra = 0, totalOtrosPagos = 0;
+            let totalPendienteAnt = 0;
+            let totalImporteExtra = 0, totalPagadoExtra = 0, totalPendienteExtra = 0;
             let totalClases = 0, totalPagadoClases = 0, totalPendienteClases = 0;
             let totalTerapias = 0, totalPagadoTerapias = 0, totalPendienteTerapias = 0;
+            let totalImporteEval = 0, totalPagadoEval = 0, totalPendienteEval = 0;
             let totalGeneral = 0, totalPagadoGeneral = 0, totalPendienteGeneral = 0;
 
             filasEstado.forEach(f => {
                 totalPendienteAnt += (f.pendiente_mes_anterior || 0);
-                totalCobroExtra += (f.cobro_extra || 0);
-                totalOtrosPagos += (f.otros_pagos || 0);
+
+                const impE = f.importe_extra || 0;
+                const pagE = f.pagado_extra || 0;
+                totalImporteExtra += impE;
+                totalPagadoExtra += pagE;
+                totalPendienteExtra += (impE - pagE);
 
                 const impC = f.importe_clases || 0;
                 const pagC = f.importe_pagado_clases || 0;
@@ -1500,6 +1905,12 @@
                 totalPagadoTerapias += pagT;
                 totalPendienteTerapias += (impT - pagT);
 
+                const impEv = f.importe_evaluacion || 0;
+                const pagEv = f.pagado_evaluacion || 0;
+                totalImporteEval += impEv;
+                totalPagadoEval += pagEv;
+                totalPendienteEval += (impEv - pagEv);
+
                 const totF = f.total_final || 0;
                 const totP = f.total_pagado || 0;
                 totalGeneral += totF;
@@ -1508,8 +1919,9 @@
             });
 
             document.getElementById('total-pendiente-ant-general').textContent = formatearMoneda(totalPendienteAnt);
-            document.getElementById('total-cobro-extra-general').textContent = formatearMoneda(totalCobroExtra);
-            document.getElementById('total-otros-pagos-general').textContent = formatearMoneda(totalOtrosPagos);
+            document.getElementById('total-importe-extra-general').textContent = formatearMoneda(totalImporteExtra);
+            document.getElementById('total-pagado-extra-general').textContent = formatearMoneda(totalPagadoExtra);
+            document.getElementById('total-pendiente-extra-general').textContent = formatearMoneda(totalPendienteExtra);
 
             document.getElementById('total-clases-general').textContent = formatearMoneda(totalClases);
             document.getElementById('total-pagado-clases-general').textContent = formatearMoneda(totalPagadoClases);
@@ -1518,6 +1930,10 @@
             document.getElementById('total-terapias-general').textContent = formatearMoneda(totalTerapias);
             document.getElementById('total-pagado-terapias-general').textContent = formatearMoneda(totalPagadoTerapias);
             document.getElementById('total-pendiente-terapias-general').textContent = formatearMoneda(totalPendienteTerapias);
+
+            document.getElementById('total-importe-evaluacion-general').textContent = formatearMoneda(totalImporteEval);
+            document.getElementById('total-pagado-evaluacion-general').textContent = formatearMoneda(totalPagadoEval);
+            document.getElementById('total-pendiente-evaluacion-general').textContent = formatearMoneda(totalPendienteEval);
 
             document.getElementById('total-general').textContent = formatearMoneda(totalGeneral);
             document.getElementById('total-pagado-general').textContent = formatearMoneda(totalPagadoGeneral);
@@ -1533,6 +1949,8 @@
             }
 
             try {
+                filasEstado.forEach(f => calcularImportesFilaObjeto(f));
+
                 const respuesta = await fetch('/api/hoja-pago/guardar', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1540,8 +1958,11 @@
                 });
 
                 if (respuesta.ok) {
+                    await propagarPendientesMesesPosteriores(mes, filasEstado);
                     hayCambiosPendientes = false;
-                    alert("✅ ¡Hoja de pago mensual guardada correctamente!");
+                    actualizarSnapshotErrores();
+                    renderizarGrid();
+                    alert("✅ ¡Hoja de pago mensual y meses posteriores guardados correctamente!");
                 } else {
                     const res = await respuesta.json();
                     alert("❌ Error al guardar: " + (res.error || "No se pudo procesar la solicitud"));
@@ -1552,4 +1973,4 @@
         }
     </script>
 </body> 
-</html>
+</html> 

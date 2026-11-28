@@ -8,7 +8,7 @@
 </head>
 <body class="bg-slate-100 min-h-screen flex flex-col">
     <!-- Barra de navegación superior -->
-    <header class="bg-white shadow-sm">
+    <header class="bg-white shadow-sm sticky top-0 z-50">
         <div class="w-full px-4 sm:px-8 py-4 flex justify-between items-center">
             
             <!-- 👈 Izquierda: Logo / Icono + Título -->
@@ -30,9 +30,8 @@
 
     <!-- Contenido Principal / Menú de Opciones -->
     <main class="flex-1 max-w-7xl w-full mx-auto p-6">
-        <div class="bg-white rounded-xl shadow-md p-6 mb-8">
+        <div class="bg-white rounded-xl shadow-md p-6 mb-8 sticky top-24 z-40">
             <h2 class="text-2xl font-bold text-slate-800 mb-2">Panel de Control Principal</h2>
-            <p class="text-slate-600 text-sm">Selecciona una de las opciones disponibles en el sistema para comenzar a gestionar tu actividad diaria.</p>
         </div>
 
         <!-- Cuadrícula de Módulos -->
@@ -89,7 +88,7 @@
                 <p class="text-xs text-slate-500 mt-1">Cálculo mensual de importes</p>
             </a>
 
-            <!-- Opción: Informe de Pagos (Solo Administrador / Administrador-Profesor) -->
+            <!-- Opción: Informe de Pagos (Solo Administrador / Profesor-Administrador) -->
             <a href="/informe_pagos.html" id="card-informe-pagos" class="hidden bg-white p-6 rounded-xl shadow-md border-l-4 border-blue-600 hover:shadow-lg transition group">
                 <div class="flex justify-between items-start mb-4">
                     <span class="text-3xl mb-2">📊</span>
@@ -97,15 +96,20 @@
                 </div>
                 <h3 class="font-bold text-lg text-slate-800 mb-1">Informe de Pagos</h3>
                 <p class="text-xs text-slate-500 mt-1">Consulta, agrupación e impresión de pagos</p>
-            </a> 
+            </a>
+
+            <!-- Opción: Evolución y Facturación por Profesor (Solo Administrador / Profesor-Administrador) -->
+            <a href="/evolucion_profesores.html" id="card-evolucion-profesores" class="hidden bg-white p-6 rounded-xl shadow-md border-l-4 border-blue-600 hover:shadow-lg transition group">
+                <div class="flex justify-between items-start mb-4">
+                    <span class="text-3xl mb-2">📈</span>
+                    <span class="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full group-hover:bg-blue-600 group-hover:text-white transition">Acceder →</span>
+                </div>
+                <h3 class="font-bold text-lg text-slate-800 mb-1">Evolución Profesores</h3>
+                <p class="text-xs text-slate-500 mt-1">Gráficas de facturación, alumnos y pendientes</p>
+            </a>
 
         </div>
     </main>
-
-    <!-- Pie de página -->
-    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-400">
-        Gestor Educativo & Pedagógico &copy; 2026
-    </footer>
 
     <script>
         // Comprobar autenticación al cargar el menú
@@ -120,17 +124,12 @@
             document.getElementById('info-usuario').textContent = `👤 ${usuario.nombre} (${usuario.rol.toUpperCase()})`;
         }
 
-       // function cerrarSesion() {
-        //    localStorage.removeItem('token');
-        //    localStorage.removeItem('usuario');
-        //    window.location.href = '/';
-       // }
        function cerrarSesion() {
             fetch('/api/logout', { method: 'POST' }).finally(() => {
-                // 2. Limpiar datos locales
+                // Limpiar datos locales
                 localStorage.removeItem('usuario');
                 
-                // 3. Redirigir al login reemplazando la historia del navegador para que "Volver atrás" no funcione
+                // Redirigir al login reemplazando la historia del navegador para que "Volver atrás" no funcione
                 window.location.replace('/index.html');
             });
         }
@@ -143,6 +142,7 @@
             rolNormalizado === 'admin' ||
             rolNormalizado === 'administrador' ||
             rolNormalizado === 'admin_profesor' ||
+            rolNormalizado === 'profesor_administrador' ||
             rolNormalizado === 'administrador/profesor' ||
             rolNormalizado === 'administrador_profesor'
         ) {
@@ -150,6 +150,7 @@
             document.getElementById('card-usuarios').classList.remove('hidden');
             document.getElementById('card-tarifas').classList.remove('hidden');
             document.getElementById('card-informe-pagos').classList.remove('hidden');
+            document.getElementById('card-evolucion-profesores').classList.remove('hidden');
         }
     </script>
     

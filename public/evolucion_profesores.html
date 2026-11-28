@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evolución y Facturación por Profesor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @media print {
+            @page {
+                size: A4 landscape;
+                margin: 10mm;
+            }
+            body {
+                background: #ffffff !important;
+                color: #0f172a !important;
+                font-size: 10px !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            .print-shadow-none {
+                box-shadow: none !important;
+                border: 1px solid #cbd5e1 !important;
+            }
+            .bloque-impresion {
+                break-inside: avoid;
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800">
+
+    <!-- Navbar superior fijo -->
+    <header class="bg-white shadow-sm fixed top-0 left-0 right-0 z-30 no-print">
+        <div class="w-full px-4 sm:px-8 py-4 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-sm overflow-hidden">
+                    <img src="/Logo_Logos.png" alt="Logotipo" class="w-10 h-10 object-contain">
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-slate-800">📈 Evolución y Facturación por Profesor</h1>
+                    <p class="text-xs text-slate-500">Análisis mensual de facturación, alumnos atendidos y tipos de clase</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-4">
+                <button onclick="window.location.href='/dashboard.html'" class="text-sm font-semibold text-blue-600 hover:underline bg-transparent border-none cursor-pointer">← Volver al Panel</button>
+                <span id="info-usuario" class="text-sm font-semibold text-slate-600 bg-slate-100 px-3 py-1.5 rounded-lg">Cargando...</span>
+                <button onclick="cerrarSesion()" class="bg-red-50 text-red-600 text-sm font-semibold px-4 py-2 rounded-lg hover:bg-red-100 transition">
+                    Cerrar Sesión
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Panel de filtros completamente inmóvil -->
+    <div class="fixed top-[72px] left-0 right-0 z-20 px-4 sm:px-8 pt-2 no-print print:static print:p-0">
+        <section class="bg-white p-4 sm:p-5 rounded-xl shadow-md border border-slate-200">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
+
+                <!-- Mes/Año Desde -->
+                <div>
+                    <label for="filtro-mes-desde" class="block text-xs font-semibold text-slate-700 mb-1">Mes / Año Desde:</label>
+                    <div class="flex items-center gap-1">
+                        <button type="button" onclick="cambiarMesFiltro('filtro-mes-desde', -1)" title="Mes anterior"
+                                class="px-2 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg border border-slate-300 transition shrink-0">◀</button>
+                        <input type="month" id="filtro-mes-desde" onchange="actualizarVista()"
+                               class="w-full min-w-0 px-2 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                        <button type="button" onclick="cambiarMesFiltro('filtro-mes-desde', 1)" title="Mes siguiente"
+                                class="px-2 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg border border-slate-300 transition shrink-0">▶</button>
+                    </div>
+                </div>
+
+                <!-- Mes/Año Hasta -->
+                <div>
+                    <label for="filtro-mes-hasta" class="block text-xs font-semibold text-slate-700 mb-1">Mes / Año Hasta:</label>
+                    <div class="flex items-center gap-1">
+                        <button type="button" onclick="cambiarMesFiltro('filtro-mes-hasta', -1)" title="Mes anterior"
+                                class="px-2 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg border border-slate-300 transition shrink-0">◀</button>
+                        <input type="month" id="filtro-mes-hasta" onchange="actualizarVista()"
+                               class="w-full min-w-0 px-2 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                        <button type="button" onclick="cambiarMesFiltro('filtro-mes-hasta', 1)" title="Mes siguiente"
+                                class="px-2 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg border border-slate-300 transition shrink-0">▶</button>
+                    </div>
+                </div>
+
+                <!-- Selector de Profesor -->
+                <div>
+                    <label for="filtro-profesor" class="block text-xs font-semibold text-slate-700 mb-1">Profesor:</label>
+                    <select id="filtro-profesor" onchange="actualizarVista()"
+                            class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white font-medium">
+                        <option value="TODOS">Todos los profesores</option>
+                    </select>
+                </div>
+
+                <!-- Selector de Tipo de Clase / Servicio -->
+                <div>
+                    <label for="filtro-tipo-clase" class="block text-xs font-semibold text-slate-700 mb-1">Tipo de Clase / Servicio:</label>
+                    <select id="filtro-tipo-clase" onchange="actualizarVista()"
+                            class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white font-medium">
+                        <option value="TODOS">Todos los tipos</option>
+                        <option value="REF P">REF P (Refuerzo Primaria)</option>
+                        <option value="REF S">REF S (Refuerzo Secundaria)</option>
+                        <option value="REF B">REF B (Refuerzo Bachillerato)</option>
+                        <option value="DA">DA (Dificultad Aprendizaje)</option>
+                        <option value="DA C">DA C (DA Compartida)</option>
+                        <option value="LOG">LOG (Logopedia)</option>
+                        <option value="LOG M">LOG M (Logopedia M.)</option>
+                        <option value="TE">TE (Terapias)</option>
+                        <option value="EV">EV (Evaluaciones)</option>
+                    </select>
+                </div>
+
+                <!-- Métrica principal de la gráfica de evolución -->
+                <div>
+                    <label for="filtro-metrica-grafico" class="block text-xs font-semibold text-slate-700 mb-1">Métrica de Evolución:</label>
+                    <select id="filtro-metrica-grafico" onchange="actualizarVista()"
+                            class="w-full px-3 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white font-medium">
+                        <option value="facturacion">Facturación (€)</option>
+                        <option value="alumnos">Alumnos distintos (nº)</option>
+                        <option value="sesiones">Sesiones / Clases impartidas</option>
+                    </select>
+                </div>
+
+                <!-- Estado y botones -->
+                <div class="flex flex-col gap-1">
+                    <span id="estado-carga" class="text-[11px] font-semibold text-blue-600 text-right truncate">Cargando datos...</span>
+                    <div class="flex items-center gap-2">
+                        <button type="button" id="btn-recargar" onclick="cargarDatosCompletos()"
+                                class="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-lg shadow-sm transition flex items-center justify-center gap-1">
+                            ⚡ Actualizar
+                        </button>
+                        <button type="button" onclick="window.print()"
+                                class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-sm transition flex items-center justify-center gap-1.5">
+                            🖨️ Imprimir
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Contenido principal -->
+    <main class="w-full px-4 sm:px-8 pt-[380px] sm:pt-[235px] lg:pt-[188px] pb-6 space-y-6 print:pt-6">
+
+        <!-- Cabecera visible solo al imprimir -->
+        <section class="hidden print:flex bg-white p-4 rounded-xl border border-slate-200 flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+            <div>
+                <h2 class="text-lg font-bold text-slate-900">Informe de Evolución y Facturación por Profesor</h2>
+                <p id="subtitulo-impresion" class="text-xs text-slate-600"></p>
+            </div>
+            <div class="text-xs text-slate-500" id="fecha-impresion"></div>
+        </section>
+
+        <!-- Tarjetas KPI Resumen -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 bloque-impresion">
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-blue-600 print-shadow-none">
+                <div class="text-xs font-semibold text-slate-500 uppercase">Total Facturado</div>
+                <div id="kpi-facturado" class="text-2xl font-extrabold text-slate-800 mt-1 tabular-nums">0,00 €</div>
+                <div id="kpi-facturado-sub" class="text-[11px] text-slate-500 mt-1">0 sesiones registradas</div>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-indigo-600 print-shadow-none">
+                <div class="text-xs font-semibold text-slate-500 uppercase">Alumnos Distintos</div>
+                <div id="kpi-alumnos" class="text-2xl font-extrabold text-indigo-700 mt-1 tabular-nums">0</div>
+                <div id="kpi-alumnos-sub" class="text-[11px] text-slate-500 mt-1">Media: 0,00 € / alumno</div>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-emerald-600 print-shadow-none">
+                <div class="text-xs font-semibold text-slate-500 uppercase">Sesiones Impartidas</div>
+                <div id="kpi-sesiones" class="text-2xl font-extrabold text-emerald-700 mt-1 tabular-nums">0</div>
+                <div id="kpi-sesiones-sub" class="text-[11px] text-slate-500 mt-1">Media: 0,00 € / sesión</div>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 border-l-4 border-l-purple-600 print-shadow-none">
+                <div class="text-xs font-semibold text-slate-500 uppercase">Facturación Media / Mes</div>
+                <div id="kpi-media-mensual" class="text-2xl font-extrabold text-purple-700 mt-1 tabular-nums">0,00 €</div>
+                <div id="kpi-meses-activos" class="text-[11px] text-slate-500 mt-1">En 0 meses analizados</div>
+            </div>
+        </section>
+
+        <!-- Fila 1 de Gráficas: Evolución Temporal por Profesor y Distribución por Tipo de Clase -->
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-6 bloque-impresion">
+            <div class="lg:col-span-2 bg-white p-5 rounded-xl shadow-md border border-slate-200 print-shadow-none">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
+                    <div>
+                        <h3 id="titulo-grafica-evolucion" class="text-base font-bold text-slate-800">Evolución Mensual por Profesor</h3>
+                        <p class="text-xs text-slate-500">Comparativa de evolución a lo largo de los meses seleccionados</p>
+                    </div>
+                    <span class="text-[11px] font-semibold bg-blue-50 text-blue-700 px-2.5 py-1 rounded-lg border border-blue-100">Serie Temporal</span>
+                </div>
+                <div class="relative h-80 w-full">
+                    <canvas id="chart-evolucion-profesores"></canvas>
+                </div>
+            </div>
+
+            <div class="bg-white p-5 rounded-xl shadow-md border border-slate-200 print-shadow-none">
+                <div class="mb-4">
+                    <h3 class="text-base font-bold text-slate-800">Distribución por Tipo de Clase</h3>
+                    <p class="text-xs text-slate-500">Peso de cada servicio sobre la facturación</p>
+                </div>
+                <div class="relative h-80 w-full flex items-center justify-center">
+                    <canvas id="chart-tipos-clase"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Fila 2 de Gráfica: Alumnos Distintos y Sesiones por Profesor -->
+        <section class="bloque-impresion">
+            <div class="bg-white p-5 rounded-xl shadow-md border border-slate-200 print-shadow-none">
+                <div class="mb-4">
+                    <h3 class="text-base font-bold text-slate-800">Alumnos Distintos y Sesiones Impartidas por Profesor</h3>
+                    <p class="text-xs text-slate-500">Volumen de alumnado único tratado y sesiones realizadas en el periodo</p>
+                </div>
+                <div class="relative h-72 w-full">
+                    <canvas id="chart-alumnos-profesor"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tabla Resumen Detallada por Profesor -->
+        <section class="bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden print-shadow-none bloque-impresion">
+            <div class="px-5 py-3.5 bg-slate-800 text-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div>
+                    <h3 class="text-sm font-bold">Detalle Numérico por Profesor</h3>
+                    <p class="text-[11px] text-slate-300">Desglose de alumnos únicos, sesiones, tipos impartidos y facturación</p>
+                </div>
+                <span id="badge-total-profesores" class="text-xs bg-slate-700 text-slate-200 px-3 py-1 rounded-full font-semibold">0 profesores</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse text-xs">
+                    <thead>
+                        <tr class="bg-slate-100 text-slate-700 border-b border-slate-300 text-[10px] font-bold uppercase text-center">
+                            <th class="py-2.5 px-3 border-r text-left">Profesor</th>
+                            <th class="py-2.5 px-2.5 border-r">Alumnos Distintos</th>
+                            <th class="py-2.5 px-2.5 border-r">Sesiones / Clases</th>
+                            <th class="py-2.5 px-2.5 border-r">Tipos Impartidos</th>
+                            <th class="py-2.5 px-2.5 border-r bg-blue-50 text-blue-900">Facturado (€)</th>
+                            <th class="py-2.5 px-2.5">Media / Alumno</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-detalle-profesores" class="divide-y divide-slate-200"></tbody>
+                    <tfoot id="tfoot-detalle-profesores" class="bg-slate-200 text-slate-900 font-extrabold border-t-2 border-slate-400 text-xs"></tfoot>
+                </table>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        const usuarioGuardado = JSON.parse(localStorage.getItem('usuario') || '{}');
+        document.getElementById('info-usuario').textContent = `👤 ${usuarioGuardado.nombre || 'Usuario'} (${(usuarioGuardado.rol || 'PROFE').toUpperCase()})`;
+
+        let alumnosCache = [];
+        let tarifasListaCache = [];
+        let registrosAnaliticos = [];
+
+        let chartEvolucion = null;
+        let chartTipos = null;
+        let chartAlumnos = null;
+
+        const paletaColores = [
+            '#2563eb', '#059669', '#d97706', '#7c3aed', '#dc2626',
+            '#0891b2', '#db2777', '#4f46e5', '#65a30d', '#ea580c'
+        ];
+        
+        const ROLES_PERMITIDOS = ['administrador', 'admin_profesor'];
+
+        function tieneRolPermitido(rolRaw) {
+            const rolNormalizado = String(rolRaw || '').trim().toLowerCase();
+            return ROLES_PERMITIDOS.includes(rolNormalizado);
+        }
+
+        async function verificarAccesoRol() {
+            const usuarioLocal = JSON.parse(localStorage.getItem('usuario') || '{}');
+            let usuarioValidado = usuarioLocal;
+
+            // Intentar validar contra la tabla usuarios vía API si existe endpoint disponible
+            try {
+                const res = await fetch(`/api/usuarios?_t=${Date.now()}`, { cache: 'no-store' });
+                if (res.ok) {
+                    const listaUsuarios = await res.json();
+                    if (Array.isArray(listaUsuarios) && listaUsuarios.length > 0) {
+                        const encontrado = listaUsuarios.find(u =>
+                            (usuarioLocal.id !== undefined && String(u.id) === String(usuarioLocal.id)) ||
+                            (usuarioLocal.email && String(u.email).toLowerCase() === String(u.email && usuarioLocal.email).toLowerCase())
+                        );
+                        if (encontrado) {
+                            usuarioValidado = encontrado;
+                            localStorage.setItem('usuario', JSON.stringify({ ...usuarioLocal, ...encontrado }));
+                        }
+                    }
+                }
+            } catch (_) {
+                // Si no se puede consultar /api/usuarios, se usa el usuario en sesión/localStorage
+            }
+
+            const estaActivo = usuarioValidado.activo === undefined || usuarioValidado.activo === null || Number(usuarioValidado.activo) !== 0;
+
+            if (!estaActivo || !tieneRolPermitido(usuarioValidado.rol)) {
+                alert('Acceso denegado. Solo pueden acceder usuarios con rol administrador o profesor_administrador.');
+                window.location.replace('/dashboard.html');
+                return false;
+            }
+
+            return true;
+        }
+
+        function esRolSoloAdministrador(rolRaw) {
+            const rol = String(rolRaw || '').trim().toLowerCase();
+            return rol === 'admin' || rol === 'administrador';
+        }
+
+        function cerrarSesion() {
+            fetch('/api/logout', { method: 'POST' }).finally(() => {
+                localStorage.removeItem('usuario');
+                window.location.replace('/index.html');
+            });
+        }
+
+        function formatearMoneda(valor) {
+            const num = parseFloat(valor) || 0;
+            const partes = num.toFixed(2).split('.');
+            partes[0] = partes[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            return `${partes.join(',')} €`;
+        }
+
+        function parsearImporteTexto(texto) {
+            if (typeof texto === 'number') return texto;
+            if (!texto) return 0;
+            const limpio = String(texto).replace(/€/g, '').replace(/\./g, '').replace(/,/g, '.').trim();
+            return parseFloat(limpio) || 0;
+        }
+
+        function formatearNombreMes(mesStr) {
+            if (!mesStr || !/^\d{4}-\d{2}$/.test(mesStr)) return mesStr || '';
+            const [anio, mes] = mesStr.split('-').map(Number);
+            const meses = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+            return `${meses[mes - 1]} '${String(anio).slice(2)}`;
+        }
+
+        function obtenerRangoMeses(desdeStr, hastaStr) {
+            if (!desdeStr || !hastaStr || desdeStr > hastaStr) return [];
+            const [aIni, mIni] = desdeStr.split('-').map(Number);
+            const [aFin, mFin] = hastaStr.split('-').map(Number);
+            const lista = [];
+            let cur = new Date(aIni, mIni - 1, 1);
+            const fin = new Date(aFin, mFin - 1, 1);
+            while (cur <= fin && lista.length < 60) {
+                lista.push(`${cur.getFullYear()}-${String(cur.getMonth() + 1).padStart(2, '0')}`);
+                cur = new Date(cur.getFullYear(), cur.getMonth() + 1, 1);
+            }
+            return lista;
+        }
+
+        function cambiarMesFiltro(inputId, delta) {
+            const inputEl = document.getElementById(inputId);
+            if (!inputEl || !inputEl.value) return;
+            const [anio, mes] = inputEl.value.split('-').map(Number);
+            const d = new Date(anio, mes - 1 + delta, 1);
+            const nuevo = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            inputEl.value = nuevo;
+
+            const desdeEl = document.getElementById('filtro-mes-desde');
+            const hastaEl = document.getElementById('filtro-mes-hasta');
+            if (inputId === 'filtro-mes-desde' && nuevo > hastaEl.value) hastaEl.value = nuevo;
+            if (inputId === 'filtro-mes-hasta' && nuevo < desdeEl.value) desdeEl.value = nuevo;
+
+            cargarDatosCompletos();
+        }
+
+        async function fetchJSONSafe(url) {
+            try {
+                const sep = url.includes('?') ? '&' : '?';
+                const res = await fetch(`${url}${sep}_t=${Date.now()}`, { cache: 'no-store' });
+                if (!res.ok) return null;
+                return await res.json();
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function normalizarFechaISO(fechaRaw) {
+            if (!fechaRaw) return '';
+            const s = String(fechaRaw).trim();
+            const mIso = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+            if (mIso) return `${mIso[1]}-${mIso[2]}-${mIso[3]}`;
+            const mEs = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})/);
+            if (mEs) return `${mEs[3]}-${mEs[2].padStart(2, '0')}-${mEs[1].padStart(2, '0')}`;
+            return '';
+        }
+
+        function extraerPrecioSesionTarifa(t) {
+            if (!t) return 0;
+            const raw = t.tarifa_por_sesion ?? t.tarifa_por_Sesion ?? t.precio_sesion ?? t.precio_1h ?? t.precio ?? t.importe ?? 0;
+            return parsearImporteTexto(raw);
+        }
+
+        function obtenerTarifaGeneralPorTipo(tipoBuscado, mesStr, codigosAlternativos = []) {
+            const lista = tarifasListaCache || [];
+            const objetivo = String(tipoBuscado || '').toUpperCase().trim();
+            const alternativos = (codigosAlternativos || []).map(c => String(c).toUpperCase().trim());
+
+            const coincideTipo = (t) => {
+                const tipo = String(t.tipo_servicio ?? t.tipo_Servicio ?? '').toUpperCase().trim();
+                const codigo = String(t.codigo ?? '').toUpperCase().trim();
+                return tipo === objetivo || (!tipo && codigo === objetivo) || alternativos.includes(tipo) || alternativos.includes(codigo);
+            };
+            const estaActiva = (t) => t.activa === undefined || t.activa === null || Number(t.activa) !== 0;
+
+            const [anio, mes] = mesStr.split('-').map(Number);
+            const inicioMes = `${anio}-${String(mes).padStart(2, '0')}-01`;
+            const finMes = `${anio}-${String(mes).padStart(2, '0')}-${String(new Date(anio, mes, 0).getDate()).padStart(2, '0')}`;
+
+            const candidatas = lista.filter(t => {
+                if (!coincideTipo(t) || !estaActiva(t)) return false;
+                const fIni = normalizarFechaISO(t.fecha_inicio);
+                const fFin = normalizarFechaISO(t.fecha_fin);
+                return (!fIni || fIni <= finMes) && (!fFin || fFin >= inicioMes);
+            });
+
+            if (candidatas.length > 0) {
+                candidatas.sort((a, b) => normalizarFechaISO(b.fecha_inicio).localeCompare(normalizarFechaISO(a.fecha_inicio)));
+                const p = extraerPrecioSesionTarifa(candidatas[0]);
+                if (p > 0) return p;
+            }
+            const fb = lista.find(t => coincideTipo(t) && estaActiva(t) && extraerPrecioSesionTarifa(t) > 0);
+            return fb ? extraerPrecioSesionTarifa(fb) : 0;
+        }
+
+        function calcularImporteServicioAlumno(alumnoObj, codigoServicio, mesStr, numSesiones = 1) {
+            const cod = String(codigoServicio || '').toUpperCase().trim();
+            if (cod === 'TE') {
+                const pAlumno = parsearImporteTexto(alumnoObj.precio_tarifa ?? alumnoObj.precio_terapia ?? 0);
+                const pUnit = pAlumno > 0 ? pAlumno : obtenerTarifaGeneralPorTipo('TE', mesStr, ['TERAPIA', 'TERAPIAS']);
+                return pUnit * numSesiones;
+            }
+            if (cod === 'EV') {
+                return obtenerTarifaGeneralPorTipo('EV', mesStr, ['EVALUACION', 'EVALUACIONES']) * numSesiones;
+            }
+
+            const mapaCfg = {
+                "REF P": { tarifaId: alumnoObj.tarifa_refuerzo_id, horas: alumnoObj.horas_refuerzo },
+                "REF S": { tarifaId: alumnoObj.tarifa_refuerzo_id, horas: alumnoObj.horas_refuerzo },
+                "REF B": { tarifaId: alumnoObj.tarifa_refuerzo_id, horas: alumnoObj.horas_refuerzo },
+                "DA":    { tarifaId: alumnoObj.tarifa_dificultad_id, horas: alumnoObj.horas_dificultad },
+                "DA C":  { tarifaId: alumnoObj.tarifa_dificultad_id, horas: alumnoObj.horas_dificultad },
+                "LOG":   { tarifaId: alumnoObj.tarifa_logopedia_id, horas: alumnoObj.horas_logopedia },
+                "LOG M": { tarifaId: alumnoObj.tarifa_logopedia_id, horas: alumnoObj.horas_logopedia }
+            };
+
+            const cfg = mapaCfg[cod];
+            if (cfg && cfg.tarifaId && cfg.horas > 0) {
+                const tObj = tarifasListaCache.find(t => String(t.id) === String(cfg.tarifaId));
+                if (tObj) {
+                    const h = parseInt(cfg.horas, 10);
+                    if (h >= 1 && h <= 5) {
+                        return parsearImporteTexto(tObj[`precio_${h}h`]);
+                    }
+                }
+            }
+            const tFallback = tarifasListaCache.find(t => String(t.codigo || '').toUpperCase().trim() === cod);
+            return tFallback ? parsearImporteTexto(tFallback.precio_1h || tFallback.tarifa_por_sesion || 0) : 0;
+        }
+
+        async function cargarDatosCompletos() {
+            const estadoEl = document.getElementById('estado-carga');
+            const btnRecargar = document.getElementById('btn-recargar');
+            const mesDesde = document.getElementById('filtro-mes-desde').value;
+            const mesHasta = document.getElementById('filtro-mes-hasta').value;
+            const meses = obtenerRangoMeses(mesDesde, mesHasta);
+
+            if (meses.length === 0) return;
+
+            estadoEl.textContent = 'Analizando historial...';
+            btnRecargar.disabled = true;
+            btnRecargar.classList.add('opacity-60');
+
+            try {
+                const [usuariosData, profesData, alumnosData, tarifasData] = await Promise.all([
+                    fetchJSONSafe('/api/usuarios'),
+                    fetchJSONSafe('/api/profesores'),
+                    fetchJSONSafe('/api/alumnos'),
+                    fetchJSONSafe('/api/tarifas')
+                ]);
+
+                alumnosCache = Array.isArray(alumnosData) ? alumnosData : [];
+                tarifasListaCache = Array.isArray(tarifasData) ? tarifasData : [];
+
+                const rolesPorUsuarioId = new Map();
+                const idsSoloAdmin = new Set();
+
+                if (Array.isArray(usuariosData)) {
+                    usuariosData.forEach(u => {
+                        const id = String(u.id ?? u.usuario_id ?? '');
+                        if (!id) return;
+                        rolesPorUsuarioId.set(id, u.rol);
+                        if (esRolSoloAdministrador(u.rol)) {
+                            idsSoloAdmin.add(id);
+                        }
+                    });
+                }
+
+                const mapaProfesores = new Map();
+                const listaCrudaProfes = Array.isArray(profesData) && profesData.length > 0
+                    ? profesData
+                    : (Array.isArray(usuariosData) ? usuariosData : []);
+
+                listaCrudaProfes.forEach(p => {
+                    const id = String(p.id ?? p.profesor_id ?? p.usuario_id ?? '');
+                    if (!id) return;
+                    const rolEf = p.rol ?? rolesPorUsuarioId.get(id);
+                    if (esRolSoloAdministrador(rolEf) || idsSoloAdmin.has(id)) return;
+                    const nombre = `${p.nombre || ''} ${p.apellidos || ''}`.trim() || p.username || `Profesor #${id}`;
+                    mapaProfesores.set(id, { id, nombre });
+                });
+
+                const mapaAlumnos = new Map();
+                alumnosCache.forEach(a => mapaAlumnos.set(String(a.id), a));
+
+                const resultadosMensuales = await Promise.all(
+                    meses.map(async m => {
+                        const [asig, hoja] = await Promise.all([
+                            fetchJSONSafe(`/api/asignaciones/mes?mes=${m}`),
+                            fetchJSONSafe(`/api/hoja-pago?mes=${m}`)
+                        ]);
+                        return {
+                            mes: m,
+                            asignaciones: Array.isArray(asig) ? asig : [],
+                            hojaPago: Array.isArray(hoja) ? hoja : []
+                        };
+                    })
+                );
+
+                const registrosProcesados = [];
+
+                resultadosMensuales.forEach(({ mes, asignaciones, hojaPago }) => {
+                    const hojaPorAlumno = new Map();
+                    hojaPago.forEach(h => {
+                        if (h && h.alumno_id !== undefined) {
+                            hojaPorAlumno.set(String(h.alumno_id), h);
+                        }
+                    });
+
+                    const clavesAgrupadas = new Map();
+
+                    asignaciones.forEach(a => {
+                        if (!a || !a.alumno_id) return;
+                        if (String(a.asistencia || '').toUpperCase() === 'REC') return;
+
+                        const profId = String(a.profesor_id ?? a.usuario_id ?? a.profe_id ?? 'SIN_ASIGNAR');
+                        const rolAsignado = a.rol_profesor ?? a.rol ?? rolesPorUsuarioId.get(profId);
+                        if (esRolSoloAdministrador(rolAsignado) || idsSoloAdmin.has(profId)) return;
+
+                        let profNombre = a.nombre_profesor || a.profesor_nombre || '';
+                        if (!profNombre && mapaProfesores.has(profId)) {
+                            profNombre = mapaProfesores.get(profId).nombre;
+                        }
+                        if (!profNombre) {
+                            profNombre = profId === 'SIN_ASIGNAR' ? 'Sin profesor asignado' : `Profesor #${profId}`;
+                        }
+                        if (!mapaProfesores.has(profId)) {
+                            mapaProfesores.set(profId, { id: profId, nombre: profNombre });
+                        }
+
+                        const alumnoId = String(a.alumno_id);
+                        const alumnoObj = mapaAlumnos.get(alumnoId) || {};
+                        const alumnoNombre = `${alumnoObj.nombre || ''} ${alumnoObj.apellidos || ''}`.trim() || `Alumno #${alumnoId}`;
+                        const tipoClase = String(a.codigo_tarifa || a.tarifa_codigo || a.codigo || 'OTRO').toUpperCase().trim();
+
+                        const key = `${profId}__${alumnoId}__${tipoClase}`;
+                        if (!clavesAgrupadas.has(key)) {
+                            clavesAgrupadas.set(key, {
+                                mes,
+                                profesorId: profId,
+                                profesorNombre: profNombre,
+                                alumnoId,
+                                alumnoNombre,
+                                tipoClase,
+                                sesiones: 0
+                            });
+                        }
+                        clavesAgrupadas.get(key).sesiones += 1;
+                    });
+
+                    const itemsPorAlumno = new Map();
+                    clavesAgrupadas.forEach(item => {
+                        const alumnoObj = mapaAlumnos.get(item.alumnoId) || {};
+                        const hojaReg = hojaPorAlumno.get(item.alumnoId);
+
+                        let importeBruto = calcularImporteServicioAlumno(alumnoObj, item.tipoClase, mes, item.sesiones);
+
+                        if (hojaReg && item.tipoClase !== 'TE' && item.tipoClase !== 'EV') {
+                            const totalC = parseFloat(hojaReg.total_clases);
+                            const numC = parseFloat(hojaReg.num_clases);
+                            if (!isNaN(totalC) && totalC > 0 && !isNaN(numC)) {
+                                const dto = Math.max(0, numC / totalC);
+                                importeBruto = importeBruto * (1 - dto);
+                            }
+                        }
+
+                        item.importeBruto = importeBruto;
+                        if (!itemsPorAlumno.has(item.alumnoId)) itemsPorAlumno.set(item.alumnoId, []);
+                        itemsPorAlumno.get(item.alumnoId).push(item);
+                    });
+
+                    itemsPorAlumno.forEach((listaItems, alumnoId) => {
+                        const hojaReg = hojaPorAlumno.get(alumnoId);
+                        const sumaBrutaAlumno = listaItems.reduce((s, it) => s + it.importeBruto, 0);
+
+                        let facturadoRealAlumno = sumaBrutaAlumno;
+
+                        if (hojaReg) {
+                            const impClases = parseFloat(hojaReg.importe_clases || 0);
+                            const impTerapias = parseFloat(hojaReg.importe_terapias || 0);
+                            const impEval = (hojaReg.evaluacion === 1 || hojaReg.evaluacion === true)
+                                ? obtenerTarifaGeneralPorTipo('EV', mes, ['EVALUACION', 'EVALUACIONES'])
+                                : 0;
+                            const cobroExtra = parseFloat(hojaReg.cobro_extra || 0);
+
+                            const totalMesSinAnt = impClases + impTerapias + impEval + cobroExtra;
+                            if (totalMesSinAnt > 0) facturadoRealAlumno = totalMesSinAnt;
+                        }
+
+                        listaItems.forEach(item => {
+                            const peso = sumaBrutaAlumno > 0 ? (item.importeBruto / sumaBrutaAlumno) : (1 / listaItems.length);
+                            const facturado = facturadoRealAlumno * peso;
+
+                            registrosProcesados.push({
+                                mes: item.mes,
+                                profesorId: item.profesorId,
+                                profesorNombre: item.profesorNombre,
+                                alumnoId: item.alumnoId,
+                                alumnoNombre: item.alumnoNombre,
+                                tipoClase: item.tipoClase,
+                                sesiones: item.sesiones,
+                                facturado
+                            });
+                        });
+                    });
+                });
+
+                registrosAnaliticos = registrosProcesados;
+
+                const selectProf = document.getElementById('filtro-profesor');
+                const valorPrevio = selectProf.value;
+                const listaProfesOrdenada = Array.from(mapaProfesores.values()).sort((a, b) =>
+                    a.nombre.localeCompare(b.nombre, 'es', { sensitivity: 'base' })
+                );
+
+                selectProf.innerHTML = `<option value="TODOS">Todos los profesores (${listaProfesOrdenada.length})</option>`;
+                listaProfesOrdenada.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.id;
+                    opt.textContent = p.nombre;
+                    selectProf.appendChild(opt);
+                });
+                if (Array.from(selectProf.options).some(o => o.value === valorPrevio)) {
+                    selectProf.value = valorPrevio;
+                }
+
+                estadoEl.textContent = `${meses.length} ${meses.length === 1 ? 'mes analizado' : 'meses analizados'}`;
+                actualizarVista();
+            } finally {
+                btnRecargar.disabled = false;
+                btnRecargar.classList.remove('opacity-60');
+            }
+        }
+
+        function actualizarVista() {
+            const mesDesde = document.getElementById('filtro-mes-desde').value;
+            const mesHasta = document.getElementById('filtro-mes-hasta').value;
+            const profSel = document.getElementById('filtro-profesor').value;
+            const tipoSel = document.getElementById('filtro-tipo-clase').value;
+            const metricaSel = document.getElementById('filtro-metrica-grafico').value;
+
+            const mesesRango = obtenerRangoMeses(mesDesde, mesHasta);
+
+            const textoProf = profSel === 'TODOS' ? 'Todos los profesores' : document.getElementById('filtro-profesor').selectedOptions[0]?.textContent;
+            const textoTipo = tipoSel === 'TODOS' ? 'Todos los tipos de clase' : tipoSel;
+            document.getElementById('subtitulo-impresion').textContent =
+                `Periodo: ${formatearNombreMes(mesDesde)} a ${formatearNombreMes(mesHasta)} · Profesor: ${textoProf} · Clase: ${textoTipo}`;
+            document.getElementById('fecha-impresion').textContent = `Generado el ${new Date().toLocaleDateString('es-ES')}`;
+
+            const filtrados = registrosAnaliticos.filter(r => {
+                if (profSel !== 'TODOS' && r.profesorId !== profSel) return false;
+                if (tipoSel !== 'TODOS' && r.tipoClase !== tipoSel) return false;
+                return true;
+            });
+
+            const totalFacturado = filtrados.reduce((s, r) => s + r.facturado, 0);
+            const totalSesiones = filtrados.reduce((s, r) => s + r.sesiones, 0);
+            const alumnosUnicosGlobal = new Set(filtrados.map(r => r.alumnoId)).size;
+            const mediaPorAlumno = alumnosUnicosGlobal > 0 ? (totalFacturado / alumnosUnicosGlobal) : 0;
+            const mediaPorSesion = totalSesiones > 0 ? (totalFacturado / totalSesiones) : 0;
+            const mediaMensual = mesesRango.length > 0 ? (totalFacturado / mesesRango.length) : 0;
+
+            document.getElementById('kpi-facturado').textContent = formatearMoneda(totalFacturado);
+            document.getElementById('kpi-facturado-sub').textContent = `${totalSesiones} sesiones registradas`;
+            document.getElementById('kpi-alumnos').textContent = alumnosUnicosGlobal;
+            document.getElementById('kpi-alumnos-sub').textContent = `Media: ${formatearMoneda(mediaPorAlumno)} / alumno`;
+            document.getElementById('kpi-sesiones').textContent = totalSesiones;
+            document.getElementById('kpi-sesiones-sub').textContent = `Media: ${formatearMoneda(mediaPorSesion)} / sesión`;
+            document.getElementById('kpi-media-mensual').textContent = formatearMoneda(mediaMensual);
+            document.getElementById('kpi-meses-activos').textContent = `En ${mesesRango.length} ${mesesRango.length === 1 ? 'mes' : 'meses'}`;
+
+            const porProfesorMap = new Map();
+            filtrados.forEach(r => {
+                if (!porProfesorMap.has(r.profesorId)) {
+                    porProfesorMap.set(r.profesorId, {
+                        id: r.profesorId,
+                        nombre: r.profesorNombre,
+                        alumnosSet: new Set(),
+                        tiposSet: new Set(),
+                        sesiones: 0,
+                        facturado: 0,
+                        porMes: new Map()
+                    });
+                }
+                const p = porProfesorMap.get(r.profesorId);
+                p.alumnosSet.add(r.alumnoId);
+                p.tiposSet.add(r.tipoClase);
+                p.sesiones += r.sesiones;
+                p.facturado += r.facturado;
+
+                if (!p.porMes.has(r.mes)) {
+                    p.porMes.set(r.mes, { facturado: 0, sesiones: 0, alumnosSet: new Set() });
+                }
+                const pm = p.porMes.get(r.mes);
+                pm.facturado += r.facturado;
+                pm.sesiones += r.sesiones;
+                pm.alumnosSet.add(r.alumnoId);
+            });
+
+            const listaProfesStats = Array.from(porProfesorMap.values()).sort((a, b) => b.facturado - a.facturado);
+
+            renderizarGraficaEvolucion(mesesRango, listaProfesStats, metricaSel);
+            renderizarGraficaTiposClase(filtrados);
+            renderizarGraficaAlumnosProfesor(listaProfesStats);
+            renderizarTablaProfesores(listaProfesStats, {
+                alumnosUnicosGlobal,
+                totalSesiones,
+                totalFacturado
+            });
+        }
+
+        function renderizarGraficaEvolucion(mesesRango, listaProfesStats, metricaSel) {
+            const ctx = document.getElementById('chart-evolucion-profesores').getContext('2d');
+            if (chartEvolucion) chartEvolucion.destroy();
+
+            const etiquetasMeses = mesesRango.map(formatearNombreMes);
+            const titulosMetrica = {
+                facturacion: 'Evolución Mensual de Facturación (€)',
+                alumnos: 'Evolución Mensual de Alumnos Distintos (nº)',
+                sesiones: 'Evolución Mensual de Sesiones Impartidas'
+            };
+            document.getElementById('titulo-grafica-evolucion').textContent = titulosMetrica[metricaSel] || 'Evolución Mensual';
+
+            const datasets = listaProfesStats.map((prof, idx) => {
+                const color = paletaColores[idx % paletaColores.length];
+                const data = mesesRango.map(m => {
+                    const datosMes = prof.porMes.get(m);
+                    if (!datosMes) return 0;
+                    if (metricaSel === 'facturacion') return Number(datosMes.facturado.toFixed(2));
+                    if (metricaSel === 'alumnos') return datosMes.alumnosSet.size;
+                    return datosMes.sesiones;
+                });
+                return {
+                    label: prof.nombre,
+                    data,
+                    borderColor: color,
+                    backgroundColor: color + '22',
+                    borderWidth: 2.5,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    tension: 0.3,
+                    fill: listaProfesStats.length === 1
+                };
+            });
+
+            const esMoneda = metricaSel === 'facturacion';
+
+            chartEvolucion = new Chart(ctx, {
+                type: 'line',
+                data: { labels: etiquetasMeses, datasets },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => {
+                                    const val = context.parsed.y || 0;
+                                    return `${context.dataset.label}: ${esMoneda ? formatearMoneda(val) : val}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                font: { size: 10 },
+                                callback: (value) => esMoneda ? `${value} €` : value
+                            }
+                        },
+                        x: { ticks: { font: { size: 10 } } }
+                    }
+                }
+            });
+        }
+
+        function renderizarGraficaTiposClase(filtrados) {
+            const ctx = document.getElementById('chart-tipos-clase').getContext('2d');
+            if (chartTipos) chartTipos.destroy();
+
+            const mapaTipos = new Map();
+            filtrados.forEach(r => {
+                mapaTipos.set(r.tipoClase, (mapaTipos.get(r.tipoClase) || 0) + r.facturado);
+            });
+
+            const entradas = Array.from(mapaTipos.entries()).sort((a, b) => b[1] - a[1]);
+            const labels = entradas.map(e => e[0]);
+            const data = entradas.map(e => Number(e[1].toFixed(2)));
+
+            chartTipos = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels,
+                    datasets: [{
+                        data,
+                        backgroundColor: labels.map((_, idx) => paletaColores[idx % paletaColores.length]),
+                        borderWidth: 2,
+                        borderColor: '#ffffff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '62%',
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 11, font: { size: 10 } } },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => {
+                                    const val = context.parsed || 0;
+                                    const total = data.reduce((a, b) => a + b, 0);
+                                    const pct = total > 0 ? ((val / total) * 100).toFixed(1) : '0.0';
+                                    return `${context.label}: ${formatearMoneda(val)} (${pct}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderizarGraficaAlumnosProfesor(listaProfesStats) {
+            const ctx = document.getElementById('chart-alumnos-profesor').getContext('2d');
+            if (chartAlumnos) chartAlumnos.destroy();
+
+            const labels = listaProfesStats.map(p => p.nombre);
+            const dataAlumnos = listaProfesStats.map(p => p.alumnosSet.size);
+            const dataSesiones = listaProfesStats.map(p => p.sesiones);
+
+            chartAlumnos = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'Alumnos distintos (nº)',
+                            data: dataAlumnos,
+                            backgroundColor: '#4f46e5',
+                            borderRadius: 4,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Sesiones impartidas',
+                            data: dataSesiones,
+                            backgroundColor: '#93c5fd',
+                            borderRadius: 4,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+                    },
+                    scales: {
+                        x: { ticks: { font: { size: 10 } } },
+                        y: {
+                            type: 'linear',
+                            position: 'left',
+                            beginAtZero: true,
+                            title: { display: true, text: 'Alumnos', font: { size: 10 } },
+                            ticks: { precision: 0, font: { size: 10 } }
+                        },
+                        y1: {
+                            type: 'linear',
+                            position: 'right',
+                            beginAtZero: true,
+                            grid: { drawOnChartArea: false },
+                            title: { display: true, text: 'Sesiones', font: { size: 10 } },
+                            ticks: { precision: 0, font: { size: 10 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderizarTablaProfesores(listaProfesStats, totales) {
+            const tbody = document.getElementById('tabla-detalle-profesores');
+            const tfoot = document.getElementById('tfoot-detalle-profesores');
+            document.getElementById('badge-total-profesores').textContent =
+                `${listaProfesStats.length} ${listaProfesStats.length === 1 ? 'profesor' : 'profesores'}`;
+
+            if (listaProfesStats.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="py-8 text-center text-slate-400">No hay registros de actividad docente en el periodo y filtros seleccionados.</td>
+                    </tr>
+                `;
+                tfoot.innerHTML = '';
+                return;
+            }
+
+            tbody.innerHTML = listaProfesStats.map((p, idx) => {
+                const bg = idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/70';
+                const numAlumnos = p.alumnosSet.size;
+                const mediaAlumno = numAlumnos > 0 ? (p.facturado / numAlumnos) : 0;
+                const badgesTipos = Array.from(p.tiposSet).sort().map(t =>
+                    `<span class="inline-block bg-slate-100 border border-slate-300 text-slate-700 text-[10px] font-bold px-1.5 py-0.5 rounded mr-1 mb-0.5">${t}</span>`
+                ).join('');
+
+                return `
+                    <tr class="${bg} hover:bg-blue-50/40">
+                        <td class="py-2.5 px-3 font-bold text-slate-800 border-r whitespace-nowrap">${p.nombre}</td>
+                        <td class="py-2.5 px-2.5 text-center border-r font-bold text-indigo-700 tabular-nums">${numAlumnos}</td>
+                        <td class="py-2.5 px-2.5 text-center border-r font-semibold text-slate-700 tabular-nums">${p.sesiones}</td>
+                        <td class="py-2.5 px-2.5 border-r">${badgesTipos}</td>
+                        <td class="py-2.5 px-2.5 text-right border-r bg-blue-50/40 font-extrabold text-blue-900 tabular-nums">${formatearMoneda(p.facturado)}</td>
+                        <td class="py-2.5 px-2.5 text-right font-semibold text-slate-700 tabular-nums">${formatearMoneda(mediaAlumno)}</td>
+                    </tr>
+                `;
+            }).join('');
+
+            const mediaGlobalAlumno = totales.alumnosUnicosGlobal > 0 ? (totales.totalFacturado / totales.alumnosUnicosGlobal) : 0;
+
+            tfoot.innerHTML = `
+                <tr>
+                    <td class="py-2.5 px-3 border-r uppercase text-[11px]">Total Periodo</td>
+                    <td class="py-2.5 px-2.5 text-center border-r text-indigo-900 tabular-nums">${totales.alumnosUnicosGlobal} únicos</td>
+                    <td class="py-2.5 px-2.5 text-center border-r tabular-nums">${totales.totalSesiones}</td>
+                    <td class="py-2.5 px-2.5 border-r text-center text-[10px] text-slate-600">—</td>
+                    <td class="py-2.5 px-2.5 text-right border-r bg-blue-200/70 text-blue-950 tabular-nums">${formatearMoneda(totales.totalFacturado)}</td>
+                    <td class="py-2.5 px-2.5 text-right tabular-nums">${formatearMoneda(mediaGlobalAlumno)}</td>
+                </tr>
+            `;
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            const permitido = await verificarAccesoRol();
+            if (!permitido) return;
+
+            const hoy = new Date();
+            const mesHasta = `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
+            const dInicio = new Date(hoy.getFullYear(), hoy.getMonth() - 5, 1);
+            const mesDesde = `${dInicio.getFullYear()}-${String(dInicio.getMonth() + 1).padStart(2, '0')}`;
+
+            document.getElementById('filtro-mes-desde').value = mesDesde;
+            document.getElementById('filtro-mes-hasta').value = mesHasta;
+
+            cargarDatosCompletos();
+        });
+    </script>
+</body>
+</html>

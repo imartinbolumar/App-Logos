@@ -9,12 +9,12 @@
         @media print {
             @page {
                 size: A4 landscape;
-                margin: 10mm;
+                margin: 8mm;
             }
             body {
                 background: #ffffff !important;
                 color: #0f172a !important;
-                font-size: 10px !important;
+                font-size: 9px !important;
             }
             .no-print {
                 display: none !important;
@@ -28,12 +28,11 @@
                 max-height: none !important;
             }
             table {
-                min-width: 100% !important;
                 width: 100% !important;
-                font-size: 9px !important;
+                font-size: 8px !important;
             }
             th, td {
-                padding: 4px 5px !important;
+                padding: 3px 3px !important;
             }
             .grupo-bloque {
                 break-inside: avoid;
@@ -44,9 +43,9 @@
 </head>
 <body class="bg-slate-100 min-h-screen text-slate-800">
 
-    <!-- Navbar superior -->
-    <header class="bg-white shadow-sm w-full sticky top-0 z-30 no-print">
-        <div class="w-full px-4 sm:px-8 py-4 flex justify-between items-center">
+    <!-- Navbar superior fijo -->
+    <header class="bg-white shadow-sm fixed top-0 left-0 right-0 z-30 no-print">
+        <div class="w-full px-3 sm:px-6 py-3.5 flex justify-between items-center">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-blue-600 text-white rounded-xl flex items-center justify-center font-bold text-lg shadow-sm overflow-hidden">
                     <img src="/Logo_Logos.png" alt="Logotipo" class="w-10 h-10 object-contain">
@@ -66,25 +65,39 @@
         </div>
     </header>
 
-    <!-- Contenido principal -->
-    <main class="w-full px-4 sm:px-8 py-6 space-y-6">
-
-        <!-- Panel de filtros -->
-        <section class="bg-white p-5 rounded-xl shadow-md border border-slate-200 space-y-4 no-print">
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 items-end">
+    <!-- Panel de filtros completamente inmóvil -->
+    <div class="fixed top-[68px] left-0 right-0 z-20 px-2 sm:px-4 pt-2 no-print print:static print:p-0">
+        <section class="bg-white p-3.5 sm:p-4 rounded-xl shadow-md border border-slate-200">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3 items-end">
 
                 <!-- Mes/Año Desde -->
                 <div>
-                    <label for="filtro-mes-desde" class="block text-xs font-semibold text-slate-700 mb-1">Mes / Año Desde:</label>
-                    <input type="month" id="filtro-mes-desde" onchange="renderizarInforme()"
-                           class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                    <div class="flex items-center justify-between mb-1">
+                        <label for="filtro-mes-desde" class="block text-xs font-semibold text-slate-700">Mes / Año Desde:</label>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <button type="button" onclick="cambiarMesFiltro('filtro-mes-desde', -1)" title="Mes anterior"
+                                class="px-2 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg border border-slate-300 transition shrink-0">◀</button>
+                        <input type="month" id="filtro-mes-desde" onchange="actualizarEtiquetasMesCorto(); renderizarInforme()"
+                               class="w-full min-w-0 px-2 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                        <button type="button" onclick="cambiarMesFiltro('filtro-mes-desde', 1)" title="Mes siguiente"
+                                class="px-2 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg border border-slate-300 transition shrink-0">▶</button>
+                    </div>
                 </div>
 
                 <!-- Mes/Año Hasta -->
                 <div>
-                    <label for="filtro-mes-hasta" class="block text-xs font-semibold text-slate-700 mb-1">Mes / Año Hasta:</label>
-                    <input type="month" id="filtro-mes-hasta" onchange="renderizarInforme()"
-                           class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                    <div class="flex items-center justify-between mb-1">
+                        <label for="filtro-mes-hasta" class="block text-xs font-semibold text-slate-700">Mes / Año Hasta:</label>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <button type="button" onclick="cambiarMesFiltro('filtro-mes-hasta', -1)" title="Mes anterior"
+                                class="px-2 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg border border-slate-300 transition shrink-0">◀</button>
+                        <input type="month" id="filtro-mes-hasta" onchange="actualizarEtiquetasMesCorto(); renderizarInforme()"
+                               class="w-full min-w-0 px-2 py-2 text-xs border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white">
+                        <button type="button" onclick="cambiarMesFiltro('filtro-mes-hasta', 1)" title="Mes siguiente"
+                                class="px-2 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-lg border border-slate-300 transition shrink-0">▶</button>
+                    </div>
                 </div>
 
                 <!-- Alumno (autocomplete / vacío = todos) -->
@@ -102,18 +115,17 @@
                     </div>
                     <input type="hidden" id="filtro-alumno-id" value="">
                     <div id="sugerencias-filtro-alumno"
-                         class="hidden absolute left-0 right-0 mt-1 max-h-48 overflow-y-auto border border-slate-200 rounded-xl bg-white shadow-xl divide-y divide-slate-100 z-40">
+                         class="hidden absolute left-0 right-0 mt-1 max-h-48 overflow-y-auto border border-slate-200 rounded-xl bg-white shadow-xl divide-y divide-slate-100 z-50">
                     </div>
                 </div>
 
-                <!-- Todos o solo deuda -->
+                <!-- Check Solo con deuda -->
                 <div>
-                    <label for="filtro-deuda" class="block text-xs font-semibold text-slate-700 mb-1">Estado de deuda:</label>
-                    <select id="filtro-deuda" onchange="renderizarInforme()"
-                            class="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white font-medium">
-                        <option value="todos">Todos los alumnos</option>
-                        <option value="deuda">Solo con deuda</option>
-                    </select>
+                    <label for="filtro-solo-deuda" class="flex items-center gap-2.5 w-full px-3 py-2 text-sm border border-slate-300 rounded-lg bg-slate-50 hover:bg-slate-100 cursor-pointer select-none transition">
+                        <input type="checkbox" id="filtro-solo-deuda" onchange="renderizarInforme()"
+                               class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer">
+                        <span class="text-xs font-semibold text-slate-700">Solo con deuda</span>
+                    </label>
                 </div>
 
                 <!-- Agrupación: mes a mes o alumno a alumno -->
@@ -126,30 +138,32 @@
                     </select>
                 </div>
 
-                <!-- Botones acciones -->
-                <div class="flex items-center gap-2">
-                    <button type="button" onclick="limpiarTodosFiltros()" title="Vaciar filtros para ver todo el historial"
-                            class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg border border-slate-300 transition">
-                        Todo el historial
-                    </button>
-                    <button type="button" onclick="imprimirInforme()"
-                            class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-sm transition flex items-center justify-center gap-1.5">
-                        🖨️ Imprimir
-                    </button>
+                <!-- Estado encima y botones Recalcular / Imprimir -->
+                <div class="flex flex-col gap-1">
+                    <span id="estado-carga-informe" class="text-[11px] font-semibold text-blue-600 text-right truncate">Cargando datos...</span>
+                    <div class="flex items-center gap-2">
+                        <button type="button" id="btn-recalcular-informe" onclick="recalcularInforme()" title="Volver a cargar los datos actualizados"
+                                class="px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-semibold rounded-lg shadow-sm transition flex items-center justify-center gap-1">
+                            ⚡ Recalcular
+                        </button>
+                        <button type="button" onclick="imprimirInforme()"
+                                class="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-sm transition flex items-center justify-center gap-1.5">
+                            🖨️ Imprimir
+                        </button>
+                    </div>
                 </div>
             </div>
-
-            <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 text-xs text-slate-500">
-                <span id="resumen-filtros-texto">Mostrando todo el historial disponible.</span>
-                <span id="estado-carga-informe" class="font-semibold text-blue-600">Cargando datos...</span>
-            </div>
         </section>
+    </div>
 
-        <!-- Cabecera visible solo o destacada en informe / impresión -->
-        <section id="cabecera-informe-impresion" class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 print-shadow-none flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+    <!-- Contenido principal -->
+    <main class="w-full px-2 sm:px-4 pt-[370px] sm:pt-[225px] lg:pt-[176px] pb-6 space-y-5 print:pt-4">
+
+        <!-- Cabecera oculta en pantalla y visible al imprimir -->
+        <section id="cabecera-informe-impresion" class="hidden print:flex bg-white p-4 rounded-xl shadow-sm border border-slate-200 print-shadow-none flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
                 <h2 class="text-lg font-bold text-slate-900">Informe Detallado de Pagos</h2>
-                <p id="subtitulo-informe" class="text-xs text-slate-600">Rango: Todo el historial · Alumnos: Todos · Agrupación: Mes a mes</p>
+                <p id="subtitulo-informe" class="text-xs text-slate-600">Rango: Mes actual · Alumnos: Todos · Agrupación: Mes a mes</p>
             </div>
             <div class="text-xs text-slate-500">
                 <span>Registros mostrados: <strong id="contador-registros-informe" class="text-slate-800">0</strong></span>
@@ -157,7 +171,7 @@
         </section>
 
         <!-- Contenedor dinámico del informe agrupado -->
-        <section id="contenedor-informe" class="space-y-6"></section>
+        <section id="contenedor-informe" class="space-y-5"></section>
 
     </main>
 
@@ -169,13 +183,98 @@
         let tarifasListaCache = [];
         let registrosInforme = [];
 
-        const codigosTarifasOrden = ["REF P", "REF S", "REF B", "DA", "DA C", "LOG", "LOG M"];
+        const ROLES_PERMITIDOS = ['administrador', 'admin_profesor'];
+
+        function tieneRolPermitido(rolRaw) {
+            const rolNormalizado = String(rolRaw || '').trim().toLowerCase();
+            return ROLES_PERMITIDOS.includes(rolNormalizado);
+        }
+
+        async function verificarAccesoRol() {
+            const usuarioLocal = JSON.parse(localStorage.getItem('usuario') || '{}');
+            let usuarioValidado = usuarioLocal;
+
+            try {
+                const res = await fetch(`/api/usuarios?_t=${Date.now()}`, { cache: 'no-store' });
+                if (res.ok) {
+                    const listaUsuarios = await res.json();
+                    if (Array.isArray(listaUsuarios) && listaUsuarios.length > 0) {
+                        const encontrado = listaUsuarios.find(u =>
+                            (usuarioLocal.id !== undefined && String(u.id) === String(usuarioLocal.id)) ||
+                            (usuarioLocal.email && String(u.email).toLowerCase() === String(usuarioLocal.email && usuarioLocal.email).toLowerCase())
+                        );
+                        if (encontrado) {
+                            usuarioValidado = encontrado;
+                            localStorage.setItem('usuario', JSON.stringify({ ...usuarioLocal, ...encontrado }));
+                        }
+                    }
+                }
+            } catch (_) {}
+
+            const estaActivo = usuarioValidado.activo === undefined || usuarioValidado.activo === null || Number(usuarioValidado.activo) !== 0;
+
+            if (!estaActivo || !tieneRolPermitido(usuarioValidado.rol)) {
+                alert('Acceso denegado. Solo pueden acceder usuarios con rol administrador.');
+                window.location.replace('/dashboard.html');
+                return false;
+            }
+
+            return true;
+        }
 
         function cerrarSesion() {
             fetch('/api/logout', { method: 'POST' }).finally(() => {
                 localStorage.removeItem('usuario');
                 window.location.replace('/index.html');
             });
+        }
+
+        function obtenerMesActualStr() {
+            const hoy = new Date();
+            return `${hoy.getFullYear()}-${String(hoy.getMonth() + 1).padStart(2, '0')}`;
+        }
+
+        function formatearMesCorto(mesStr) {
+            if (!mesStr || !/^\d{4}-\d{2}$/.test(mesStr)) return '';
+            const [anio, mes] = mesStr.split('-').map(Number);
+            const meses = [
+                'enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio',
+                'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'
+            ];
+            return `${meses[mes - 1]} ${anio}`;
+        }
+
+        function actualizarEtiquetasMesCorto() {
+            const desdeVal = document.getElementById('filtro-mes-desde')?.value || '';
+            const hastaVal = document.getElementById('filtro-mes-hasta')?.value || '';
+            const elDesde = document.getElementById('corto-mes-desde');
+            const elHasta = document.getElementById('corto-mes-hasta');
+            if (elDesde) elDesde.textContent = formatearMesCorto(desdeVal);
+            if (elHasta) elHasta.textContent = formatearMesCorto(hastaVal);
+        }
+
+        function cambiarMesFiltro(inputId, delta) {
+            const inputEl = document.getElementById(inputId);
+            if (!inputEl) return;
+
+            const baseStr = inputEl.value && /^\d{4}-\d{2}$/.test(inputEl.value)
+                ? inputEl.value
+                : obtenerMesActualStr();
+            const [anio, mes] = baseStr.split('-').map(Number);
+            const fecha = new Date(anio, mes - 1 + delta, 1);
+            const nuevoValor = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
+            inputEl.value = nuevoValor;
+
+            const desdeEl = document.getElementById('filtro-mes-desde');
+            const hastaEl = document.getElementById('filtro-mes-hasta');
+            if (inputId === 'filtro-mes-desde' && hastaEl.value && nuevoValor > hastaEl.value) {
+                hastaEl.value = nuevoValor;
+            } else if (inputId === 'filtro-mes-hasta' && desdeEl.value && nuevoValor < desdeEl.value) {
+                desdeEl.value = nuevoValor;
+            }
+
+            actualizarEtiquetasMesCorto();
+            renderizarInforme();
         }
 
         function formatearMoneda(valor) {
@@ -199,10 +298,8 @@
 
         function formatearNombreMes(mesStr) {
             if (!mesStr || !/^\d{4}-\d{2}$/.test(mesStr)) return mesStr || 'Sin mes';
-            const [anio, mes] = mesStr.split('-').map(Number);
-            const fecha = new Date(anio, mes - 1, 1);
-            const nombreMes = fecha.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
-            return `${nombreMes.charAt(0).toUpperCase() + nombreMes.slice(1)} (${mesStr})`;
+            const texto = formatearMesCorto(mesStr);
+            return texto.charAt(0).toUpperCase() + texto.slice(1);
         }
 
         function normalizarFechaISO(fechaRaw) {
@@ -217,7 +314,7 @@
 
         function extraerPrecioSesionTarifa(t) {
             if (!t) return 0;
-            const raw = t.tarifa_por_sesion ?? t.tarifa_por_Sesion ?? t.precio_sesion ?? t.precio_1h ?? t.precio ?? t.importe ?? 0;
+            const raw = t.tarifa_sesion ?? t.tarifa_por_sesion ?? t.tarifa_por_Sesion ?? t.precio_sesion ?? t.precio_1h ?? t.precio ?? t.importe ?? 0;
             return parsearImporteTexto(raw);
         }
 
@@ -267,12 +364,40 @@
         }
 
         function obtenerTarifaGeneralEV(mesStr) {
-            return obtenerTarifaGeneralPorTipo('EV', mesStr, ['EVALUACION', 'EVALUACIONES']);
+            const lista = tarifasListaCache || [];
+            const estaActiva = (t) => t.activa === undefined || t.activa === null || Number(t.activa) !== 0;
+            const esCodigoEV = (t) => String(t.codigo || '').toUpperCase().trim() === 'EV';
+
+            if (!mesStr) {
+                const tarifaSinMes = lista.find(t => esCodigoEV(t) && estaActiva(t));
+                return tarifaSinMes ? extraerPrecioSesionTarifa(tarifaSinMes) : 0;
+            }
+
+            const [anio, mes] = mesStr.split('-').map(Number);
+            const inicioMes = `${anio}-${String(mes).padStart(2, '0')}-01`;
+            const ultimoDia = new Date(anio, mes, 0).getDate();
+            const finMes = `${anio}-${String(mes).padStart(2, '0')}-${String(ultimoDia).padStart(2, '0')}`;
+
+            const candidatas = lista.filter(t => {
+                if (!esCodigoEV(t) || !estaActiva(t)) return false;
+                const fIni = normalizarFechaISO(t.fecha_inicio);
+                const fFin = normalizarFechaISO(t.fecha_fin);
+                return (!fIni || fIni <= finMes) && (!fFin || fFin >= inicioMes);
+            });
+
+            if (candidatas.length > 0) {
+                candidatas.sort((a, b) => normalizarFechaISO(b.fecha_inicio).localeCompare(normalizarFechaISO(a.fecha_inicio)));
+                return extraerPrecioSesionTarifa(candidatas[0]);
+            }
+
+            const fallbackEV = lista.find(t => esCodigoEV(t) && estaActiva(t));
+            return fallbackEV ? extraerPrecioSesionTarifa(fallbackEV) : 0;
         }
 
         async function fetchJSONSafe(url) {
             try {
-                const res = await fetch(url);
+                const separator = url.includes('?') ? '&' : '?';
+                const res = await fetch(`${url}${separator}_t=${Date.now()}`, { cache: 'no-store' });
                 if (!res.ok) return null;
                 return await res.json();
             } catch (e) {
@@ -290,8 +415,10 @@
 
             const mes = String(raw.mes || '').slice(0, 7);
             const pendAnt = parseFloat(raw.pendiente_mes_anterior || 0);
-            const cobroExtra = parseFloat(raw.cobro_extra || 0);
-            const pagosExtra = parseFloat(raw.otros_pagos || 0);
+
+            const impExtra = parseFloat(raw.importe_extra ?? raw.cobro_extra ?? 0);
+            const pagadoExtra = parseFloat(raw.pagado_extra ?? raw.otros_pagos ?? 0);
+            const pendienteExtra = impExtra - pagadoExtra;
 
             const tarifas = raw.tarifas || {
                 "REF P": raw.ref_p || 0,
@@ -349,7 +476,7 @@
             const numC = parseFloat(raw.num_clases);
             let pctDto = 0;
             if (!isNaN(totalC) && totalC > 0 && !isNaN(numC)) {
-                pctDto = Math.max(0, numC / totalC);
+                pctDto = Math.max(0, (totalC - numC) / totalC);
             }
 
             const importeClases = (raw.importe_clases !== undefined && raw.importe_clases !== null)
@@ -391,18 +518,22 @@
                 : totalTerapiasPagadas * precioTerapiaAplicar;
             const pendienteTerapias = importeTerapias - pagadoTerapias;
 
-            const tieneEvaluacion = raw.evaluacion === 1 || raw.evaluacion === true;
-            const importeEvaluaciones = (raw.importe_evaluaciones !== undefined && raw.importe_evaluaciones !== null)
-                ? parseFloat(raw.importe_evaluaciones) || 0
-                : (tieneEvaluacion ? obtenerTarifaGeneralEV(mes) : 0);
+            const rawImpEval = raw.importe_evaluaciones ?? raw.importe_evaluacion;
+            const hasImpEval = rawImpEval !== undefined && rawImpEval !== null;
+            const importeEvaluaciones = hasImpEval
+                ? (parseFloat(rawImpEval) || 0)
+                : ((raw.evaluacion === 1 || raw.evaluacion === true) ? obtenerTarifaGeneralEV(mes) : 0);
+
+            const pagadoEvaluaciones = parseFloat(raw.pagado_evaluaciones ?? raw.pagado_evaluacion ?? 0);
+            const pendienteEvaluaciones = importeEvaluaciones - pagadoEvaluaciones;
 
             const totalImporteMes = (raw.total_final !== undefined && raw.total_final !== null)
                 ? parseFloat(raw.total_final) || 0
-                : (pendAnt + cobroExtra + importeClases + importeTerapias + importeEvaluaciones);
+                : (pendAnt + impExtra + importeClases + importeTerapias + importeEvaluaciones);
 
             const totalPagado = (raw.total_pagado !== undefined && raw.total_pagado !== null)
                 ? parseFloat(raw.total_pagado) || 0
-                : (pagosExtra + pagadoClases + pagadoTerapias);
+                : (pagadoExtra + pagadoClases + pagadoTerapias + pagadoEvaluaciones);
 
             const totalPendiente = totalImporteMes - totalPagado;
 
@@ -411,8 +542,9 @@
                 nombreAlumno,
                 mes,
                 pendiente_mes_anterior: pendAnt,
-                cobro_extra: cobroExtra,
-                pagos_extra: pagosExtra,
+                imp_extra: impExtra,
+                pagado_extra: pagadoExtra,
+                pendiente_extra: pendienteExtra,
                 importe_clases: importeClases,
                 pagado_clases: pagadoClases,
                 pendiente_clases: pendienteClases,
@@ -420,6 +552,8 @@
                 pagado_terapias: pagadoTerapias,
                 pendiente_terapias: pendienteTerapias,
                 importe_evaluaciones: importeEvaluaciones,
+                pagado_evaluaciones: pagadoEvaluaciones,
+                pendiente_evaluaciones: pendienteEvaluaciones,
                 total_importe_mes: totalImporteMes,
                 total_pagado: totalPagado,
                 total_pendiente: totalPendiente
@@ -428,47 +562,62 @@
 
         async function cargarHistorialCompleto() {
             const estadoEl = document.getElementById('estado-carga-informe');
+            const btnRecalcular = document.getElementById('btn-recalcular-informe');
             estadoEl.textContent = 'Cargando historial...';
-
-            const [alumnosData, tarifasData, hojaTodosData] = await Promise.all([
-                fetchJSONSafe('/api/alumnos'),
-                fetchJSONSafe('/api/tarifas'),
-                fetchJSONSafe('/api/hoja-pago')
-            ]);
-
-            alumnosCache = Array.isArray(alumnosData) ? alumnosData : [];
-            tarifasListaCache = Array.isArray(tarifasData) ? tarifasData : [];
-
-            const mapaAlumnos = new Map();
-            alumnosCache.forEach(a => mapaAlumnos.set(String(a.id), a));
-
-            let filasBrutas = [];
-            if (Array.isArray(hojaTodosData) && hojaTodosData.length > 0) {
-                filasBrutas = hojaTodosData;
-            } else {
-                // Respaldo si el endpoint requiere parámetro ?mes=
-                const hoy = new Date();
-                const mesesCandidatos = [];
-                for (let i = -24; i <= 3; i++) {
-                    const d = new Date(hoy.getFullYear(), hoy.getMonth() + i, 1);
-                    mesesCandidatos.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
-                }
-                const resultadosPorMes = await Promise.all(
-                    mesesCandidatos.map(m => fetchJSONSafe(`/api/hoja-pago?mes=${m}`))
-                );
-                resultadosPorMes.forEach((lista, idx) => {
-                    if (Array.isArray(lista)) {
-                        lista.forEach(item => filasBrutas.push({ ...item, mes: item.mes || mesesCandidatos[idx] }));
-                    }
-                });
+            if (btnRecalcular) {
+                btnRecalcular.disabled = true;
+                btnRecalcular.classList.add('opacity-60', 'cursor-not-allowed');
             }
 
-            registrosInforme = filasBrutas
-                .filter(r => r && r.alumno_id && r.mes)
-                .map(r => calcularDetalleRegistro(r, mapaAlumnos));
+            try {
+                const [alumnosData, tarifasData, hojaTodosData] = await Promise.all([
+                    fetchJSONSafe('/api/alumnos'),
+                    fetchJSONSafe('/api/tarifas'),
+                    fetchJSONSafe('/api/hoja-pago')
+                ]);
 
-            estadoEl.textContent = `Historial cargado (${registrosInforme.length} registros)`;
-            renderizarInforme();
+                alumnosCache = Array.isArray(alumnosData) ? alumnosData : [];
+                tarifasListaCache = Array.isArray(tarifasData) ? tarifasData : [];
+
+                const mapaAlumnos = new Map();
+                alumnosCache.forEach(a => mapaAlumnos.set(String(a.id), a));
+
+                let filasBrutas = [];
+                if (Array.isArray(hojaTodosData) && hojaTodosData.length > 0) {
+                    filasBrutas = hojaTodosData;
+                } else {
+                    const hoy = new Date();
+                    const mesesCandidatos = [];
+                    for (let i = -24; i <= 3; i++) {
+                        const d = new Date(hoy.getFullYear(), hoy.getMonth() + i, 1);
+                        mesesCandidatos.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+                    }
+                    const resultadosPorMes = await Promise.all(
+                        mesesCandidatos.map(m => fetchJSONSafe(`/api/hoja-pago?mes=${m}`))
+                    );
+                    resultadosPorMes.forEach((lista, idx) => {
+                        if (Array.isArray(lista)) {
+                            lista.forEach(item => filasBrutas.push({ ...item, mes: item.mes || mesesCandidatos[idx] }));
+                        }
+                    });
+                }
+
+                registrosInforme = filasBrutas
+                    .filter(r => r && r.alumno_id && r.mes)
+                    .map(r => calcularDetalleRegistro(r, mapaAlumnos));
+
+                estadoEl.textContent = `Historial cargado (${registrosInforme.length} registros)`;
+                renderizarInforme();
+            } finally {
+                if (btnRecalcular) {
+                    btnRecalcular.disabled = false;
+                    btnRecalcular.classList.remove('opacity-60', 'cursor-not-allowed');
+                }
+            }
+        }
+
+        async function recalcularInforme() {
+            await cargarHistorialCompleto();
         }
 
         function manejarInputAlumnoFiltro() {
@@ -538,17 +687,6 @@
             renderizarInforme();
         }
 
-        function limpiarTodosFiltros() {
-            document.getElementById('filtro-mes-desde').value = '';
-            document.getElementById('filtro-mes-hasta').value = '';
-            document.getElementById('filtro-alumno-texto').value = '';
-            document.getElementById('filtro-alumno-id').value = '';
-            document.getElementById('btn-limpiar-alumno').classList.add('hidden');
-            document.getElementById('filtro-deuda').value = 'todos';
-            document.getElementById('filtro-agrupacion').value = 'mes';
-            renderizarInforme();
-        }
-
         document.addEventListener('click', (e) => {
             const cont = document.getElementById('filtro-alumno-texto')?.parentElement?.parentElement;
             const lista = document.getElementById('sugerencias-filtro-alumno');
@@ -562,7 +700,7 @@
             const mesHasta = document.getElementById('filtro-mes-hasta').value;
             const alumnoIdSel = document.getElementById('filtro-alumno-id').value;
             const alumnoTexto = normalizarTexto(document.getElementById('filtro-alumno-texto').value);
-            const soloDeuda = document.getElementById('filtro-deuda').value === 'deuda';
+            const soloDeuda = document.getElementById('filtro-solo-deuda').checked;
 
             return registrosInforme.filter(reg => {
                 const mesReg = String(reg.mes || '').slice(0, 7);
@@ -576,7 +714,8 @@
                 }
 
                 if (soloDeuda) {
-                    if ((parseFloat(reg.total_pendiente) || 0) <= 0.009) return false;
+                    const pendiente = parseFloat(reg.total_pendiente) || 0;
+                    if (Math.abs(pendiente) < 0.005) return false;
                 }
 
                 return true;
@@ -586,8 +725,9 @@
         function sumarRegistros(lista) {
             return lista.reduce((acc, r) => {
                 acc.pendiente_mes_anterior += r.pendiente_mes_anterior || 0;
-                acc.cobro_extra += r.cobro_extra || 0;
-                acc.pagos_extra += r.pagos_extra || 0;
+                acc.imp_extra += r.imp_extra || 0;
+                acc.pagado_extra += r.pagado_extra || 0;
+                acc.pendiente_extra += r.pendiente_extra || 0;
                 acc.importe_clases += r.importe_clases || 0;
                 acc.pagado_clases += r.pagado_clases || 0;
                 acc.pendiente_clases += r.pendiente_clases || 0;
@@ -595,14 +735,17 @@
                 acc.pagado_terapias += r.pagado_terapias || 0;
                 acc.pendiente_terapias += r.pendiente_terapias || 0;
                 acc.importe_evaluaciones += r.importe_evaluaciones || 0;
+                acc.pagado_evaluaciones += r.pagado_evaluaciones || 0;
+                acc.pendiente_evaluaciones += r.pendiente_evaluaciones || 0;
                 acc.total_importe_mes += r.total_importe_mes || 0;
                 acc.total_pagado += r.total_pagado || 0;
                 acc.total_pendiente += r.total_pendiente || 0;
                 return acc;
             }, {
                 pendiente_mes_anterior: 0,
-                cobro_extra: 0,
-                pagos_extra: 0,
+                imp_extra: 0,
+                pagado_extra: 0,
+                pendiente_extra: 0,
                 importe_clases: 0,
                 pagado_clases: 0,
                 pendiente_clases: 0,
@@ -610,6 +753,8 @@
                 pagado_terapias: 0,
                 pendiente_terapias: 0,
                 importe_evaluaciones: 0,
+                pagado_evaluaciones: 0,
+                pendiente_evaluaciones: 0,
                 total_importe_mes: 0,
                 total_pagado: 0,
                 total_pendiente: 0
@@ -617,23 +762,25 @@
         }
 
         function renderizarInforme() {
+            actualizarEtiquetasMesCorto();
+
             const mesDesde = document.getElementById('filtro-mes-desde').value;
             const mesHasta = document.getElementById('filtro-mes-hasta').value;
             const alumnoTexto = document.getElementById('filtro-alumno-texto').value.trim();
-            const modoDeuda = document.getElementById('filtro-deuda').value;
+            const soloDeuda = document.getElementById('filtro-solo-deuda').checked;
             const agrupacion = document.getElementById('filtro-agrupacion').value;
 
+            const desdeCorto = mesDesde ? formatearMesCorto(mesDesde) : 'Inicio';
+            const hastaCorto = mesHasta ? formatearMesCorto(mesHasta) : 'Fin';
             const textoRango = (!mesDesde && !mesHasta)
                 ? 'Todo el historial'
-                : `${mesDesde || 'Inicio'} a ${mesHasta || 'Fin'}`;
+                : (mesDesde === mesHasta ? formatearNombreMes(mesDesde) : `${desdeCorto} a ${hastaCorto}`);
             const textoAlumno = alumnoTexto || 'Todos';
-            const textoDeuda = modoDeuda === 'deuda' ? 'Solo con deuda' : 'Todos';
+            const textoDeuda = soloDeuda ? 'Solo con deuda' : 'Todos';
             const textoAgrup = agrupacion === 'alumno' ? 'Alumno a alumno' : 'Mes a mes';
 
             document.getElementById('subtitulo-informe').textContent =
                 `Rango: ${textoRango} · Alumno: ${textoAlumno} · Estado: ${textoDeuda} · Agrupación: ${textoAgrup}`;
-            document.getElementById('resumen-filtros-texto').textContent =
-                (mesDesde || mesHasta) ? `Filtrado por rango ${textoRango}` : 'Sin rango de fechas: mostrando todo el historial disponible.';
 
             const filtrados = filtrarRegistros();
             document.getElementById('contador-registros-informe').textContent = filtrados.length;
@@ -696,27 +843,46 @@
                 const sum = sumarRegistros(grupo.items);
                 const esPorAlumno = agrupacion === 'alumno';
 
+                const totalPdteMesAntHtml = esPorAlumno ? '' : formatearMoneda(sum.pendiente_mes_anterior);
+                const totalPendienteHtml = esPorAlumno ? '' : formatearMoneda(sum.total_pendiente);
+
                 const filasHtml = grupo.items.map((r, idx) => {
-                    const etiquetaContexto = esPorAlumno ? (r.mes || '-') : r.nombreAlumno;
+                    const etiquetaContexto = esPorAlumno ? (formatearMesCorto(r.mes) || '-') : r.nombreAlumno;
                     const bgRow = idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/70';
                     const clasePendiente = r.total_pendiente > 0.009 ? 'text-red-700 font-extrabold' : 'text-amber-700 font-bold';
 
                     return `
                         <tr class="${bgRow} border-b border-slate-200 hover:bg-blue-50/40">
-                            <td class="py-2 px-2.5 font-semibold text-slate-800 border-r whitespace-nowrap">${etiquetaContexto}</td>
-                            <td class="py-2 px-2 text-right tabular-nums border-r">${formatearMoneda(r.pendiente_mes_anterior)}</td>
-                            <td class="py-2 px-2 text-right tabular-nums border-r">${formatearMoneda(r.cobro_extra)}</td>
-                            <td class="py-2 px-2 text-right tabular-nums border-r">${formatearMoneda(r.pagos_extra)}</td>
-                            <td class="py-2 px-2 text-right tabular-nums border-r bg-sky-50/30">${formatearMoneda(r.importe_clases)}</td>
-                            <td class="py-2 px-2 text-right tabular-nums border-r bg-sky-50/30 text-teal-700">${formatearMoneda(r.pagado_clases)}</td>
-                            <td class="py-2 px-2 text-right tabular-nums border-r bg-sky-50/30 text-amber-700">${formatearMoneda(r.pendiente_clases)}</td>
-                            <td class="py-2 px-2 text-right tabular-nums border-r bg-teal-50/30">${formatearMoneda(r.importe_terapias)}</td>
-                            <td class="py-2 px-2 text-right tabular-nums border-r bg-teal-50/30 text-teal-700">${formatearMoneda(r.pagado_terapias)}</td>
-                            <td class="py-2 px-2 text-right tabular-nums border-r bg-teal-50/30 text-amber-700">${formatearMoneda(r.pendiente_terapias)}</td>
-                            <td class="py-2 px-2 text-right tabular-nums border-r bg-purple-50/30">${formatearMoneda(r.importe_evaluaciones)}</td>
-                            <td class="py-2 px-2 text-right tabular-nums border-r bg-blue-50/70 font-extrabold text-blue-900">${formatearMoneda(r.total_importe_mes)}</td>
-                            <td class="py-2 px-2 text-right tabular-nums border-r bg-emerald-50/70 font-extrabold text-emerald-800">${formatearMoneda(r.total_pagado)}</td>
-                            <td class="py-2 px-2 text-right tabular-nums bg-amber-50/80 ${clasePendiente}">${formatearMoneda(r.total_pendiente)}</td>
+                            <!-- Bloque Alumno / Mes -->
+                            <td class="py-1.5 px-1.5 font-semibold text-slate-800 border-r-2 border-slate-400 truncate" title="${etiquetaContexto}">${etiquetaContexto}</td>
+
+                            <!-- Bloque Pdte. Mes Ant. -->
+                            <td class="py-1.5 px-1 text-right tabular-nums border-r-2 border-slate-400 bg-amber-50/20 whitespace-nowrap">${formatearMoneda(r.pendiente_mes_anterior)}</td>
+
+                            <!-- Bloque Extras -->
+                            <td class="py-1.5 px-1 text-right tabular-nums border-r border-slate-300 bg-orange-50/25 whitespace-nowrap">${formatearMoneda(r.imp_extra)}</td>
+                            <td class="py-1.5 px-1 text-right tabular-nums border-r border-slate-300 bg-orange-50/25 text-teal-700 whitespace-nowrap">${formatearMoneda(r.pagado_extra)}</td>
+                            <td class="py-1.5 px-1 text-right tabular-nums border-r-2 border-slate-400 bg-orange-50/25 text-amber-700 whitespace-nowrap">${formatearMoneda(r.pendiente_extra)}</td>
+
+                            <!-- Bloque Clases -->
+                            <td class="py-1.5 px-1 text-right tabular-nums border-r border-slate-300 bg-sky-50/30 whitespace-nowrap">${formatearMoneda(r.importe_clases)}</td>
+                            <td class="py-1.5 px-1 text-right tabular-nums border-r border-slate-300 bg-sky-50/30 text-teal-700 whitespace-nowrap">${formatearMoneda(r.pagado_clases)}</td>
+                            <td class="py-1.5 px-1 text-right tabular-nums border-r-2 border-slate-400 bg-sky-50/30 text-amber-700 whitespace-nowrap">${formatearMoneda(r.pendiente_clases)}</td>
+
+                            <!-- Bloque Terapias -->
+                            <td class="py-1.5 px-1 text-right tabular-nums border-r border-slate-300 bg-teal-50/30 whitespace-nowrap">${formatearMoneda(r.importe_terapias)}</td>
+                            <td class="py-1.5 px-1 text-right tabular-nums border-r border-slate-300 bg-teal-50/30 text-teal-700 whitespace-nowrap">${formatearMoneda(r.pagado_terapias)}</td>
+                            <td class="py-1.5 px-1 text-right tabular-nums border-r-2 border-slate-400 bg-teal-50/30 text-amber-700 whitespace-nowrap">${formatearMoneda(r.pendiente_terapias)}</td>
+
+                            <!-- Bloque Evaluaciones -->
+                            <td class="py-1.5 px-1 text-right tabular-nums border-r border-slate-300 bg-purple-50/30 whitespace-nowrap">${formatearMoneda(r.importe_evaluaciones)}</td>
+                            <td class="py-1.5 px-1 text-right tabular-nums border-r border-slate-300 bg-purple-50/30 text-teal-700 whitespace-nowrap">${formatearMoneda(r.pagado_evaluaciones)}</td>
+                            <td class="py-1.5 px-1 text-right tabular-nums border-r-2 border-slate-400 bg-purple-50/30 text-amber-700 whitespace-nowrap">${formatearMoneda(r.pendiente_evaluaciones)}</td>
+
+                            <!-- Bloque Totales -->
+                            <td class="py-1.5 px-1 text-right tabular-nums border-r border-slate-300 bg-blue-50/70 font-extrabold text-blue-900 whitespace-nowrap">${formatearMoneda(r.total_importe_mes)}</td>
+                            <td class="py-1.5 px-1 text-right tabular-nums border-r border-slate-300 bg-emerald-50/70 font-extrabold text-emerald-800 whitespace-nowrap">${formatearMoneda(r.total_pagado)}</td>
+                            <td class="py-1.5 px-1 text-right tabular-nums bg-amber-50/80 ${clasePendiente} whitespace-nowrap">${formatearMoneda(r.total_pendiente)}</td>
                         </tr>
                     `;
                 }).join('');
@@ -724,7 +890,7 @@
                 const bloque = document.createElement('div');
                 bloque.className = 'grupo-bloque bg-white rounded-xl shadow-md border border-slate-200 overflow-hidden print-shadow-none';
                 bloque.innerHTML = `
-                    <div class="px-4 py-3 bg-slate-800 text-white flex items-center justify-between">
+                    <div class="px-4 py-2.5 bg-slate-800 text-white flex items-center justify-between">
                         <div class="flex items-center gap-2">
                             <span class="font-bold text-sm">${grupo.titulo}</span>
                             <span class="text-[11px] bg-slate-700 text-slate-200 px-2 py-0.5 rounded-full">${grupo.items.length} ${grupo.items.length === 1 ? 'registro' : 'registros'}</span>
@@ -732,44 +898,95 @@
                         <span class="text-xs text-slate-300">${grupo.subtitulo}</span>
                     </div>
                     <div class="overflow-x-auto print-overflow-visible">
-                        <table class="w-full text-left border-collapse text-xs min-w-[1380px]">
+                        <table class="w-full table-fixed text-left border-collapse text-[11px]">
+                            <colgroup>
+                                <col class="w-[12%]">
+                                <col class="w-[5.5%]">
+                                <col class="w-[5.5%]">
+                                <col class="w-[5.5%]">
+                                <col class="w-[5.5%]">
+                                <col class="w-[5.5%]">
+                                <col class="w-[5.5%]">
+                                <col class="w-[5.5%]">
+                                <col class="w-[5.5%]">
+                                <col class="w-[5.5%]">
+                                <col class="w-[5.5%]">
+                                <col class="w-[5.5%]">
+                                <col class="w-[5.5%]">
+                                <col class="w-[5.5%]">
+                                <col class="w-[5.5%]">
+                                <col class="w-[5.5%]">
+                                <col class="w-[5.5%]">
+                            </colgroup>
                             <thead>
-                                <tr class="bg-slate-100 text-slate-700 border-b border-slate-300 text-[10px] font-bold uppercase text-center">
-                                    <th class="py-2 px-2.5 border-r text-left">${grupo.columnaContexto}</th>
-                                    <th class="py-2 px-2 border-r">Pdte. Mes Ant.</th>
-                                    <th class="py-2 px-2 border-r">Cobros Extra</th>
-                                    <th class="py-2 px-2 border-r">Pagos Extra</th>
-                                    <th class="py-2 px-2 border-r bg-sky-100/60">Imp. Clases</th>
-                                    <th class="py-2 px-2 border-r bg-sky-100/60">Pagado Clases</th>
-                                    <th class="py-2 px-2 border-r bg-sky-100/60">Pdte. Clases</th>
-                                    <th class="py-2 px-2 border-r bg-teal-100/60">Imp. Terapias</th>
-                                    <th class="py-2 px-2 border-r bg-teal-100/60">Pagado Terapias</th>
-                                    <th class="py-2 px-2 border-r bg-teal-100/60">Pdte. Terapias</th>
-                                    <th class="py-2 px-2 border-r bg-purple-100/60">Imp. Evaluaciones</th>
-                                    <th class="py-2 px-2 border-r bg-blue-100 text-blue-950">Total Importe Mes</th>
-                                    <th class="py-2 px-2 border-r bg-emerald-100 text-emerald-950">Total Pagado</th>
-                                    <th class="py-2 px-2 bg-amber-100 text-amber-950">Pendiente</th>
+                                <tr class="bg-slate-100 text-slate-700 border-b-2 border-slate-300 text-[9px] leading-tight font-bold uppercase text-center">
+                                    <!-- Bloque Alumno / Mes -->
+                                    <th class="py-1.5 px-1.5 border-r-2 border-slate-400 text-left">${grupo.columnaContexto}</th>
+
+                                    <!-- Bloque Pdte. Mes Ant. -->
+                                    <th class="py-1.5 px-1 border-r-2 border-slate-400 bg-amber-100/50">Pdte.<br>Mes Ant.</th>
+
+                                    <!-- Bloque Extras -->
+                                    <th class="py-1.5 px-1 border-r border-slate-300 bg-orange-100/60">Imp.<br>Extra</th>
+                                    <th class="py-1.5 px-1 border-r border-slate-300 bg-orange-100/60">Pag.<br>Extra</th>
+                                    <th class="py-1.5 px-1 border-r-2 border-slate-400 bg-orange-100/60">Pdte.<br>Extra</th>
+
+                                    <!-- Bloque Clases -->
+                                    <th class="py-1.5 px-1 border-r border-slate-300 bg-sky-100/60">Imp.<br>Clases</th>
+                                    <th class="py-1.5 px-1 border-r border-slate-300 bg-sky-100/60">Pag.<br>Clases</th>
+                                    <th class="py-1.5 px-1 border-r-2 border-slate-400 bg-sky-100/60">Pdte.<br>Clases</th>
+
+                                    <!-- Bloque Terapias -->
+                                    <th class="py-1.5 px-1 border-r border-slate-300 bg-teal-100/60">Imp.<br>Terapias</th>
+                                    <th class="py-1.5 px-1 border-r border-slate-300 bg-teal-100/60">Pag.<br>Terapias</th>
+                                    <th class="py-1.5 px-1 border-r-2 border-slate-400 bg-teal-100/60">Pdte.<br>Terapias</th>
+
+                                    <!-- Bloque Evaluaciones -->
+                                    <th class="py-1.5 px-1 border-r border-slate-300 bg-purple-100/60">Imp.<br>Eval.</th>
+                                    <th class="py-1.5 px-1 border-r border-slate-300 bg-purple-100/60">Pag.<br>Eval.</th>
+                                    <th class="py-1.5 px-1 border-r-2 border-slate-400 bg-purple-100/60">Pdte.<br>Eval.</th>
+
+                                    <!-- Bloque Totales -->
+                                    <th class="py-1.5 px-1 border-r border-slate-300 bg-blue-100 text-blue-950">Total<br>Mes</th>
+                                    <th class="py-1.5 px-1 border-r border-slate-300 bg-emerald-100 text-emerald-950">Total<br>Pagado</th>
+                                    <th class="py-1.5 px-1 bg-amber-100 text-amber-950">Total<br>Pdte.</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 ${filasHtml}
                             </tbody>
                             <tfoot>
-                                <tr class="bg-slate-200 text-slate-900 font-extrabold border-t-2 border-slate-400 text-xs">
-                                    <td class="py-2.5 px-2.5 border-r uppercase text-[11px]">Suma ${grupo.titulo}</td>
-                                    <td class="py-2.5 px-2 text-right tabular-nums border-r">${formatearMoneda(sum.pendiente_mes_anterior)}</td>
-                                    <td class="py-2.5 px-2 text-right tabular-nums border-r">${formatearMoneda(sum.cobro_extra)}</td>
-                                    <td class="py-2.5 px-2 text-right tabular-nums border-r">${formatearMoneda(sum.pagos_extra)}</td>
-                                    <td class="py-2.5 px-2 text-right tabular-nums border-r">${formatearMoneda(sum.importe_clases)}</td>
-                                    <td class="py-2.5 px-2 text-right tabular-nums border-r text-teal-800">${formatearMoneda(sum.pagado_clases)}</td>
-                                    <td class="py-2.5 px-2 text-right tabular-nums border-r text-amber-800">${formatearMoneda(sum.pendiente_clases)}</td>
-                                    <td class="py-2.5 px-2 text-right tabular-nums border-r">${formatearMoneda(sum.importe_terapias)}</td>
-                                    <td class="py-2.5 px-2 text-right tabular-nums border-r text-teal-800">${formatearMoneda(sum.pagado_terapias)}</td>
-                                    <td class="py-2.5 px-2 text-right tabular-nums border-r text-amber-800">${formatearMoneda(sum.pendiente_terapias)}</td>
-                                    <td class="py-2.5 px-2 text-right tabular-nums border-r">${formatearMoneda(sum.importe_evaluaciones)}</td>
-                                    <td class="py-2.5 px-2 text-right tabular-nums border-r bg-blue-200/80 text-blue-950">${formatearMoneda(sum.total_importe_mes)}</td>
-                                    <td class="py-2.5 px-2 text-right tabular-nums border-r bg-emerald-200/80 text-emerald-950">${formatearMoneda(sum.total_pagado)}</td>
-                                    <td class="py-2.5 px-2 text-right tabular-nums bg-amber-200/90 text-amber-950">${formatearMoneda(sum.total_pendiente)}</td>
+                                <tr class="bg-slate-200 text-slate-900 font-extrabold border-t-2 border-slate-400 text-[11px]">
+                                    <!-- Bloque Alumno / Mes -->
+                                    <td class="py-2 px-1.5 border-r-2 border-slate-400 uppercase text-[10px] truncate" title="${grupo.titulo}">${grupo.titulo}</td>
+
+                                    <!-- Bloque Pdte. Mes Ant. -->
+                                    <td class="py-2 px-1 text-right tabular-nums border-r-2 border-slate-400 whitespace-nowrap">${totalPdteMesAntHtml}</td>
+
+                                    <!-- Bloque Extras -->
+                                    <td class="py-2 px-1 text-right tabular-nums border-r border-slate-300 whitespace-nowrap">${formatearMoneda(sum.imp_extra)}</td>
+                                    <td class="py-2 px-1 text-right tabular-nums border-r border-slate-300 text-teal-800 whitespace-nowrap">${formatearMoneda(sum.pagado_extra)}</td>
+                                    <td class="py-2 px-1 text-right tabular-nums border-r-2 border-slate-400 text-amber-800 whitespace-nowrap">${formatearMoneda(sum.pendiente_extra)}</td>
+
+                                    <!-- Bloque Clases -->
+                                    <td class="py-2 px-1 text-right tabular-nums border-r border-slate-300 whitespace-nowrap">${formatearMoneda(sum.importe_clases)}</td>
+                                    <td class="py-2 px-1 text-right tabular-nums border-r border-slate-300 text-teal-800 whitespace-nowrap">${formatearMoneda(sum.pagado_clases)}</td>
+                                    <td class="py-2 px-1 text-right tabular-nums border-r-2 border-slate-400 text-amber-800 whitespace-nowrap">${formatearMoneda(sum.pendiente_clases)}</td>
+
+                                    <!-- Bloque Terapias -->
+                                    <td class="py-2 px-1 text-right tabular-nums border-r border-slate-300 whitespace-nowrap">${formatearMoneda(sum.importe_terapias)}</td>
+                                    <td class="py-2 px-1 text-right tabular-nums border-r border-slate-300 text-teal-800 whitespace-nowrap">${formatearMoneda(sum.pagado_terapias)}</td>
+                                    <td class="py-2 px-1 text-right tabular-nums border-r-2 border-slate-400 text-amber-800 whitespace-nowrap">${formatearMoneda(sum.pendiente_terapias)}</td>
+
+                                    <!-- Bloque Evaluaciones -->
+                                    <td class="py-2 px-1 text-right tabular-nums border-r border-slate-300 whitespace-nowrap">${formatearMoneda(sum.importe_evaluaciones)}</td>
+                                    <td class="py-2 px-1 text-right tabular-nums border-r border-slate-300 text-teal-800 whitespace-nowrap">${formatearMoneda(sum.pagado_evaluaciones)}</td>
+                                    <td class="py-2 px-1 text-right tabular-nums border-r-2 border-slate-400 text-amber-800 whitespace-nowrap">${formatearMoneda(sum.pendiente_evaluaciones)}</td>
+
+                                    <!-- Bloque Totales -->
+                                    <td class="py-2 px-1 text-right tabular-nums border-r border-slate-300 bg-blue-200/80 text-blue-950 whitespace-nowrap">${formatearMoneda(sum.total_importe_mes)}</td>
+                                    <td class="py-2 px-1 text-right tabular-nums border-r border-slate-300 bg-emerald-200/80 text-emerald-950 whitespace-nowrap">${formatearMoneda(sum.total_pagado)}</td>
+                                    <td class="py-2 px-1 text-right tabular-nums bg-amber-200/90 text-amber-950 whitespace-nowrap">${totalPendienteHtml}</td>
                                 </tr>
                             </tfoot>
                         </table>
@@ -778,7 +995,6 @@
                 contenedor.appendChild(bloque);
             });
 
-            // Sumatorio total general del informe
             if (gruposMap.size > 1) {
                 const totGen = sumarRegistros(filtrados);
                 const cajaTotalGeneral = document.createElement('div');
@@ -788,7 +1004,7 @@
                         <div class="text-xs uppercase tracking-wider font-bold text-slate-300">
                             Total General del Informe (${filtrados.length} registros)
                         </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-right">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-right">
                             <div class="bg-blue-950/90 border border-blue-700/60 rounded-lg px-3.5 py-2">
                                 <div class="text-[10px] uppercase text-blue-200 font-semibold">Total Importe Mes</div>
                                 <div class="text-sm font-extrabold tabular-nums text-white">${formatearMoneda(totGen.total_importe_mes)}</div>
@@ -796,10 +1012,6 @@
                             <div class="bg-emerald-950/90 border border-emerald-700/60 rounded-lg px-3.5 py-2">
                                 <div class="text-[10px] uppercase text-emerald-200 font-semibold">Total Pagado</div>
                                 <div class="text-sm font-extrabold tabular-nums text-white">${formatearMoneda(totGen.total_pagado)}</div>
-                            </div>
-                            <div class="bg-amber-950/90 border border-amber-700/60 rounded-lg px-3.5 py-2">
-                                <div class="text-[10px] uppercase text-amber-200 font-semibold">Total Pendiente</div>
-                                <div class="text-sm font-extrabold tabular-nums text-amber-200">${formatearMoneda(totGen.total_pendiente)}</div>
                             </div>
                         </div>
                     </div>
@@ -812,7 +1024,14 @@
             window.print();
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            const permitido = await verificarAccesoRol();
+            if (!permitido) return;
+
+            const mesActual = obtenerMesActualStr();
+            document.getElementById('filtro-mes-desde').value = mesActual;
+            document.getElementById('filtro-mes-hasta').value = mesActual;
+            actualizarEtiquetasMesCorto();
             cargarHistorialCompleto();
         });
     </script>

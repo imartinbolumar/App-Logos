@@ -1,0 +1,18 @@
+{
+	"folders": [
+		{
+			"path": "../../Formación IA/sap-prompt-library"
+		},
+		{
+			"name": "SAP_HANA_DES(ABAP)",
+			"uri": "adt://sap_hana_des"
+		},
+		{
+			"name": "SAP_HANA_DES(ABAP)",
+			"uri": "adt://sap_hana_des"
+		}
+	],
+	"settings": {
+		"abapfs.mcpServer.autoStart": true
+	}
+}
